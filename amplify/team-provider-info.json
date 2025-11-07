@@ -1,0 +1,100 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-compaexpress-dev-7ef74-authRole",
+      "UnauthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-dev-7ef74-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-dev-7ef74-authRole",
+      "Region": "sa-east-1",
+      "DeploymentBucketName": "amplify-compaexpress-dev-7ef74-deployment",
+      "UnauthRoleName": "amplify-compaexpress-dev-7ef74-unauthRole",
+      "StackName": "amplify-compaexpress-dev-7ef74",
+      "StackId": "arn:aws:cloudformation:sa-east-1:882816896815:stack/amplify-compaexpress-dev-7ef74/ddf05600-68da-11f0-a247-024e1f94706d",
+      "AmplifyAppId": "d35vso9rdxwm47",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-compaexpress-dev-7ef74-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
+    },
+    "categories": {
+      "auth": {
+        "compaexpress1bfc17d6": {},
+        "userPoolGroups": {}
+      },
+      "api": {
+        "compaexpress": {},
+        "apidcebec22": {}
+      },
+      "storage": {
+        "s322de2a4c": {}
+      },
+      "function": {
+        "getusers": {
+          "deploymentBucketName": "amplify-compaexpress-dev-7ef74-deployment",
+          "s3Key": "amplify-builds/getusers-5037633665632f615943-build.zip"
+        },
+        "adminassign": {
+          "deploymentBucketName": "amplify-compaexpress-dev-7ef74-deployment",
+          "s3Key": "amplify-builds/adminassign-51756b5575784a4a6f7a-build.zip"
+        },
+        "generatepdf": {
+          "deploymentBucketName": "amplify-compaexpress-dev-7ef74-deployment",
+          "s3Key": "amplify-builds/generatepdf-55776261696475566372-build.zip"
+        },
+        "compaexpress1bfc17d6": {},
+        "desactivateuser": {
+          "deploymentBucketName": "amplify-compaexpress-dev-7ef74-deployment",
+          "s3Key": "amplify-builds/desactivateuser-4c2b70536d316731374c-build.zip"
+        }
+      }
+    }
+  },
+  "release": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-compaexpress-release-a1e91-authRole",
+      "UnauthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-release-a1e91-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-release-a1e91-authRole",
+      "Region": "sa-east-1",
+      "DeploymentBucketName": "amplify-compaexpress-release-a1e91-deployment",
+      "UnauthRoleName": "amplify-compaexpress-release-a1e91-unauthRole",
+      "StackName": "amplify-compaexpress-release-a1e91",
+      "StackId": "arn:aws:cloudformation:sa-east-1:882816896815:stack/amplify-compaexpress-release-a1e91/13374170-6994-11f0-8d39-0a2c7008f6b5",
+      "AmplifyAppId": "d35vso9rdxwm47",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-compaexpress-release-a1e91-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
+    },
+    "categories": {
+      "auth": {
+        "compaexpress1bfc17d6": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "adminassign": {
+          "deploymentBucketName": "amplify-compaexpress-release-a1e91-deployment",
+          "s3Key": "amplify-builds/adminassign-51756b5575784a4a6f7a-build.zip"
+        },
+        "generatepdf": {
+          "deploymentBucketName": "amplify-compaexpress-release-a1e91-deployment",
+          "s3Key": "amplify-builds/generatepdf-55776261696475566372-build.zip"
+        },
+        "getusers": {
+          "deploymentBucketName": "amplify-compaexpress-release-a1e91-deployment",
+          "s3Key": "amplify-builds/getusers-5037633665632f615943-build.zip"
+        },
+        "compaexpress1bfc17d6": {},
+        "desactivateuser": {
+          "deploymentBucketName": "amplify-compaexpress-release-a1e91-deployment",
+          "s3Key": "amplify-builds/desactivateuser-4c2b70536d316731374c-build.zip"
+        }
+      },
+      "api": {
+        "apidcebec22": {},
+        "compaexpress": {}
+      },
+      "storage": {
+        "s322de2a4c": {}
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d35vso9rdxwm47",
+          "type": "manual"
+        }
+      }
+    }
+  }
+}

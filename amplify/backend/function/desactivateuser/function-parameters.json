@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "auth": {
+      "compaexpress1bfc17d6": [
+        "read",
+        "update"
+      ]
+    }
+  },
+  "lambdaLayers": []
+}

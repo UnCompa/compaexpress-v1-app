@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "paths": {
+    "/users": {
+      "name": "/users",
+      "lambdaFunction": "getusers",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read"
+        ]
+      }
+    },
+    "/admin-assign": {
+      "name": "/admin-assign",
+      "lambdaFunction": "adminassign",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read"
+        ]
+      }
+    },
+    "/generate-invoice-pdf": {
+      "name": "/generate-invoice-pdf",
+      "lambdaFunction": "generatepdf",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read"
+        ]
+      }
+    },
+    "/desactivateuser": {
+      "name": "/desactivateuser",
+      "lambdaFunction": "desactivateuser",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}

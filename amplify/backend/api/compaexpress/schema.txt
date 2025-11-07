@@ -1,0 +1,439 @@
+type Negocio
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["superadmin"] }
+      { allow: groups, groups: ["admin"], operations: [read, update] }
+      { allow: groups, groups: ["vendedor"], operations: [read] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  nombre: String!
+  representate: String
+  ruc: String!
+  telefono: String
+  duration: Int # Si es -1 es infinito
+  logo: String # Key de aws
+  correoElectronico: String
+  pais: String
+  provincia: String
+  ciudad: String
+  movilAccess: Int
+  pcAccess: Int
+  direccion: String
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Proveedor
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin"]
+        operations: [create, read, update, delete]
+      }
+      { allow: groups, groups: ["vendedor"], operations: [read, update, create] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  nombre: String!
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  negocioID: ID! @index(name: "byNegocio", sortKeyFields: ["nombre"])
+  productos: [Producto] @hasMany(indexName: "byProveedor", fields: ["id"])
+}
+
+type Categoria
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin"]
+        operations: [create, read, update, delete]
+      }
+      { allow: groups, groups: ["vendedor"], operations: [read] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  nombre: String!
+  negocioID: ID! @index(name: "byNegocio", sortKeyFields: ["nombre"])
+  parentCategoriaID: ID @index(name: "byParentCategoria")
+  productos: [Producto] @hasMany(indexName: "byCategoria", fields: ["id"])
+  subCategorias: [Categoria]
+    @hasMany(indexName: "byParentCategoria", fields: ["id"])
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Producto
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["admin"], operations: [create, read, update, delete] },
+      { allow: groups, groups: ["vendedor"], operations: [read, update, create] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  nombre: String!
+  descripcion: String!
+  stock: Int!
+  barCode: String!
+  productoImages: [String]
+  negocioID: ID! @index(name: "byNegocio", sortKeyFields: ["nombre"])
+  categoriaID: ID! @index(name: "byCategoria")
+  proveedorID: ID! @index(name: "byProveedor") # relación con proveedor
+  precioCompra: Float! # PRECIO DE COMPRA (por unidad)
+  productoPrecios: [ProductoPrecios] @hasMany(indexName: "byProducto", fields: ["id"])
+  estado: String
+  invoiceItems: [InvoiceItem] @hasMany(indexName: "byProducto", fields: ["id"])
+  orderItems: [OrderItem] @hasMany(indexName: "byProducto", fields: ["id"])
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+
+
+type ProductoPrecios
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["admin"], operations: [create, read, update, delete] },
+      { allow: groups, groups: ["vendedor"], operations: [read, update, create] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  nombre: String! # Ej: "público", "combo", "cliente especial"
+  precio: Float!  # Precio total por 'quantity'
+  quantity: Int!  # Cuántos productos incluye este precio
+  productoID: ID! @index(name: "byProducto")
+  negocioID: ID! @index(name: "byNegocio", sortKeyFields: ["nombre"])
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type HistorialPrecio
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["admin", "vendedor"], operations: [create, read] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  productoID: ID! @index(name: "byProducto")
+  tipo: String! # "compra" o "venta"
+  precio: Float!
+  fechaInicio: AWSDateTime!
+  fechaFin: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CompraProveedor
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["admin", "vendedor"], operations: [create, read, update] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  proveedorID: ID! @index(name: "byProveedor")
+  negocioID: ID! @index(name: "byNegocio")
+  fechaCompra: AWSDateTime!
+  totalCompra: Float!
+  productos: [CompraItem] @hasMany(indexName: "byCompra", fields: ["id"])
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CompraItem
+  @model
+  @auth(  
+    rules: [
+      { allow: groups, groups: ["admin", "vendedor"], operations: [create, read, update] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  compraID: ID! @index(name: "byCompra")
+  productoID: ID! @index(name: "byProducto")
+  cantidad: Int!
+  precioUnitario: Float!
+  subtotal: Float!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+
+enum TIPOS_PAGO {
+  EFECTIVO
+  TRASNFERENCIA
+}
+
+type Invoice
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  sellerID: String! # sub de cognito de vendedor
+  negocioID: ID! @index(name: "byNegocio")
+  invoiceNumber: String!
+  invoiceDate: AWSDateTime!
+  invoiceReceivedTotal: Float!
+  invoiceReturnedTotal: Float!
+  invoiceType: TIPOS_PAGO
+  invoiceStatus: String
+  invoiceItems: [InvoiceItem] @hasMany(indexName: "byInvoice", fields: ["id"])
+  invoiceImages: [String]
+  isDeleted: Boolean @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  cajaID: ID @index(name: "byCaja")
+  cajaMovimientoID: ID @index(name: "byCajaMovimiento")
+  cierreCajaID: ID @index(name: "byCierreCaja")
+}
+
+type InvoiceItem
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  invoiceID: ID! @index(name: "byInvoice")
+  productoID: ID! @index(name: "byProducto")
+  quantity: Int!
+  tax: Int
+  subtotal: Float!
+  total: Float!
+  isDeleted: Boolean @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Order
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  sellerID: String! # sub de cognito de vendedor
+  negocioID: ID! @index(name: "byNegocio")
+  orderNumber: String!
+  orderDate: AWSDateTime!
+  orderReceivedTotal: Float!
+  orderReturnedTotal: Float!
+  orderType: TIPOS_PAGO
+  orderStatus: String
+  orderItems: [OrderItem] @hasMany(indexName: "byOrder", fields: ["id"])
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  cajaID: ID @index(name: "byCaja")
+  cajaMovimientoID: ID @index(name: "byCajaMovimiento")
+  cierreCajaID: ID @index(name: "byCierreCaja")
+}
+
+type OrderItem
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  orderID: ID! @index(name: "byOrder")
+  productoID: ID! @index(name: "byProducto")
+  quantity: Int!
+  tax: Int
+  subtotal: Float!
+  total: Float!
+  isDeleted: Boolean @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type SesionDispositivo
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["superadmin"] }
+      {
+        allow: groups
+        groups: ["admin"]
+        operations: [read, update, create, delete]
+      }
+      {
+        allow: groups
+        groups: ["vendedor"]
+        operations: [read, create, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  negocioId: ID! @index(name: "byNegocio")
+  userId: String!
+  deviceId: String!
+  deviceType: String! # "PC" o "MOVIL"
+  deviceInfo: String
+  isActive: Boolean!
+  lastActivity: AWSDateTime!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Caja
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin"]
+        operations: [create, read, update, delete]
+      }
+      { allow: groups, groups: ["vendedor"], operations: [read, update] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  negocioID: ID! @index(name: "byNegocio")
+  isDeleted: Boolean! @default(value: "false")
+  saldoInicial: Float!
+  isActive: Boolean!
+  cajaMonedas: [CajaMoneda] @hasMany(indexName: "byCaja", fields: ["id"])
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CajaMoneda
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  cajaID: ID! @index(name: "byCaja")
+  negocioID: ID! @index(name: "byNegocio")
+  moneda: String! # Ej: USD
+  denominacion: Float! # Ej: 0.10
+  monto: Float! # 10 centavos de dolar
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CajaMovimiento
+  @model
+  @auth(
+    rules: [
+     {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  cajaID: ID! @index(name: "byCaja")
+  tipo: String! # "INGRESO" o "EGRESO"
+  origen: String! # "Factura" o "Orden"
+  monto: Float!
+  negocioID: ID! @index(name: "byNegocio")
+  descripcion: String
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CierreCaja
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  cajaID: ID! @index(name: "byCaja")
+  negocioID: ID! @index(name: "byNegocio")
+  saldoFinal: Float!
+  diferencia: Float!
+  observaciones: String
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CierreCajaHistorial
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  cierreCajaID: ID! @index(name: "byCierreCaja")
+  fechaCierre: AWSDateTime!
+  usuarioID: String!
+  negocioID: ID! @index(name: "byNegocio")
+  isDeleted: Boolean! @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Auditoria
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["superadmin", "admin"], operations: [create, read] }
+    ]
+  ) {
+  id: ID! @primaryKey
+  userId: String!
+  grupo: String!
+  accion: String! # ejemplo: "CREAR_FACTURA", "ELIMINAR_PRODUCTO"
+  entidad: String! # ejemplo: "Producto", "Invoice"
+  entidadId: String
+  descripcion: String
+  fecha: AWSDateTime!
+  negocioID: ID! @index(name: "byNegocio")
+}

@@ -1,0 +1,27 @@
+{
+  "resourceName": "s322de2a4c",
+  "policyUUID": "22de2a4c",
+  "bucketName": "compaexpress424eaba516da45279e1a48e732ddb495",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "groupAccess": {
+    "superadmin": [
+      "CREATE_AND_UPDATE",
+      "READ",
+      "DELETE"
+    ],
+    "admin": [
+      "CREATE_AND_UPDATE",
+      "READ"
+    ],
+    "vendedor": [
+      "CREATE_AND_UPDATE",
+      "READ"
+    ]
+  }
+}
