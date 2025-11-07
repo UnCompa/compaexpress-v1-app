@@ -328,8 +328,9 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Text('Gestionar Inventario'),
         backgroundColor: const Color(0xFF1565C0),
@@ -370,7 +371,7 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
               children: [
                 // Filtros y búsqueda
                 Container(
-                  color: Colors.white,
+                  color: theme.colorScheme.surface,
                   padding: EdgeInsets.all(16),
                   child: Column(
                     children: [
@@ -521,7 +522,7 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                               itemCount: _filteredProducts.length,
                               itemBuilder: (context, index) {
                                 final product = _filteredProducts[index];
-                                return _buildProductCard(product);
+                                return _buildProductCard(product, theme);
                               },
                             );
                           },
@@ -550,7 +551,7 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
     );
   }
 
-  Widget _buildProductCard(Producto product) {
+  Widget _buildProductCard(Producto product, ThemeData theme) {
     return FutureBuilder<List<ProductoPrecios>>(
       future: _getProductoPrecios(product.id),
       builder: (context, snapshot) {
@@ -615,12 +616,12 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
-                                color: Colors.grey[200],
+                                color: theme.colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 Icons.image,
-                                color: Colors.grey[600],
+                                color: theme.colorScheme.primary,
                                 size: 30,
                               ),
                             );
@@ -631,12 +632,12 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.image,
-                            color: Colors.grey[600],
+                            color: theme.colorScheme.primary,
                             size: 30,
                           ),
                         ),
@@ -743,13 +744,13 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             'Cargando precios...',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: theme.colorScheme.primary,
                               fontSize: 12,
                             ),
                           ),
@@ -762,7 +763,7 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green[50],
+                              color: theme.colorScheme.surface,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -800,13 +801,13 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _getCategoryName(product.categoriaID),
                           style: TextStyle(
-                            color: Colors.blue[700],
+                            color: theme.colorScheme.secondary,
                             fontSize: 12,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -820,7 +821,7 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: product.estado == 'activo'
-                              ? Colors.green[50]
+                              ? theme.colorScheme.surface
                               : Colors.red[50],
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -828,8 +829,8 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                           product.estado?.toUpperCase() ?? 'N/A',
                           style: TextStyle(
                             color: product.estado == 'activo'
-                                ? Colors.green[700]
-                                : Colors.red[700],
+                                ? theme.colorScheme.tertiary
+                                : theme.colorScheme.error,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),

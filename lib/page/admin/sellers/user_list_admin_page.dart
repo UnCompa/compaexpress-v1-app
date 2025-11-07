@@ -98,9 +98,9 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         final usersResponse = UsersResponse.fromJson(jsonData);
-
+        final userActives = usersResponse.users.where((user) => user.enabled).toList();
         setState(() {
-          users = usersResponse.users;
+          users = userActives;
           isLoading = false;
         });
       } else {
@@ -136,15 +136,16 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           'Gestión de vendedores',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         elevation: 0,
         actions: [
           IconButton(
@@ -159,8 +160,8 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
           Navigator.of(context).pushNamed(Routes.adminViewUsersCrear);
         },
         label: Text("Agregar vendedor"),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         icon: Icon(Icons.add),
       ),
       body: Column(
@@ -170,7 +171,7 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Color(0xFF1565C0),
+              color: theme.colorScheme.primary,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
@@ -181,15 +182,15 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
                 Text(
                   'Total de Usuarios',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: theme.colorScheme.onPrimary,
                     fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   users.length.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),

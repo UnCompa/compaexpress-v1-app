@@ -51,12 +51,13 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('Crear Nueva Caja'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         elevation: 2,
         actions: [
           Container(
@@ -75,8 +76,8 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
                   : const Icon(Icons.save, size: 18),
               label: const Text('GUARDAR'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.secondary,
+                foregroundColor: theme.colorScheme.onSecondary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -95,7 +96,7 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCajaInfoSection(),
+                    _buildCajaInfoSection(theme),
                     const SizedBox(height: 24),
                     _buildMonedasSection(),
                   ],
@@ -109,7 +110,7 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
     );
   }
 
-  Widget _buildCajaInfoSection() {
+  Widget _buildCajaInfoSection(ThemeData theme) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -123,12 +124,12 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.add_circle,
-                    color: Colors.blue.shade600,
+                    color: theme.colorScheme.onPrimary,
                     size: 20,
                   ),
                 ),
@@ -146,7 +147,7 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
                 labelText: 'Saldo Inicial',
                 prefixIcon: Icon(
                   Icons.attach_money,
-                  color: Colors.green.shade600,
+                  color: theme.colorScheme.primary,
                 ),
                 prefixText: '\$ ',
                 border: OutlineInputBorder(
@@ -154,7 +155,7 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                  borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                 ),
                 helperText: 'Ingrese el saldo inicial de la caja',
                 fillColor: Colors.grey[50],
@@ -181,12 +182,12 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _isActive ? Colors.green.shade50 : Colors.orange.shade50,
+                color: _isActive ? theme.colorScheme.primary : theme.colorScheme.error,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _isActive
-                      ? Colors.green.shade200
-                      : Colors.orange.shade200,
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.error,
                 ),
               ),
               child: Row(
@@ -197,15 +198,7 @@ class _AdminCajaCreatePageState extends State<AdminCajaCreatePage> {
                       setState(() {
                         _isActive = value ?? true;
                       });
-                    },
-                    activeColor: Colors.green.shade600,
-                  ),
-                  Icon(
-                    _isActive ? Icons.check_circle : Icons.pause_circle,
-                    color: _isActive
-                        ? Colors.green.shade600
-                        : Colors.orange.shade600,
-                    size: 20,
+                    },                  
                   ),
                   const SizedBox(width: 8),
                   Text(

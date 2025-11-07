@@ -7,6 +7,14 @@ import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/product/product_controller.dart';
 import 'package:compaexpress/services/product/product_service.dart';
 import 'package:compaexpress/services/proveedor/proveedor_service.dart';
+import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
+import 'package:compaexpress/widget/ui/barcode_field.dart';
+import 'package:compaexpress/widget/ui/custom_buttons.dart';
+import 'package:compaexpress/widget/ui/custom_dropdown.dart';
+// Importar los widgets personalizados
+import 'package:compaexpress/widget/ui/custom_text_field.dart';
+import 'package:compaexpress/widget/ui/image_picker_section.dart';
+import 'package:compaexpress/widget/ui/price_section_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,7 +22,7 @@ import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
 
 class AdminCreateInventoryProduct extends StatefulWidget {
-  final String negocioID; // ID del negocio al que pertenece el producto
+  final String negocioID;
 
   const AdminCreateInventoryProduct({super.key, required this.negocioID});
 
@@ -26,6 +34,8 @@ class AdminCreateInventoryProduct extends StatefulWidget {
 class _AdminCreateInventoryProductState
     extends State<AdminCreateInventoryProduct> {
   final _formKey = GlobalKey<FormState>();
+
+  // Controllers
   final _nombreController = TextEditingController();
   final _precioCompraController = TextEditingController();
   final _tipoCompraController = TextEditingController();
@@ -33,20 +43,19 @@ class _AdminCreateInventoryProductState
   final _stockController = TextEditingController();
   final _barCodeController = TextEditingController();
 
+  // Estados de carga
   bool _isLoading = false;
   bool _isLoadingCategorias = true;
   bool _isLoadingProveedores = true;
   bool _isUploadingImages = false;
   bool _isFavorite = false;
 
-  // Listas y variables para categorías
+  // Datos
   List<Categoria> _categorias = [];
   List<Categoria> _categoriasFiltradas = [];
   Categoria? _categoriaSeleccionada;
-  //Listar los proveedores
   List<Proveedor> _proveedores = [];
   Proveedor? _proveedorSeleccionado;
-  // Variables para imágenes
   List<File> _imagenesSeleccionadas = [];
   final ImagePicker _picker = ImagePicker();
 
@@ -54,7 +63,7 @@ class _AdminCreateInventoryProductState
   String _estadoSeleccionado = 'activo';
   final List<String> _estadosDisponibles = ['activo', 'inactivo', 'agotado'];
 
-  // Variables para precios múltiples
+  // Precios
   final List<Map<String, TextEditingController>> _preciosControllers = [];
 
   @override
@@ -62,7 +71,6 @@ class _AdminCreateInventoryProductState
     super.initState();
     _cargarCategorias();
     _cargarProveedores();
-    // Inicializar con un precio por defecto
     _agregarPrecio();
   }
 
@@ -70,6 +78,7 @@ class _AdminCreateInventoryProductState
   void dispose() {
     _nombreController.dispose();
     _precioCompraController.dispose();
+    _tipoCompraController.dispose();
     _descripcionController.dispose();
     _stockController.dispose();
     _barCodeController.dispose();
@@ -80,6 +89,8 @@ class _AdminCreateInventoryProductState
     }
     super.dispose();
   }
+
+  // ========== MÉTODOS DE CARGA DE DATOS ==========
 
   Future<void> _cargarCategorias() async {
     try {
@@ -98,9 +109,7 @@ class _AdminCreateInventoryProductState
       }
     } catch (e) {
       safePrint('Error cargando categorías: $e');
-      setState(() {
-        _isLoadingCategorias = false;
-      });
+      setState(() => _isLoadingCategorias = false);
       _mostrarError('Error al cargar las categorías');
     }
   }
@@ -114,12 +123,53 @@ class _AdminCreateInventoryProductState
       });
     } catch (e) {
       safePrint('Error cargando los proveedores: $e');
-      setState(() {
-        _isLoadingProveedores = false;
-      });
+      setState(() => _isLoadingProveedores = false);
       _mostrarError('Error al cargar los proveedores');
     }
   }
+
+  // ========== MANEJO DE CÓDIGO DE BARRAS ==========
+
+  /// Callback para cuando se escanea un código con el lector USB
+  void _onBarcodeScannedFromUSB(String barcode) {
+    setState(() {
+      _barCodeController.text = barcode;
+    });
+
+    // Mostrar feedback visual
+    _mostrarExito('Código escaneado: $barcode');
+
+    // Auto-focus en el siguiente campo (opcional)
+    FocusScope.of(context).nextFocus();
+  }
+
+  /// Escanear código con cámara (método manual)
+  Future<void> _scanBarcodeWithCamera(BuildContext context) async {
+    try {
+      final result = await SimpleBarcodeScanner.scanBarcode(
+        context,
+        barcodeAppBar: const BarcodeAppBar(
+          appBarTitle: 'Escanear Código de Barras',
+          centerTitle: false,
+          enableBackButton: true,
+          backButtonIcon: Icon(Icons.arrow_back_ios),
+        ),
+        isShowFlashIcon: true,
+        delayMillis: 1000,
+        cameraFace: CameraFace.back,
+      );
+      if (result != null && result != '-1') {
+        setState(() {
+          _barCodeController.text = result;
+        });
+      }
+    } catch (e) {
+      safePrint('Error al escanear: $e');
+      _mostrarError('Error al escanear código de barras');
+    }
+  }
+
+  // ========== MÉTODOS DE GESTIÓN DE IMÁGENES ==========
 
   Future<void> _seleccionarImagenes() async {
     try {
@@ -152,11 +202,9 @@ class _AdminCreateInventoryProductState
         imageQuality: 85,
       );
 
-      if (image != null) {
+      if (image != null && _imagenesSeleccionadas.length < 5) {
         setState(() {
-          if (_imagenesSeleccionadas.length < 5) {
-            _imagenesSeleccionadas.add(File(image.path));
-          }
+          _imagenesSeleccionadas.add(File(image.path));
         });
       }
     } catch (e) {
@@ -172,20 +220,15 @@ class _AdminCreateInventoryProductState
   }
 
   Future<List<String>> _subirImagenes() async {
-    if (_imagenesSeleccionadas.isEmpty) {
-      return [];
-    }
+    if (_imagenesSeleccionadas.isEmpty) return [];
 
-    setState(() {
-      _isUploadingImages = true;
-    });
+    setState(() => _isUploadingImages = true);
 
     List<String> uploadedKeys = [];
     const uuid = Uuid();
 
     try {
-      for (int i = 0; i < _imagenesSeleccionadas.length; i++) {
-        final file = _imagenesSeleccionadas[i];
+      for (var file in _imagenesSeleccionadas) {
         final extension = file.path.split('.').last.toLowerCase();
         final keyPath = 'productos/${uuid.v4()}.$extension';
 
@@ -205,13 +248,13 @@ class _AdminCreateInventoryProductState
       _mostrarError('Error al subir las imágenes');
       return [];
     } finally {
-      setState(() {
-        _isUploadingImages = false;
-      });
+      setState(() => _isUploadingImages = false);
     }
 
     return uploadedKeys;
   }
+
+  // ========== MÉTODOS DE GESTIÓN DE PRECIOS ==========
 
   void _agregarPrecio() {
     setState(() {
@@ -232,38 +275,19 @@ class _AdminCreateInventoryProductState
     });
   }
 
+  // ========== MÉTODOS DE CREACIÓN DE PRODUCTO ==========
+
   Future<void> _crearProducto() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validaciones locales
-    if (_categoriaSeleccionada == null) {
-      _mostrarError('Por favor selecciona una categoría');
-      return;
-    }
-    for (var precio in _preciosControllers) {
-      if (precio['nombre']!.text.trim().isEmpty ||
-          precio['cantidad']!.text.trim().isEmpty ||
-          precio['precio']!.text.trim().isEmpty) {
-        _mostrarError('Todos los campos de precios deben estar completos');
-        return;
-      }
-      final valorPrecio = double.tryParse(precio['precio']!.text);
-      if (valorPrecio == null || valorPrecio <= 0) {
-        _mostrarError('Todos los precios deben ser válidos y mayores a 0');
-        return;
-      }
-      final valorCantidad = double.tryParse(precio['cantidad']!.text);
-      if (valorCantidad == null || valorCantidad <= 0) {
-        _mostrarError('Todos las cantidades deben ser válidos y mayores a 0');
-        return;
-      }
-    }
+    if (!_validarFormulario()) return;
 
     // Validaciones remotas
     final validation = await ProductController.validateProductNameAndBarCode(
       _nombreController.text.toLowerCase(),
       _barCodeController.text.toLowerCase(),
     );
+
     if (validation['nameExists']!) {
       _mostrarError('Ya existe un producto con ese nombre.');
       return;
@@ -305,35 +329,12 @@ class _AdminCreateInventoryProductState
         createdAt: now,
         updatedAt: now,
       );
+
       final dataManager = getProductManager();
       final createdProducto = await dataManager.saveDataReturned(producto);
 
       // Crear precios en lote
-      final precioRequests = _preciosControllers.map((precio) {
-        final productoPrecio = ProductoPrecios(
-          nombre: precio['nombre']!.text.trim(),
-          precio: double.parse(precio['precio']!.text),
-          negocioID: widget.negocioID,
-          productoID: createdProducto!.id,
-          quantity: int.parse(precio['cantidad']!.text),
-          isDeleted: false,
-          createdAt: now,
-          updatedAt: now,
-        );
-        return ModelMutations.create(productoPrecio);
-      }).toList();
-
-      final responses = await Future.wait(
-        precioRequests.map(
-          (request) => Amplify.API.mutate(request: request).response,
-        ),
-      );
-      for (var response in responses) {
-        if (response.data == null) {
-          _mostrarError('Error al crear un precio. Intenta de nuevo.');
-          return;
-        }
-      }
+      await _crearPrecios(createdProducto!.id, now);
 
       _mostrarExito('Producto y precios creados exitosamente');
       Navigator.of(context).pop(true);
@@ -347,33 +348,77 @@ class _AdminCreateInventoryProductState
     }
   }
 
+  Future<void> _crearPrecios(String productoID, TemporalDateTime now) async {
+    final precioRequests = _preciosControllers.map((precio) {
+      final productoPrecio = ProductoPrecios(
+        nombre: precio['nombre']!.text.trim(),
+        precio: double.parse(precio['precio']!.text),
+        negocioID: widget.negocioID,
+        productoID: productoID,
+        quantity: int.parse(precio['cantidad']!.text),
+        isDeleted: false,
+        createdAt: now,
+        updatedAt: now,
+      );
+      return ModelMutations.create(productoPrecio);
+    }).toList();
+
+    final responses = await Future.wait(
+      precioRequests.map(
+        (request) => Amplify.API.mutate(request: request).response,
+      ),
+    );
+
+    for (var response in responses) {
+      if (response.data == null) {
+        _mostrarError('Error al crear un precio. Intenta de nuevo.');
+        return;
+      }
+    }
+  }
+
+  bool _validarFormulario() {
+    if (_categoriaSeleccionada == null) {
+      _mostrarError('Por favor selecciona una categoría');
+      return false;
+    }
+
+    if (_proveedorSeleccionado == null) {
+      _mostrarError('Por favor selecciona un proveedor');
+      return false;
+    }
+
+    for (var precio in _preciosControllers) {
+      if (precio['nombre']!.text.trim().isEmpty ||
+          precio['cantidad']!.text.trim().isEmpty ||
+          precio['precio']!.text.trim().isEmpty) {
+        _mostrarError('Todos los campos de precios deben estar completos');
+        return false;
+      }
+
+      final valorPrecio = double.tryParse(precio['precio']!.text);
+      if (valorPrecio == null || valorPrecio <= 0) {
+        _mostrarError('Todos los precios deben ser válidos y mayores a 0');
+        return false;
+      }
+
+      final valorCantidad = double.tryParse(precio['cantidad']!.text);
+      if (valorCantidad == null || valorCantidad <= 0) {
+        _mostrarError('Todas las cantidades deben ser válidas y mayores a 0');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // ========== MÉTODOS DE UTILIDAD ==========
+
   void _handleError(String message, dynamic error) {
     safePrint('Error: $error');
     _mostrarError(message);
     if (mounted) {
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _scanBarcode(BuildContext context) async {
-    try {
-      final result = await SimpleBarcodeScanner.scanBarcode(
-        context,
-        barcodeAppBar: const BarcodeAppBar(
-          appBarTitle: 'Escanear Código de Barras',
-          centerTitle: false,
-          enableBackButton: true,
-          backButtonIcon: Icon(Icons.arrow_back_ios),
-        ),
-        isShowFlashIcon: true,
-        delayMillis: 1000,
-        cameraFace: CameraFace.back,
-      );
-      if (result != null && result != '-1') {
-        _barCodeController.text = result;
-      }
-    } catch (e) {
-      safePrint('Error al escanear: $e');
     }
   }
 
@@ -397,830 +442,307 @@ class _AdminCreateInventoryProductState
     );
   }
 
+  // ========== BUILD ==========
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Crear Producto'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          if (_isFavorite) ...[
-            Container(
-              margin: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.yellow.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isFavorite = false;
-                  });
-                },
-                icon: Icon(Icons.star, color: Colors.yellow[700]),
-                label: Text("Favorito", style: TextStyle(color: Colors.white)),
-              ),
+    return BarcodeListenerWrapper(
+      contextName: 'create_product',
+      onBarcodeScanned: _onBarcodeScannedFromUSB,
+      enabled: !_isLoading && !_isUploadingImages,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Crear Producto'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          actions: [
+            FavoriteToggleButton(
+              isFavorite: _isFavorite,
+              onToggle: () => setState(() => _isFavorite = !_isFavorite),
             ),
-          ] else
-            Container(
-              margin: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isFavorite = true;
-                  });
-                },
-                icon: Icon(Icons.star, color: Colors.grey[100]),
-                label: Text("Favorito", style: TextStyle(color: Colors.white)),
-              ),
-            ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Campo Nombre
-              TextFormField(
-                controller: _nombreController,
-                decoration: _buildInputDecoration(
+          ],
+        ),
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Indicador de lector USB activo
+                _buildUSBReaderIndicator(),
+
+                const SizedBox(height: 16),
+
+                // Nombre del producto
+                CustomTextField(
+                  controller: _nombreController,
                   labelText: "Nombre del Producto *",
                   prefixIcon: Icons.shopping_bag,
+                  textCapitalization: TextCapitalization.words,
+                  inputFormatters: [LengthLimitingTextInputFormatter(50)],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El nombre es obligatorio';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'El nombre debe tener al menos 2 caracteres';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'El nombre es obligatorio';
-                  }
-                  if (value.trim().length < 2) {
-                    return 'El nombre debe tener al menos 2 caracteres';
-                  }
-                  return null;
-                },
-                inputFormatters: [LengthLimitingTextInputFormatter(50)],
-                textCapitalization: TextCapitalization.words,
-              ),
 
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _precioCompraController,
-                      decoration: _buildInputDecoration(
+                const SizedBox(height: 16),
+
+                // Precio compra y Tipo
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _precioCompraController,
                         labelText: "Precio compra",
                         prefixIcon: Icons.money_off,
-                      ),
-                      keyboardType: TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(10),
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d{0,2}'),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
                         ),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'El precio de compra es obligatorio';
-                        }
-                        final precio = double.tryParse(value);
-                        if (precio == null) {
-                          return 'Ingresa un precio de compra válido';
-                        }
-                        if (precio <= 0) {
-                          return 'El precio de compra debe ser mayor a 0';
-                        }
-                        return null;
-                      },
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(10),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}'),
+                          ),
+                        ],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'El precio de compra es obligatorio';
+                          }
+                          final precio = double.tryParse(value);
+                          if (precio == null || precio <= 0) {
+                            return 'El precio debe ser mayor a 0';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _tipoCompraController,
-                      decoration: _buildInputDecoration(
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _tipoCompraController,
                         labelText: "Tipo *",
-                        prefixIcon: Icons.type_specimen_outlined,
                         hintText: "Ej: XL, Normal",
+                        prefixIcon: Icons.type_specimen_outlined,
+                        textCapitalization: TextCapitalization.words,
+                        inputFormatters: [LengthLimitingTextInputFormatter(12)],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'El tipo es obligatorio';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.text,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'El tipo es obligatorio';
-                        }
-                        return null;
-                      },
-                      textCapitalization: TextCapitalization.words,
-                      inputFormatters: [LengthLimitingTextInputFormatter(12)],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Campo Descripción
-              TextFormField(
-                controller: _descripcionController,
-                decoration: _buildInputDecoration(
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Descripción
+                CustomTextField(
+                  controller: _descripcionController,
                   labelText: "Descripción",
-                  prefixIcon: Icons.description,
                   hintText: 'Describe las características del producto',
+                  prefixIcon: Icons.description,
+                  maxLines: 3,
+                  maxLength: 150,
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'La descripción es obligatoria';
+                    }
+                    if (value.trim().length < 5) {
+                      return 'La descripción debe tener al menos 5 caracteres';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'La descripción es obligatoria';
-                  }
-                  if (value.trim().length < 5) {
-                    return 'La descripción debe tener al menos 2 caracteres';
-                  }
-                  return null;
-                },
-                maxLines: 3,
-                maxLength: 150,
-                textCapitalization: TextCapitalization.sentences,
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Selector de Categoría
-              _isLoadingCategorias
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          constraints: BoxConstraints(
-                            minHeight: 24,
-                            minWidth: 24,
-                          ),
-                        ),
-                      ),
-                    )
-                  : DropdownButtonFormField<Categoria>(
-                      value: _categoriaSeleccionada,
-                      decoration: _buildInputDecoration(
-                        labelText: "Categoría *",
-                        prefixIcon: Icons.category,
-                      ),
-                      hint: const Text('Selecciona una categoría'),
-                      items: _categoriasFiltradas.map((categoria) {
-                        return DropdownMenuItem<Categoria>(
-                          value: categoria,
-                          child: Text(categoria.nombre),
-                        );
-                      }).toList(),
-                      onChanged: (Categoria? newValue) {
-                        setState(() {
-                          _categoriaSeleccionada = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Selecciona una categoría';
-                        }
-                        return null;
-                      },
-                    ),
-
-              const SizedBox(height: 16),
-              // Selector de Categoría
-              _isLoadingProveedores
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          constraints: BoxConstraints(
-                            minHeight: 24,
-                            minWidth: 24,
-                          ),
-                        ),
-                      ),
-                    )
-                  : DropdownButtonFormField<Proveedor>(
-                      value: _proveedorSeleccionado,
-                      decoration: _buildInputDecoration(
-                        labelText: "Proveedor *",
-                        prefixIcon: Icons.car_rental,
-                      ),
-                      hint: const Text('Selecciona un Proveedor'),
-                      items: _proveedores.map((proveedor) {
-                        return DropdownMenuItem<Proveedor>(
-                          value: proveedor,
-                          child: Text(proveedor.nombre),
-                        );
-                      }).toList(),
-                      onChanged: (Proveedor? newValue) {
-                        setState(() {
-                          _proveedorSeleccionado = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Selecciona un proveedor';
-                        }
-                        return null;
-                      },
-                    ),
-
-              const SizedBox(height: 16),
-
-              // Sección de Precios
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Precios del Producto *',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ..._preciosControllers.asMap().entries.map((entry) {
-                        int index = entry.key;
-                        var controllers = entry.value;
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            bool isMobile = constraints.maxWidth < 600;
-
-                            return isMobile
-                                ? Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      const SizedBox(height: 8),
-                                      TextFormField(
-                                        controller: controllers['nombre'],
-                                        decoration: _buildInputDecoration(
-                                          labelText: 'Nombre del Precio',
-                                          hintText: 'Ej: Público',
-                                          prefixIcon: Icons.label,
-                                        ),
-                                        textCapitalization:
-                                            TextCapitalization.words,
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'El nombre es obligatorio';
-                                          }
-                                          return null;
-                                        },
-                                        inputFormatters: [
-                                          LengthLimitingTextInputFormatter(20),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: controllers['precio'],
-                                              decoration: _buildInputDecoration(
-                                                labelText: 'Precio',
-                                                hintText: 'Ej: 999.99',
-                                                prefixIcon: Icons.attach_money,
-                                                suffixText: 'USD',
-                                              ),
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter.allow(
-                                                  RegExp(r'^\d*\.?\d{0,2}'),
-                                                ),
-                                                LengthLimitingTextInputFormatter(
-                                                  10,
-                                                ),
-                                              ],
-
-                                              keyboardType:
-                                                  const TextInputType.numberWithOptions(
-                                                    decimal: true,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.trim().isEmpty) {
-                                                  return 'El precio es obligatorio';
-                                                }
-                                                final precio = double.tryParse(
-                                                  value,
-                                                );
-                                                if (precio == null) {
-                                                  return 'Ingresa un precio válido';
-                                                }
-                                                if (precio <= 0) {
-                                                  return 'El precio debe ser mayor a 0';
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller:
-                                                  controllers['cantidad'],
-                                              decoration: _buildInputDecoration(
-                                                labelText: 'Cantidad',
-                                                hintText: 'Ej: 1',
-                                                prefixIcon:
-                                                    Icons.numbers_rounded,
-                                                suffixText: 'USD',
-                                              ),
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                                LengthLimitingTextInputFormatter(
-                                                  5,
-                                                ),
-                                              ],
-
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.trim().isEmpty) {
-                                                  return 'La cantidad es obligatorio';
-                                                }
-                                                final cantidad =
-                                                    double.tryParse(value);
-                                                if (cantidad == null) {
-                                                  return 'Ingresa una cantidad válida';
-                                                }
-                                                if (cantidad <= 0) {
-                                                  return 'La cantidad debe ser mayor a 0';
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            onPressed:
-                                                _preciosControllers.length > 1
-                                                ? () => _eliminarPrecio(index)
-                                                : null,
-                                            icon: const Icon(Icons.delete),
-                                            color: Colors.red,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                    ],
-                                  )
-                                : Padding(
-                                    padding: EdgeInsetsGeometry.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const SizedBox(height: 8),
-                                        Expanded(
-                                          flex: 2,
-                                          child: TextFormField(
-                                            controller: controllers['nombre'],
-                                            decoration: _buildInputDecoration(
-                                              labelText: 'Nombre del Precio',
-                                              hintText: 'Ej: Público',
-                                              prefixIcon: Icons.label,
-                                            ),
-                                            textCapitalization:
-                                                TextCapitalization.words,
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.trim().isEmpty) {
-                                                return 'El nombre es obligatorio';
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          flex: 2,
-                                          child: TextFormField(
-                                            controller: controllers['precio'],
-                                            decoration: _buildInputDecoration(
-                                              labelText: 'Precio',
-                                              hintText: 'Ej: 999.99',
-                                              prefixIcon: Icons.attach_money,
-                                              suffixText: 'USD',
-                                            ),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter.allow(
-                                                RegExp(r'^\d*\.?\d{0,2}'),
-                                              ),
-                                              LengthLimitingTextInputFormatter(
-                                                10,
-                                              ),
-                                            ],
-
-                                            keyboardType:
-                                                const TextInputType.numberWithOptions(
-                                                  decimal: true,
-                                                ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.trim().isEmpty) {
-                                                return 'El precio es obligatorio';
-                                              }
-                                              final precio = double.tryParse(
-                                                value,
-                                              );
-                                              if (precio == null) {
-                                                return 'Ingresa un precio válido';
-                                              }
-                                              if (precio <= 0) {
-                                                return 'El precio debe ser mayor a 0';
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: TextFormField(
-                                            controller: controllers['cantidad'],
-                                            decoration: _buildInputDecoration(
-                                              labelText: 'Cantidad',
-                                              hintText: 'Ej: 1',
-                                              prefixIcon: Icons.numbers_rounded,
-                                              suffixText: 'USD',
-                                            ),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter
-                                                  .digitsOnly,
-                                              LengthLimitingTextInputFormatter(
-                                                5,
-                                              ),
-                                            ],
-
-                                            keyboardType:
-                                                const TextInputType.numberWithOptions(
-                                                  decimal: true,
-                                                ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.trim().isEmpty) {
-                                                return 'La cantidad es obligatorio';
-                                              }
-                                              final cantidad = double.tryParse(
-                                                value,
-                                              );
-                                              if (cantidad == null) {
-                                                return 'Ingresa una cantidad válida';
-                                              }
-                                              if (cantidad <= 0) {
-                                                return 'La cantidad debe ser mayor a 0';
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                        ),
-                                        IconButton(
-                                          onPressed:
-                                              _preciosControllers.length > 1
-                                              ? () => _eliminarPrecio(index)
-                                              : null,
-                                          icon: const Icon(Icons.delete),
-                                          color: Colors.red,
-                                        ),
-                                        const SizedBox(height: 8),
-                                      ],
-                                    ),
-                                  );
-                          },
-                        );
-                      }),
-                      ElevatedButton.icon(
-                        onPressed: _agregarPrecio,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Agregar otro precio'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+                // Categoría
+                CustomDropdownField<Categoria>(
+                  value: _categoriaSeleccionada,
+                  labelText: "Categoría *",
+                  prefixIcon: Icons.category,
+                  hintText: 'Selecciona una categoría',
+                  items: _categoriasFiltradas,
+                  itemLabel: (categoria) => categoria.nombre,
+                  isLoading: _isLoadingCategorias,
+                  onChanged: (value) =>
+                      setState(() => _categoriaSeleccionada = value),
+                  validator: (value) {
+                    if (value == null) return 'Selecciona una categoría';
+                    return null;
+                  },
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Campo Código de Barras
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _barCodeController,
-                      decoration: _buildInputDecoration(
-                        labelText: 'Código de Barras',
-                        hintText: 'Ej: 2500000004957',
-                        prefixIcon: Icons.barcode_reader,
-                        suffixText: 'código',
-                      ),
-                      maxLength: 15,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'El código es obligatorio';
-                        }
-                        return null;
-                      },
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () async {
-                      await _scanBarcode(context);
-                    },
-                    icon: const Icon(Icons.qr_code_scanner),
-                    tooltip: 'Escanear código de barras',
-                  ),
-                ],
-              ),
+                // Proveedor
+                CustomDropdownField<Proveedor>(
+                  value: _proveedorSeleccionado,
+                  labelText: "Proveedor *",
+                  prefixIcon: Icons.car_rental,
+                  hintText: 'Selecciona un Proveedor',
+                  items: _proveedores,
+                  itemLabel: (proveedor) => proveedor.nombre,
+                  isLoading: _isLoadingProveedores,
+                  onChanged: (value) =>
+                      setState(() => _proveedorSeleccionado = value),
+                  validator: (value) {
+                    if (value == null) return 'Selecciona un proveedor';
+                    return null;
+                  },
+                ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Campo Stock
-              TextFormField(
-                controller: _stockController,
-                decoration: _buildInputDecoration(
+                // Sección de Precios
+                PriceSectionWidget(
+                  preciosControllers: _preciosControllers,
+                  onAddPrice: _agregarPrecio,
+                  onDeletePrice: _eliminarPrecio,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Código de Barras con soporte USB y cámara
+                BarcodeTextField(
+                  controller: _barCodeController,
+                  onManualScan: () => _scanBarcodeWithCamera(context),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El código de barras es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Stock
+                CustomTextField(
+                  controller: _stockController,
                   labelText: 'Stock *',
                   hintText: 'Ej: 10',
                   prefixIcon: Icons.inventory,
                   suffixText: 'unidades',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El stock es obligatorio';
+                    }
+                    final stock = int.tryParse(value);
+                    if (stock == null || stock < 0) {
+                      return 'El stock no puede ser negativo';
+                    }
+                    return null;
+                  },
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'El stock es obligatorio';
-                  }
-                  final stock = int.tryParse(value);
-                  if (stock == null) {
-                    return 'Ingresa un stock válido';
-                  }
-                  if (stock < 0) {
-                    return 'El stock no puede ser negativo';
-                  }
-                  return null;
-                },
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Selector de Estado
-              DropdownButtonFormField<String>(
-                value: _estadoSeleccionado,
-                decoration: _buildInputDecoration(
+                // Estado
+                CustomDropdownField<String>(
+                  value: _estadoSeleccionado,
                   labelText: 'Estado *',
-                  hintText: 'Ej: 10',
                   prefixIcon: Icons.toggle_on,
+                  hintText: 'Selecciona el estado',
+                  items: _estadosDisponibles,
+                  itemLabel: (estado) => estado.toUpperCase(),
+                  onChanged: (value) =>
+                      setState(() => _estadoSeleccionado = value!),
                 ),
-                items: _estadosDisponibles.map((estado) {
-                  return DropdownMenuItem<String>(
-                    value: estado,
-                    child: Text(estado.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _estadoSeleccionado = newValue!;
-                  });
-                },
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Sección de Imágenes
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Imágenes del Producto',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Botones para agregar imágenes
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _isLoading
-                                  ? null
-                                  : _seleccionarImagenes,
-                              icon: const Icon(Icons.photo_library),
-                              label: const Text('Galería'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _isLoading ? null : _tomarFoto,
-                              icon: const Icon(Icons.camera_alt),
-                              label: const Text('Cámara'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Vista previa de imágenes
-                      if (_imagenesSeleccionadas.isNotEmpty)
-                        SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _imagenesSeleccionadas.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                margin: const EdgeInsets.only(right: 8),
-                                child: Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(
-                                        _imagenesSeleccionadas[index],
-                                        width: 120,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: GestureDetector(
-                                        onTap: () => _eliminarImagen(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.close,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                      if (_imagenesSeleccionadas.isEmpty)
-                        Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Sin imágenes seleccionadas\n(Máximo 5 imágenes)',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                // Sección de Imágenes
+                ImagePickerSection(
+                  imagenesSeleccionadas: _imagenesSeleccionadas,
+                  onSelectFromGallery: _seleccionarImagenes,
+                  onTakePhoto: _tomarFoto,
+                  onDeleteImage: _eliminarImagen,
+                  isLoading: _isLoading,
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Botón Crear
-              ElevatedButton(
-                onPressed: (_isLoading || _isUploadingImages)
-                    ? null
-                    : _crearProducto,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                // Botón Crear
+                PrimaryButton(
+                  onPressed: _crearProducto,
+                  text: 'Crear Producto',
+                  isLoading: _isLoading || _isUploadingImages,
+                  loadingText: _isUploadingImages
+                      ? 'Subiendo imágenes...'
+                      : 'Creando producto...',
                 ),
-                child: (_isLoading || _isUploadingImages)
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _isUploadingImages
-                                ? 'Subiendo imágenes...'
-                                : 'Creando producto...',
-                          ),
-                        ],
-                      )
-                    : const Text(
-                        'Crear Producto',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              // Botón Cancelar
-              OutlinedButton(
-                onPressed: (_isLoading || _isUploadingImages)
-                    ? null
-                    : () => Navigator.of(context).pop(),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                // Botón Cancelar
+                SecondaryButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  text: 'Cancelar',
+                  isLoading: _isLoading || _isUploadingImages,
                 ),
-                child: const Text('Cancelar', style: TextStyle(fontSize: 16)),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  InputDecoration _buildInputDecoration({
-    required String labelText,
-    required IconData prefixIcon,
-    String? suffixText,
-    String? hintText,
-  }) {
-    return InputDecoration(
-      labelText: labelText,
-      hintText: hintText,
-      labelStyle: TextStyle(color: Colors.blue),
-      prefixIcon: Icon(prefixIcon, color: Colors.blueAccent),
-      suffixText: suffixText,
-      border: OutlineInputBorder(
+  Widget _buildUSBReaderIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[800]!, width: 1),
+        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey[900]!, width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.blue, width: 2.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.red[400]!, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.red[600]!, width: 2.5),
-        borderRadius: BorderRadius.circular(12),
+      child: Row(
+        children: [
+          Icon(Icons.usb, color: Colors.blue[700], size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Lector USB activo - Escanea un código de barras',
+              style: TextStyle(
+                color: Colors.blue[700],
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.5),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

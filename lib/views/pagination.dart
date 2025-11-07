@@ -51,6 +51,7 @@ class PaginationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (totalItems == 0) return const SizedBox.shrink();
 
     final isMobile = MediaQuery.of(context).size.width < 600;
@@ -64,18 +65,7 @@ class PaginationWidget extends StatelessWidget {
         vertical: isMobile ? 8 : 12,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(
-          top: BorderSide(color: Colors.grey[300]!),
-          bottom: BorderSide(color: Colors.grey[300]!),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: theme.colorScheme.surface,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -86,7 +76,7 @@ class PaginationWidget extends StatelessWidget {
               'Página $currentPage de $totalPages ($totalItems elementos)',
               style: TextStyle(
                 fontSize: fontSize,
-                color: Colors.grey[600],
+                color: theme.colorScheme.onSurface,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -106,7 +96,7 @@ class PaginationWidget extends StatelessWidget {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.blue[600]!,
+                        theme.colorScheme.primary,
                       ),
                     ),
                   ),
