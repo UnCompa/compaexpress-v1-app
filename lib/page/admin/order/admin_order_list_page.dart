@@ -14,6 +14,7 @@ import 'package:compaexpress/services/user_service.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/print_order_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -468,7 +469,7 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
             context,
             MaterialPageRoute(builder: (context) => const VendedorOrderCreatePage()),
           );
-          if (result) {
+          if (result == true) {
             _loadOrders();
           }
         },
@@ -703,6 +704,7 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
                         ),
                       ),
                     ),
+                  PrintOrderButton(order: order),
                   if (_roleUser == 'admin')
                     OutlinedButton.icon(
                       onPressed: () => _deleteOrder(order),

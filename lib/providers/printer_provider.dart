@@ -1,4 +1,8 @@
+import 'dart:developer';
+
 import 'package:compaexpress/entities/invoice_with_details.dart';
+import 'package:compaexpress/entities/order_with_details.dart';
+import 'package:compaexpress/providers/admin_account_provider.dart';
 import 'package:compaexpress/providers/invoice_design_provider.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/printer_termal.dart';
@@ -239,11 +243,6 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
       } else if (state.wifiIp != null && state.wifiPort != null) {
         // Imprimir por WiFi usando flutter_thermal_printer
         debugPrint("Imprimiendo por WiFi: ${state.wifiIp}:${state.wifiPort}");
-        final wifiPrinter = Printer(
-          name: "Impresora WiFi",
-          address: "${state.wifiIp}:${state.wifiPort}",
-          connectionType: ConnectionType.NETWORK,
-        );
         final service = FlutterThermalPrinterNetwork(
           state.wifiIp!,
           port: state.wifiPort!,
@@ -272,6 +271,86 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
       }
     } catch (e) {
       debugPrint("Error al imprimir factura: $e");
+      state = state.copyWith(error: e.toString());
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al imprimir: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      state = state.copyWith(isPrinting: false);
+    }
+  }
+
+  Future<void> printOrder(
+    OrderWithDetails orderWithDetails,
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    state = state.copyWith(isPrinting: true, error: null);
+    try {
+      final negocio = await NegocioService.getNegocioById(
+        orderWithDetails.order.negocioID,
+      );
+      final accountData = ref
+          .read(userBusinessProvider)
+          .when(
+            data: (data) => data.imageUrl,
+            error: (error, stackTrace) => null,
+            loading: () => null,
+          );
+      if (negocio == null) throw Exception('Negocio no encontrado');
+      final design = ref.watch(invoiceDesignProvider);
+      log("Logo url: $accountData");
+      final bytes = await PrinterThermal.generarBytesOrden(
+        orderWithDetails,
+        negocio,
+        design: design,
+        logoUrl: accountData,
+      );
+
+      // Determinar qué tipo de impresora usar
+      if (state.selectedBluetoothPrinter != null) {
+        // Imprimir por Bluetooth usando print_bluetooth_thermal
+        debugPrint(
+          "Imprimiendo orden por Bluetooth: ${state.selectedBluetoothPrinter?.name}",
+        );
+        await _printWithBluetooth(state.selectedBluetoothPrinter!, bytes);
+      } else if (state.wifiIp != null && state.wifiPort != null) {
+        // Imprimir por WiFi usando flutter_thermal_printer
+        debugPrint(
+          "Imprimiendo orden por WiFi: ${state.wifiIp}:${state.wifiPort}",
+        );
+        final service = FlutterThermalPrinterNetwork(
+          state.wifiIp!,
+          port: state.wifiPort!,
+        );
+        await service.connect();
+        if (context.mounted) {
+          await service.printTicket(bytes);
+        }
+        await service.disconnect();
+      } else if (state.selectedPrinter != null) {
+        // Imprimir por USB usando flutter_thermal_printer
+        debugPrint("Imprimiendo orden por USB: ${state.selectedPrinter?.name}");
+        await _printWithFlutterThermalPrinter(state.selectedPrinter!, bytes);
+      } else {
+        throw Exception("No hay impresora seleccionada ni WiFi configurada");
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Orden impresa con éxito"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al imprimir orden: $e");
       state = state.copyWith(error: e.toString());
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

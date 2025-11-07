@@ -4,9 +4,9 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/mixin/session_control_mixin.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
-import 'package:compaexpress/page/admin/order/admin_order_create_page.dart';
 import 'package:compaexpress/page/vendedor/caja/vendedor_cierre_caja_page.dart';
 import 'package:compaexpress/page/vendedor/invoice/vendedor_invoice_create_page.dart';
+import 'package:compaexpress/page/vendedor/order/vendedor_order_create_page.dart';
 import 'package:compaexpress/page/vendedor/user/edit_seller_user_page.dart';
 import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/caja_service.dart';
@@ -240,7 +240,7 @@ class _SellerPageState extends State<SellerPage>
                           variant: QuickAccessVariant.primary,
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => CreateOrderScreen(),
+                              builder: (_) => VendedorOrderCreatePage(),
                             ),
                           ),
                           isEnabled: negocio != null && vigenciaValida,

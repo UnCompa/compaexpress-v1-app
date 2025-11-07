@@ -7,6 +7,8 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 // Singleton para manejar el cache de imágenes
 class ImageCacheManager {
@@ -20,16 +22,13 @@ class ImageCacheManager {
   Map<String, String> _memoryCache = {};
   Map<String, DateTime> _cacheTimestamps = {};
 
-  // Obtener URLs desde cache o cargar nuevas
   Future<Map<String, String>> getImageUrls(List<String> imageKeys) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Cargar cache persistente si está vacío el cache en memoria
     if (_memoryCache.isEmpty) {
       await _loadFromPersistentCache(prefs);
     }
 
-    // Filtrar claves que necesitan ser actualizadas
     List<String> keysToLoad = [];
     Map<String, String> result = {};
 
@@ -41,21 +40,18 @@ class ImageCacheManager {
       }
     }
 
-    // Cargar solo las imágenes que no están en cache o están expiradas
     if (keysToLoad.isNotEmpty) {
       try {
         List<String> newUrls = await GetImageFromBucket.getSignedImageUrls(
           s3Keys: keysToLoad,
         );
 
-        // Actualizar cache con nuevas URLs
         for (int i = 0; i < keysToLoad.length && i < newUrls.length; i++) {
           _memoryCache[keysToLoad[i]] = newUrls[i];
           _cacheTimestamps[keysToLoad[i]] = DateTime.now();
           result[keysToLoad[i]] = newUrls[i];
         }
 
-        // Guardar en cache persistente
         await _saveToPersistentCache(prefs);
       } catch (e) {
         print('Error cargando nuevas imágenes: $e');
@@ -108,7 +104,6 @@ class ImageCacheManager {
     }
   }
 
-  // Limpiar cache expirado
   Future<void> cleanExpiredCache() async {
     final now = DateTime.now();
     final expiredKeys = _cacheTimestamps.entries
@@ -127,7 +122,6 @@ class ImageCacheManager {
     }
   }
 
-  // Precarga de imágenes en lotes
   Future<void> preloadImages(
     List<String> imageKeys, {
     int batchSize = 10,
@@ -138,8 +132,6 @@ class ImageCacheManager {
           : imageKeys.length;
       final batch = imageKeys.sublist(i, end);
       await getImageUrls(batch);
-
-      // Pequeña pausa para no sobrecargar
       await Future.delayed(const Duration(milliseconds: 100));
     }
   }
@@ -162,21 +154,34 @@ class ProductQuickSelector extends StatefulWidget {
   State<ProductQuickSelector> createState() => _ProductQuickSelectorState();
 }
 
-class _ProductQuickSelectorState extends State<ProductQuickSelector> {
+class _ProductQuickSelectorState extends State<ProductQuickSelector>
+    with SingleTickerProviderStateMixin {
   final ImageCacheManager _cacheManager = ImageCacheManager();
   final Map<String, String> _productImages = {};
   bool _loadingImages = false;
   final TextEditingController _searchController = TextEditingController();
   List<Producto> _filteredProducts = [];
+  bool _isExpanded = false;
+  late AnimationController _expandController;
+  late Animation<double> _expandAnimation;
 
   @override
   void initState() {
     super.initState();
     _filteredProducts = widget.productos;
-    _loadProductImages();
 
-    // Limpiar cache expirado al inicializar
+    // Configurar animación de expansión/colapso
+    _expandController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _expandController,
+      curve: Curves.easeInOut,
+    );
+
     _cacheManager.cleanExpiredCache();
+    _loadProductImages();
   }
 
   Future<void> _loadProductImages() async {
@@ -185,21 +190,20 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
     });
 
     try {
-      // Obtener todas las claves de imagen disponibles
       List<String> visibleImageKeys = _getVisibleProductImageKeys();
       List<String> allImageKeys = _getAllProductImageKeys();
 
-      // Cargar primero las imágenes visibles
       if (visibleImageKeys.isNotEmpty) {
         Map<String, String> visibleImages = await _cacheManager.getImageUrls(
           visibleImageKeys,
         );
-        setState(() {
-          _productImages.addAll(visibleImages);
-        });
+        if (mounted) {
+          setState(() {
+            _productImages.addAll(visibleImages);
+          });
+        }
       }
 
-      // Precargar el resto de imágenes en segundo plano
       List<String> remainingKeys = allImageKeys
           .where((key) => !visibleImageKeys.contains(key))
           .toList();
@@ -210,15 +214,16 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
     } catch (e) {
       print('Error cargando imágenes: $e');
     } finally {
-      setState(() {
-        _loadingImages = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loadingImages = false;
+        });
+      }
     }
   }
 
-  // Obtener claves de imágenes para productos visibles (primeros en la lista)
   List<String> _getVisibleProductImageKeys() {
-    const int visibleCount = 12; // Aproximadamente lo que se ve en pantalla
+    const int visibleCount = 12;
 
     return _filteredProducts
         .take(visibleCount)
@@ -227,7 +232,6 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
         .toList();
   }
 
-  // Obtener todas las claves de imagen
   List<String> _getAllProductImageKeys() {
     return widget.productos
         .where((p) => p.productoImages != null && p.productoImages!.isNotEmpty)
@@ -235,7 +239,6 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
         .toList();
   }
 
-  // Precargar imágenes restantes en segundo plano
   Future<void> _preloadRemainingImages(List<String> imageKeys) async {
     try {
       Map<String, String> remainingImages = await _cacheManager.getImageUrls(
@@ -265,7 +268,6 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
       }
     });
 
-    // Cargar imágenes de productos filtrados si es necesario
     _loadFilteredProductImages();
   }
 
@@ -300,7 +302,7 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('No hay precios configurados para ${producto.nombre}'),
-          backgroundColor: Colors.orange,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -324,281 +326,400 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${producto.nombre} agregado correctamente'),
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         duration: const Duration(seconds: 1),
       ),
     );
   }
 
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _expandController.forward();
+      } else {
+        _expandController.reverse();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = (screenWidth / 200).floor().clamp(2, 6);
 
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Selector Rápido',
-                  style: Theme.of(context).textTheme.titleLarge,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header colapsable
+          InkWell(
+            onTap: _toggleExpanded,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withOpacity(0.3),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
                 ),
-                Row(
-                  children: [
-                    if (_loadingImages)
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.flash_on, color: Colors.amber),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Buscador
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Buscar producto...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100],
               ),
-              onChanged: _filterProducts,
-            ),
-            const SizedBox(height: 16),
-
-            // Grid de productos
-            _filteredProducts.isEmpty
-                ? Container(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 40,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No se encontraron productos',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  )
-                : SizedBox(
-                    height: 300,
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemCount: _filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        final producto = _filteredProducts[index];
-                        final imageKey = producto.productoImages?.first;
-                        final imageUrl = imageKey != null
-                            ? _productImages[imageKey]
-                            : null;
-
-                        return _buildProductCard(producto, imageUrl);
-                      },
-                    ),
-                  ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProductCard(Producto producto, String? imageUrl) {
-    final hasStock = producto.stock > 0;
-    final precios = widget.productoPrecios[producto.id] ?? [];
-    final hasPrice = precios.isNotEmpty;
-
-    return InkWell(
-      onTap: hasStock && hasPrice ? () => _selectProduct(producto) : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: hasStock && hasPrice ? Colors.grey[300]! : Colors.red[200]!,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: hasStock && hasPrice ? Colors.white : Colors.grey[100],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Imagen del producto con hero animation para mejor UX
-            Hero(
-              tag: 'product_${producto.id}',
-              child: Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
-                  color: Colors.grey[200],
-                ),
-                child: imageUrl != null
-                    ? ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(8),
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          fadeInDuration: const Duration(milliseconds: 200),
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.image_not_supported,
-                            size: 30,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.image, size: 30, color: Colors.grey),
-              ),
-            ),
-
-            // Información del producto
-            Container(
-              height: 80,
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    producto.nombre,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      color: hasStock && hasPrice ? Colors.black : Colors.grey,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            hasStock ? Icons.check_circle : Icons.cancel,
-                            color: hasStock ? Colors.green : Colors.red,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            'Stock: ${producto.stock}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: hasStock
-                                  ? Colors.green[800]
-                                  : Colors.red[800],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.flash_on,
+                        color: colorScheme.primary,
+                        size: 24,
                       ),
-                      const SizedBox(height: 2),
-                      if (hasPrice)
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.attach_money,
-                              color: Colors.blue[700],
-                              size: 14,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '\$${precios.first.precio.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue[700],
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(width: 8),
+                      Text(
+                        'Selector Rápido de Productos',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
                         ),
-                      if (!hasPrice)
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red[700],
-                              size: 12,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      if (_loadingImages)
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              colorScheme.primary,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Sin precio',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.red[700],
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
+                      const SizedBox(width: 12),
+                      AnimatedRotation(
+                        turns: _isExpanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          color: colorScheme.primary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
+          ),
 
-            // Indicador de disponibilidad
-            if (!hasStock || !hasPrice)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.red[100],
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(8),
+          // Contenido expandible
+          SizeTransition(
+            sizeFactor: _expandAnimation,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Buscador
+                  AnimationConfiguration.synchronized(
+                    duration: const Duration(milliseconds: 400),
+                    child: SlideAnimation(
+                      verticalOffset: 20,
+                      child: FadeInAnimation(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            labelText: 'Buscar producto...',
+                            labelStyle: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: colorScheme.primary,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: colorScheme.outline,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: colorScheme.surfaceContainerHighest,
+                          ),
+                          onChanged: _filterProducts,
+                        ),
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Grid de productos
+                  _filteredProducts.isEmpty
+                      ? AnimationConfiguration.synchronized(
+                          duration: const Duration(milliseconds: 400),
+                          child: FadeInAnimation(
+                            child: Container(
+                              padding: const EdgeInsets.all(32),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 64,
+                                    color: colorScheme.outline,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No se encontraron productos',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      : SizedBox(
+                          height: 400,
+                          child: AnimationLimiter(
+                            child: MasonryGridView.count(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              itemCount: _filteredProducts.length,
+                              itemBuilder: (context, index) {
+                                final producto = _filteredProducts[index];
+                                final imageKey = producto.productoImages?.first;
+                                final imageUrl = imageKey != null
+                                    ? _productImages[imageKey]
+                                    : null;
+
+                                return AnimationConfiguration.staggeredGrid(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 500),
+                                  columnCount: crossAxisCount,
+                                  child: ScaleAnimation(
+                                    child: FadeInAnimation(
+                                      child: _buildProductCard(
+                                        producto,
+                                        imageUrl,
+                                        theme,
+                                        colorScheme,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductCard(
+    Producto producto,
+    String? imageUrl,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    final hasStock = producto.stock > 0;
+    final precios = widget.productoPrecios[producto.id] ?? [];
+    final hasPrice = precios.isNotEmpty;
+    final isAvailable = hasStock && hasPrice;
+
+    return Material(
+      elevation: isAvailable ? 2 : 1,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: isAvailable ? () => _selectProduct(producto) : null,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isAvailable
+                  ? colorScheme.outline.withOpacity(0.3)
+                  : colorScheme.error.withOpacity(0.3),
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            color: isAvailable
+                ? colorScheme.surface
+                : colorScheme.surfaceContainerHighest,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Imagen del producto
+              Hero(
+                tag: 'product_${producto.id}',
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    color: colorScheme.surfaceContainerHighest,
+                  ),
+                  child: imageUrl != null
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            fadeInDuration: const Duration(milliseconds: 300),
+                            placeholder: (context, url) => Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Icon(
+                              Icons.image_not_supported,
+                              size: 32,
+                              color: colorScheme.outline,
+                            ),
+                          ),
+                        )
+                      : Icon(Icons.image, size: 32, color: colorScheme.outline),
                 ),
-                child: Center(
-                  child: Text(
-                    !hasStock ? 'Sin stock' : 'Sin precio',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.red[700],
-                      fontWeight: FontWeight.w500,
+              ),
+
+              // Información del producto
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      producto.nombre,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isAvailable
+                            ? colorScheme.onSurface
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Stock
+                    Row(
+                      children: [
+                        Icon(
+                          hasStock ? Icons.check_circle : Icons.cancel,
+                          color: hasStock
+                              ? colorScheme.primary
+                              : colorScheme.error,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Stock: ${producto.stock}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: hasStock
+                                ? colorScheme.primary
+                                : colorScheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Precio
+                    if (hasPrice)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.attach_money,
+                            color: colorScheme.secondary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '\$${precios.first.precio.toStringAsFixed(2)}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (!hasPrice)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: colorScheme.error,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Sin precio',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+
+              // Badge de estado
+              if (!isAvailable)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.errorContainer,
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(12),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      !hasStock ? 'Sin stock' : 'Sin precio',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -607,6 +728,7 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector> {
   @override
   void dispose() {
     _searchController.dispose();
+    _expandController.dispose();
     super.dispose();
   }
 }

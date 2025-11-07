@@ -8,10 +8,12 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/invoice_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
+import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/utils/denominaciones.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
@@ -443,55 +445,61 @@ class _VendedorCreateInvoiceScreenState
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Crear Factura'),
-          backgroundColor: Colors.blue[800],
-          foregroundColor: Colors.white,
-          actions: [
-            _isLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+    return BarcodeListenerWrapper(
+      onBarcodeScanned: _getProductByBarCode,
+      contextName: 'invoice',
+      child: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Crear Factura'),
+            backgroundColor: Colors.blue[800],
+            foregroundColor: Colors.white,
+            actions: [
+              _isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: _validatePagoVsFactura() ? _saveInvoice : null,
+                      icon: const Icon(Icons.save, size: 18),
+                      label: const Text('Guardar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[600],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
-                  )
-                : ElevatedButton.icon(
-                    onPressed: _validatePagoVsFactura() ? _saveInvoice : null,
-                    icon: const Icon(Icons.save, size: 18),
-                    label: const Text('Guardar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[600],
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-          ],
-          bottom: TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: [
-              Tab(icon: Icon(Icons.shopping_cart), text: 'Productos'),
-              Tab(icon: Icon(Icons.receipt_long), text: 'Datos de Factura'),
             ],
+            bottom: TabBar(
+              indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              tabs: [
+                Tab(icon: Icon(Icons.shopping_cart), text: 'Productos'),
+                Tab(icon: Icon(Icons.receipt_long), text: 'Datos de Factura'),
+              ],
+            ),
           ),
+          body: _isLoadingProducts || _isLoadingCaja
+              ? _buildLoadingSection()
+              : TabBarView(
+                  children: [_buildProductsTab(), _buildInvoiceDataTab()],
+                ),
+          floatingActionButton: _buildFloatingActionButtons(),
         ),
-        body: _isLoadingProducts || _isLoadingCaja
-            ? _buildLoadingSection()
-            : TabBarView(
-                children: [_buildProductsTab(), _buildInvoiceDataTab()],
-              ),
-        floatingActionButton: _buildFloatingActionButtons(),
       ),
     );
   }
@@ -682,12 +690,23 @@ class _VendedorCreateInvoiceScreenState
                     const SizedBox(height: 8),
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              flex: isSmallScreen ? 2 : 1,
-                              child: Row(
+                        // Asumiendo isSmallScreen definido, ej: bool isSmallScreen = constraints.maxWidth < 600;
+                        return MasonryGridView.count(
+                          crossAxisCount: isSmallScreen
+                              ? 1
+                              : 3, // Responsivo: 1 columna en small, 3 en large
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          shrinkWrap:
+                              true, // Para que no ocupe todo el espacio vertical
+                          physics:
+                              const NeverScrollableScrollPhysics(), // Si está dentro de un scrollable parent
+                          itemCount: _comprobantePreviewUrl != null
+                              ? 3
+                              : 2, // Ajusta según si hay preview
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return Row(
                                 mainAxisAlignment: isSmallScreen
                                     ? MainAxisAlignment.start
                                     : MainAxisAlignment.center,
@@ -712,12 +731,9 @@ class _VendedorCreateInvoiceScreenState
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Flexible(
-                              flex: isSmallScreen ? 3 : 2,
-                              child: ElevatedButton.icon(
+                              );
+                            } else if (index == 1) {
+                              return ElevatedButton.icon(
                                 onPressed: _pickLogo,
                                 icon: const Icon(Icons.upload_file),
                                 label: Text(
@@ -739,24 +755,57 @@ class _VendedorCreateInvoiceScreenState
                                     isSmallScreen ? 36 : 40,
                                   ),
                                 ),
-                              ),
-                            ),
-                            if (_comprobantePreviewUrl != null) ...[
-                              const SizedBox(width: 12),
-                              Flexible(
-                                flex: isSmallScreen ? 3 : 2,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(
-                                    File(_comprobantePreviewUrl!),
-                                    height: isSmallScreen ? 60 : 80,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                              );
+                            } else if (index == 2 &&
+                                _comprobantePreviewUrl != null) {
+                              return GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return Dialog(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            AspectRatio(
+                                              aspectRatio: 1.0,
+                                              child: Image.file(
+                                                File(_comprobantePreviewUrl!),
+                                                fit: BoxFit.contain,
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: const Text('Cerrar'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: isSmallScreen
+                                        ? 100
+                                        : 200, // Máximo de altura para la imagen
+                                  ),
+                                  child: AspectRatio(
+                                    aspectRatio: 1.0, // Mantiene 1:1
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(
+                                        File(_comprobantePreviewUrl!),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ],
+                              );
+                            }
+                            return const SizedBox.shrink(); // Por seguridad
+                          },
                         );
                       },
                     ),

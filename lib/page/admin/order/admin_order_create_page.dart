@@ -9,6 +9,7 @@ import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
+import 'package:compaexpress/widget/ui/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -640,16 +641,10 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            CustomTextField(
               controller: _orderNumberController,
-              decoration: InputDecoration(
-                labelText: 'Número de Orden',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100],
-              ),
+              prefixIcon: Icons.numbers,
+              labelText: 'Número de Orden',
               validator: (value) => value == null || value.isEmpty
                   ? 'Ingrese número de orden'
                   : null,
