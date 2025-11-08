@@ -171,6 +171,14 @@ class _AdminPageState extends State<AdminPage>
         isEnabled: negocio != null && vigenciaValida,
       ),
       QuickAccessItem(
+        icon: Icons.attach_money,
+        title: 'Pre-Orden',
+        subtitle: 'Crea una pre-orden',
+        variant: QuickAccessVariant.primary,
+        onTap: () => Navigator.of(context).pushNamed(Routes.preorders),
+        isEnabled: negocio != null && vigenciaValida,
+      ),
+      QuickAccessItem(
         icon: Icons.add,
         title: 'Añadir producto',
         subtitle: 'Crea un producto',
@@ -384,41 +392,33 @@ class _AdminPageState extends State<AdminPage>
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
-      child: Scaffold(appBar: _buildAppBar(), body: _buildBody()),
+      child: Scaffold(
+        appBar: _buildAppBar(Theme.of(context)),
+        body: _buildBody(),
+      ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(ThemeData theme) {
     return AppBar(
       title: Text(
         negocio?.nombre != null
             ? 'Panel de Administración\n${negocio!.nombre}'
             : 'Panel de Administración',
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          fontSize: 18,
-          color: Colors.white,
-          height: 1.2,
-        ),
         textAlign: TextAlign.center,
         softWrap: true,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       centerTitle: true,
-      backgroundColor: const Color(0xFF1565C0),
-      foregroundColor: Colors.white,
-      /* actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: _loadUserAndBusiness,
-          tooltip: 'Actualizar información',
-        ),
-      ], */
-      bottom: const TabBar(
-        indicatorColor: Colors.white,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white70,
+      bottom: TabBar(
+        indicatorColor: theme.colorScheme.onPrimary,
+        labelColor: theme.colorScheme.onPrimary,
+        unselectedLabelColor: theme.colorScheme.onPrimary.withValues(alpha: 0.5),
         tabs: [
           Tab(text: 'General'),
           Tab(text: 'Resumen'),
@@ -510,9 +510,7 @@ class _AdminPageState extends State<AdminPage>
 
   Widget _buildBusinessLogo() {
     return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle),
       child: imageUrl != null
           ? Image.network(
               imageUrl!,

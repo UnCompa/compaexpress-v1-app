@@ -333,8 +333,6 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Text('Gestionar Inventario'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
         elevation: 2,
         actions: [
           IconButton(
@@ -531,8 +529,6 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
         onPressed: () async {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(
@@ -540,6 +536,7 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                   AdminCreateInventoryProduct(negocioID: _negocioID),
             ),
           );
+          if (result == null) return;
 
           if (result) {
             _initializeData();

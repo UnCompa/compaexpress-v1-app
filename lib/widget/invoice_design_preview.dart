@@ -51,7 +51,6 @@ class InvoiceDesignPreview extends ConsumerWidget {
               width: 300,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
                 border: Border.all(color: Colors.grey[300]!),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [

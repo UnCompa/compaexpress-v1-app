@@ -27,13 +27,17 @@ class CustomDropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (isLoading) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            constraints: BoxConstraints(minHeight: 24, minWidth: 24),
+            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            constraints: const BoxConstraints(minHeight: 24, minWidth: 24),
           ),
         ),
       );
@@ -41,34 +45,77 @@ class CustomDropdownField<T> extends StatelessWidget {
 
     return DropdownButtonFormField<T>(
       value: value,
+      menuMaxHeight: 300,
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: const TextStyle(color: Colors.blue),
-        prefixIcon: Icon(prefixIcon, color: Colors.blueAccent),
+        labelStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: onChanged != null
+              ? colorScheme.onSurfaceVariant
+              : colorScheme.onSurface.withOpacity(0.4),
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          color: onChanged != null
+              ? colorScheme.primary
+              : colorScheme.onSurface.withOpacity(0.4),
+        ),
+        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+        ),
+        filled: true,
+        fillColor: theme.scaffoldBackgroundColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[800]!, width: 1),
+          borderSide: BorderSide(color: colorScheme.outline, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[900]!, width: 1),
+          borderSide: BorderSide(color: colorScheme.outline, width: 1),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 2.5),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2.5),
           borderRadius: BorderRadius.circular(12),
         ),
         errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.red[400]!, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.red[600]!, width: 2.5),
+          borderSide: BorderSide(color: colorScheme.error, width: 2.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: colorScheme.onSurface.withOpacity(0.2),
+            width: 1,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      hint: Text(hintText),
+      hint: Text(
+        hintText,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+        ),
+      ),
+      style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
+      icon: Icon(
+        Icons.arrow_drop_down,
+        color: onChanged != null
+            ? colorScheme.onSurfaceVariant
+            : colorScheme.onSurface.withOpacity(0.4),
+      ),
+      dropdownColor: colorScheme.surface,
       items: items.map((item) {
-        return DropdownMenuItem<T>(value: item, child: Text(itemLabel(item)));
+        return DropdownMenuItem<T>(
+          value: item,
+          child: Text(
+            itemLabel(item),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface,
+            ),
+          ),
+        );
       }).toList(),
       onChanged: onChanged,
       validator: validator,

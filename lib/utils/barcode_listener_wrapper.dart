@@ -47,11 +47,13 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
   final FocusNode _focusNode = FocusNode();
 
   // Buffer para rastrear secuencias de teclas y detectar scans en progreso
-  final List<String> _keyBuffer = [];
+  final List<_KeyPress> _keyBuffer = [];
   DateTime? _lastKeyTime;
   static const int _scanTimeoutMs = 100; // Tiempo entre teclas de un scan
-  bool _isScanningBarcode =
-      false; // Flag para detectar si estamos en medio de un scan
+  bool _isScanningBarcode = false; // Flag para detectar si estamos en medio de un scan
+  
+  // Contador de teclas rápidas consecutivas
+  int _rapidKeyCount = 0;
 
   @override
   void initState() {
@@ -92,37 +94,48 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
     final isBarcodeKey =
         (key.keyId >= 0x30 && key.keyId <= 0x39) || // 0-9
         (key.keyId >= 0x60 && key.keyId <= 0x69) || // Numpad 0-9
-        (key.keyId >= 0x41 &&
-            key.keyId <= 0x5A) || // A-Z (algunos códigos tienen letras)
+        (key.keyId >= 0x41 && key.keyId <= 0x5A) || // A-Z
         key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter;
 
     if (!isBarcodeKey) {
       _keyBuffer.clear();
       _isScanningBarcode = false;
+      _rapidKeyCount = 0;
       return false;
     }
 
-    // Si es muy rápido desde la última tecla, probablemente es un scan
-    if (_lastKeyTime != null &&
-        now.difference(_lastKeyTime!).inMilliseconds < _scanTimeoutMs) {
+    // MEJORADO: Detectar teclas rápidas consecutivas
+    if (_lastKeyTime != null) {
+      final timeDiff = now.difference(_lastKeyTime!).inMilliseconds;
+      
+      if (timeDiff < _scanTimeoutMs) {
+        // Tecla muy rápida - incrementar contador
+        _rapidKeyCount++;
+        
+        // Si tenemos 3+ teclas rápidas consecutivas, es definitivamente un scan
+        if (_rapidKeyCount >= 3) {
+          _isScanningBarcode = true;
+          return true;
+        }
+      } else if (timeDiff > 300) {
+        // Tecla lenta - resetear todo (escritura manual)
+        _rapidKeyCount = 0;
+        _isScanningBarcode = false;
+        _keyBuffer.clear();
+        return false;
+      }
+    }
+
+    // CRÍTICO: Solo considerar scan si tenemos evidencia clara
+    // (múltiples teclas rápidas Y un buffer significativo)
+    if (_keyBuffer.length >= 4 && _rapidKeyCount >= 2) {
       _isScanningBarcode = true;
       return true;
     }
 
-    // Si hay múltiples teclas en el buffer, es un scan
-    if (_keyBuffer.length > 2) {
-      _isScanningBarcode = true;
-      return true;
-    }
-
-    // Si no hay actividad rápida, probablemente es escritura manual
-    if (_lastKeyTime != null &&
-        now.difference(_lastKeyTime!).inMilliseconds > 300) {
-      _isScanningBarcode = false;
-    }
-
-    return _isScanningBarcode;
+    // Si no hay suficiente evidencia, asumir escritura manual
+    return _isScanningBarcode && _rapidKeyCount >= 2;
   }
 
   // NUEVO: Determina si la tecla debe ser manejada por el wrapper o dejada pasar
@@ -154,21 +167,9 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
     if (event is! KeyDownEvent) return;
 
     final key = event.logicalKey;
-    final now = DateTime.now();
-
-    // Actualizar buffer de teclas para detección de scans
-    if (_lastKeyTime != null &&
-        now.difference(_lastKeyTime!).inMilliseconds > _scanTimeoutMs) {
-      _keyBuffer.clear();
-    }
-    _lastKeyTime = now;
-    _keyBuffer.add(key.keyLabel);
-    if (_keyBuffer.length > 20) {
-      _keyBuffer.removeAt(0); // Mantener buffer limitado
-    }
 
     log(
-      'Key Event: ${key.keyLabel} (${key.keyId}) - allowKeyboardInput: ${widget.allowKeyboardInput} - buffer: ${_keyBuffer.length}',
+      'Key Event: ${key.keyLabel} (${key.keyId}) - allowKeyboardInput: ${widget.allowKeyboardInput}',
     );
 
     // F2 siempre se maneja sin importar el modo
@@ -259,12 +260,22 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
           final now = DateTime.now();
 
           // Actualizar el buffer ANTES de tomar decisiones
-          if (_lastKeyTime != null &&
-              now.difference(_lastKeyTime!).inMilliseconds > _scanTimeoutMs) {
-            _keyBuffer.clear();
+          if (_lastKeyTime != null) {
+            final timeDiff = now.difference(_lastKeyTime!).inMilliseconds;
+            
+            if (timeDiff > _scanTimeoutMs) {
+              _keyBuffer.clear();
+              
+              // Si el tiempo es muy largo, resetear el flag de scanning
+              if (timeDiff > 300) {
+                _isScanningBarcode = false;
+                _rapidKeyCount = 0;
+              }
+            }
           }
+          
           _lastKeyTime = now;
-          _keyBuffer.add(key.keyLabel);
+          _keyBuffer.add(_KeyPress(key.keyLabel, now));
           if (_keyBuffer.length > 20) {
             _keyBuffer.removeAt(0);
           }
@@ -273,12 +284,15 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
           final isScanInProgress = _isLikelyScanInProgress(event);
 
           log(
-            'onKeyEvent: ${key.keyLabel} - buffer: ${_keyBuffer.length} - isScan: $isScanInProgress - paymentMode: ${widget.allowKeyboardInput}',
+            'onKeyEvent: ${key.keyLabel} - buffer: ${_keyBuffer.length} - rapidCount: $_rapidKeyCount - isScan: $isScanInProgress - paymentMode: ${widget.allowKeyboardInput}',
           );
+
+          // Las letras A-Z solo se bloquean si hay evidencia FUERTE de scan
+          final isAlpha = key.keyId >= 0x41 && key.keyId <= 0x5A;
 
           // CRÍTICO: Si NO está en modo pago Y detectamos un scan en progreso,
           // SIEMPRE consumir la tecla para evitar que cierre la pantalla
-          if (!widget.allowKeyboardInput && isScanInProgress) {
+          if (!widget.allowKeyboardInput && isScanInProgress && !isAlpha) {
             log('🛡️ Blocking key from scan to prevent unwanted actions');
 
             // Si es Enter, asegurarnos de que el scan se complete
@@ -291,6 +305,7 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
                 if (mounted) {
                   setState(() {
                     _isScanningBarcode = false;
+                    _rapidKeyCount = 0;
                     _keyBuffer.clear();
                   });
                 }
@@ -298,6 +313,19 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
             }
 
             return KeyEventResult.handled;
+          }
+
+          // MEJORADO: Para letras, solo bloquear si hay evidencia MUY fuerte
+          if (!widget.allowKeyboardInput && isAlpha && isScanInProgress) {
+            // Solo bloquear si tenemos múltiples teclas rápidas consecutivas
+            if (_rapidKeyCount >= 3) {
+              log('🛡️ Blocking alpha key from rapid scan: ${key.keyLabel}');
+              return KeyEventResult.handled;
+            } else {
+              log('✅ Allowing alpha key (insufficient scan evidence): ${key.keyLabel}');
+              _isScanningBarcode = false;
+              _rapidKeyCount = 0;
+            }
           }
 
           // Determinar si debemos manejar esta tecla (para modo pago)
@@ -321,6 +349,7 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
             // Limpiar el buffer y flag después de un scan completo
             _keyBuffer.clear();
             _isScanningBarcode = false;
+            _rapidKeyCount = 0;
 
             // Solo procesar códigos de barras si:
             // 1. Está habilitado
@@ -356,4 +385,12 @@ class _BarcodeListenerWrapperState extends State<BarcodeListenerWrapper> {
       ),
     );
   }
+}
+
+// Clase helper para rastrear teclas con timestamp
+class _KeyPress {
+  final String key;
+  final DateTime timestamp;
+  
+  _KeyPress(this.key, this.timestamp);
 }

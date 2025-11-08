@@ -44,7 +44,8 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
       _direccionController.text = widget.proveedor!.direccion;
       _paisController.text = widget.proveedor!.pais;
       _ciudadController.text = widget.proveedor!.ciudad;
-      _tiempoEntregaController.text = widget.proveedor!.tiempoEntrega.toString();
+      _tiempoEntregaController.text = widget.proveedor!.tiempoEntrega
+          .toString();
     }
   }
 
@@ -71,7 +72,7 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
         // Actualizar proveedor existente
         final updatedProveedor = widget.proveedor!.copyWith(
           nombre: _nombreController.text.trim(),
-           direccion: _direccionController.text,
+          direccion: _direccionController.text,
           ciudad: _ciudadController.text,
           pais: _paisController.text,
           tiempoEntrega: int.parse(_tiempoEntregaController.text),
@@ -226,7 +227,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: backgroundBlue,
         appBar: _buildAppBar(),
         body: _buildBody(),
         bottomNavigationBar: _buildBottomActions(),
@@ -246,8 +246,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
         ),
       ),
       centerTitle: true,
-      backgroundColor: primaryBlue,
-      foregroundColor: Colors.white,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_rounded),
         onPressed: () async {
@@ -283,7 +281,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -297,10 +294,7 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBlue,
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             child: Icon(
               _isEditing ? Icons.edit_rounded : Icons.add_business_rounded,
               size: 48,
@@ -334,7 +328,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -373,11 +366,7 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
       children: [
         Text(
           'Nombre del Proveedor *',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: darkBlue,
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 4),
         TextFormField(
@@ -391,7 +380,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
             ),
             prefixIcon: Icon(Icons.business_rounded, color: lightBlue),
             filled: true,
-            fillColor: backgroundBlue,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -468,7 +456,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
             ),
             prefixIcon: Icon(Icons.location_on, color: lightBlue),
             filled: true,
-            fillColor: backgroundBlue,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -527,11 +514,7 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
         ),
         Text(
           'Pais del Proveedor *',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: darkBlue,
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 4),
         TextFormField(
@@ -545,7 +528,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
             ),
             prefixIcon: Icon(Icons.flag, color: lightBlue),
             filled: true,
-            fillColor: backgroundBlue,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -622,7 +604,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
             ),
             prefixIcon: Icon(Icons.apartment, color: lightBlue),
             filled: true,
-            fillColor: backgroundBlue,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -699,7 +680,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
             ),
             prefixIcon: Icon(Icons.timer, color: lightBlue),
             filled: true,
-            fillColor: backgroundBlue,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -747,7 +727,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardBlue.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: lightBlue.withOpacity(0.3), width: 1),
       ),
@@ -801,7 +780,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -823,14 +801,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
                           Navigator.pop(context);
                         }
                       },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey[700],
-                  side: BorderSide(color: Colors.grey[400]!),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
                 child: Text(
                   'Cancelar',
                   style: GoogleFonts.poppins(
@@ -845,15 +815,6 @@ class _ProveedorFormPageState extends State<ProveedorFormPage> {
               flex: 2,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveProveedor,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                ),
                 child: _isLoading
                     ? SizedBox(
                         height: 20,

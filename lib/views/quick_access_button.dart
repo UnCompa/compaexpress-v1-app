@@ -20,7 +20,8 @@ class QuickAccessButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = _getColors(variant, isEnabled);
+    final theme = Theme.of(context);
+    final colors = _getColors(context, variant, isEnabled);
 
     return Container(
       decoration: BoxDecoration(
@@ -31,10 +32,10 @@ class QuickAccessButton extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.borderColor, width: 1),
-        boxShadow: isEnabled
+        boxShadow: isEnabled && colors.shadowColor != null
             ? [
                 BoxShadow(
-                  color: colors.shadowColor,
+                  color: colors.shadowColor!,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -53,7 +54,6 @@ class QuickAccessButton extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icono con contenedor destacado más compacto
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -63,10 +63,10 @@ class QuickAccessButton extends StatelessWidget {
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
-                    boxShadow: isEnabled
+                    boxShadow: isEnabled && colors.iconShadowColor != null
                         ? [
                             BoxShadow(
-                              color: colors.iconShadowColor,
+                              color: colors.iconShadowColor!,
                               blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
@@ -76,30 +76,24 @@ class QuickAccessButton extends StatelessWidget {
                   child: Icon(icon, size: 20, color: colors.iconColor),
                 ),
                 const SizedBox(height: 8),
-
-                // Título más compacto
                 Text(
                   title,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: colors.titleColor,
                     letterSpacing: 0.1,
                   ),
                 ),
                 const SizedBox(height: 2),
-
-                // Subtítulo más pequeño
                 Text(
                   subtitle,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 9,
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: colors.subtitleColor,
                     height: 1.1,
                   ),
@@ -112,100 +106,115 @@ class QuickAccessButton extends StatelessWidget {
     );
   }
 
-  _QuickAccessColors _getColors(QuickAccessVariant variant, bool enabled) {
+  _QuickAccessColors _getColors(
+    BuildContext context,
+    QuickAccessVariant variant,
+    bool enabled,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     if (!enabled) {
       return _QuickAccessColors(
-        gradientColors: [Colors.grey[100]!, Colors.grey[200]!],
-        borderColor: Colors.grey[300]!,
-        shadowColor: Colors.transparent,
-        splashColor: Colors.grey[200]!,
-        highlightColor: Colors.grey[100]!,
-        iconGradientColors: [Colors.grey[200]!, Colors.grey[300]!],
-        iconShadowColor: Colors.transparent,
-        iconColor: Colors.grey[400]!,
-        titleColor: Colors.grey[500]!,
-        subtitleColor: Colors.grey[400]!,
+        gradientColors: [
+          theme.disabledColor.withOpacity(0.1),
+          theme.disabledColor.withOpacity(0.05),
+        ],
+        borderColor: theme.disabledColor,
+        shadowColor: null,
+        splashColor: theme.disabledColor.withOpacity(0.1),
+        highlightColor: theme.disabledColor.withOpacity(0.05),
+        iconGradientColors: [
+          theme.disabledColor,
+          theme.disabledColor.withOpacity(0.7),
+        ],
+        iconShadowColor: null,
+        iconColor: theme.colorScheme.onSurface.withOpacity(0.5),
+        titleColor: theme.colorScheme.onSurface.withOpacity(0.5),
+        subtitleColor: theme.colorScheme.onSurface.withOpacity(0.4),
       );
     }
 
     switch (variant) {
       case QuickAccessVariant.primary:
+        final baseColor = colorScheme.primary;
         return _QuickAccessColors(
           gradientColors: [
-            const Color(0xFF1E88E5).withOpacity(0.08),
-            const Color(0xFF1976D2).withOpacity(0.03),
+            baseColor.withOpacity(isDark ? 0.15 : 0.08),
+            baseColor.withOpacity(isDark ? 0.08 : 0.03),
           ],
-          borderColor: const Color(0xFF1976D2).withOpacity(0.3),
-          shadowColor: const Color(0xFF1976D2).withOpacity(0.15),
-          splashColor: const Color(0xFF1976D2).withOpacity(0.1),
-          highlightColor: const Color(0xFF1976D2).withOpacity(0.05),
-          iconGradientColors: [
-            const Color(0xFF1E88E5),
-            const Color(0xFF1976D2),
-          ],
-          iconShadowColor: const Color(0xFF1976D2).withOpacity(0.3),
-          iconColor: Colors.white,
-          titleColor: const Color(0xFF0D47A1),
-          subtitleColor: const Color(0xFF1565C0),
+          borderColor: baseColor.withOpacity(isDark ? 0.4 : 0.3),
+          shadowColor: baseColor.withOpacity(isDark ? 0.2 : 0.15),
+          splashColor: baseColor.withOpacity(isDark ? 0.15 : 0.1),
+          highlightColor: baseColor.withOpacity(isDark ? 0.1 : 0.05),
+          iconGradientColors: [baseColor, baseColor.withOpacity(0.9)],
+          iconShadowColor: baseColor.withOpacity(isDark ? 0.4 : 0.3),
+          iconColor: colorScheme.onPrimary,
+          titleColor: isDark
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.primary,
+          subtitleColor: colorScheme.primary,
         );
 
       case QuickAccessVariant.accent:
+        final baseColor = colorScheme.secondary;
         return _QuickAccessColors(
           gradientColors: [
-            const Color(0xFF42A5F5).withOpacity(0.08),
-            const Color(0xFF2196F3).withOpacity(0.03),
+            baseColor.withOpacity(isDark ? 0.15 : 0.08),
+            baseColor.withOpacity(isDark ? 0.08 : 0.03),
           ],
-          borderColor: const Color(0xFF2196F3).withOpacity(0.3),
-          shadowColor: const Color(0xFF2196F3).withOpacity(0.15),
-          splashColor: const Color(0xFF2196F3).withOpacity(0.1),
-          highlightColor: const Color(0xFF2196F3).withOpacity(0.05),
-          iconGradientColors: [
-            const Color(0xFF42A5F5),
-            const Color(0xFF2196F3),
-          ],
-          iconShadowColor: const Color(0xFF2196F3).withOpacity(0.3),
-          iconColor: Colors.white,
-          titleColor: const Color(0xFF1565C0),
-          subtitleColor: const Color(0xFF1976D2),
+          borderColor: baseColor.withOpacity(isDark ? 0.4 : 0.3),
+          shadowColor: baseColor.withOpacity(isDark ? 0.2 : 0.15),
+          splashColor: baseColor.withOpacity(isDark ? 0.15 : 0.1),
+          highlightColor: baseColor.withOpacity(isDark ? 0.1 : 0.05),
+          iconGradientColors: [baseColor, baseColor.withOpacity(0.9)],
+          iconShadowColor: baseColor.withOpacity(isDark ? 0.4 : 0.3),
+          iconColor: colorScheme.onSecondary,
+          titleColor: isDark
+              ? colorScheme.onSecondaryContainer
+              : colorScheme.secondary,
+          subtitleColor: colorScheme.secondary,
         );
 
       case QuickAccessVariant.light:
+        final baseColor = colorScheme.surfaceContainerHighest;
         return _QuickAccessColors(
           gradientColors: [
-            const Color(0xFFE3F2FD),
-            const Color(0xFFBBDEFB).withOpacity(0.7),
+            baseColor.withOpacity(isDark ? 0.3 : 0.5),
+            baseColor.withOpacity(isDark ? 0.2 : 0.3),
           ],
-          borderColor: const Color(0xFF90CAF9),
-          shadowColor: const Color(0xFF2196F3).withOpacity(0.1),
-          splashColor: const Color(0xFF2196F3).withOpacity(0.08),
-          highlightColor: const Color(0xFF2196F3).withOpacity(0.04),
+          borderColor: colorScheme.outline.withOpacity(isDark ? 0.4 : 0.3),
+          shadowColor: colorScheme.shadow.withOpacity(isDark ? 0.1 : 0.08),
+          splashColor: colorScheme.surfaceTint.withOpacity(0.08),
+          highlightColor: colorScheme.surfaceTint.withOpacity(0.04),
           iconGradientColors: [
-            const Color(0xFF64B5F6),
-            const Color(0xFF42A5F5),
+            colorScheme.primary,
+            colorScheme.primaryContainer,
           ],
-          iconShadowColor: const Color(0xFF2196F3).withOpacity(0.2),
-          iconColor: Colors.white,
-          titleColor: const Color(0xFF0D47A1),
-          subtitleColor: const Color(0xFF1565C0),
+          iconShadowColor: colorScheme.primary.withOpacity(isDark ? 0.3 : 0.2),
+          iconColor: colorScheme.onPrimary,
+          titleColor: colorScheme.onSurface,
+          subtitleColor: colorScheme.onSurfaceVariant,
         );
     }
   }
 }
 
 enum QuickAccessVariant {
-  primary, // Azul oscuro y elegante
-  accent, // Azul medio vibrante
-  light, // Azul claro y suave
+  primary, // Usa colorScheme.primary
+  accent, // Usa colorScheme.secondary
+  light, // Usa colores de superficie
 }
 
 class _QuickAccessColors {
   final List<Color> gradientColors;
   final Color borderColor;
-  final Color shadowColor;
+  final Color? shadowColor;
   final Color splashColor;
   final Color highlightColor;
   final List<Color> iconGradientColors;
-  final Color iconShadowColor;
+  final Color? iconShadowColor;
   final Color iconColor;
   final Color titleColor;
   final Color subtitleColor;

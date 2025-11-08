@@ -84,13 +84,8 @@ type Producto
     rules: [
       {
         allow: groups
-        groups: ["admin"]
+        groups: ["admin", "vendedor"]
         operations: [create, read, update, delete]
-      }
-      {
-        allow: groups
-        groups: ["vendedor"]
-        operations: [read, update, create]
       }
     ]
   ) {

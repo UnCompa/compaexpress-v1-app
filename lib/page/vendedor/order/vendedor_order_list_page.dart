@@ -11,6 +11,7 @@ import 'package:compaexpress/services/user_service.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/print_order_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -304,8 +305,7 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Órdenes del vendedor'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
+
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -319,14 +319,15 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const VendedorOrderCreatePage()),
+            MaterialPageRoute(
+              builder: (context) => const VendedorOrderCreatePage(),
+            ),
           );
           if (result) {
             _loadOrders();
           }
         },
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
+
         tooltip: 'Nueva Orden',
         child: const Icon(Icons.add),
       ),
@@ -548,6 +549,7 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
                         ),
                       ),
                     ),
+                  PrintOrderButton(order: order),
                   if (_roleUser == 'admin')
                     OutlinedButton.icon(
                       onPressed: () => _deleteOrder(order),

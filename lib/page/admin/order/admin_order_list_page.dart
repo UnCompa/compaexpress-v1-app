@@ -452,8 +452,6 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Órdenes'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -473,8 +471,7 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
             _loadOrders();
           }
         },
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
+        
         tooltip: 'Nueva Orden',
         child: const Icon(Icons.add),
       ),

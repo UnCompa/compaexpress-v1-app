@@ -813,8 +813,6 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Facturas'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -836,8 +834,6 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
             _loadInvoices();
           }
         },
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
         tooltip: 'Nueva Factura',
         child: const Icon(Icons.add),
       ),

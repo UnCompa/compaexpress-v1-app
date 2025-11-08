@@ -10,6 +10,8 @@ import 'package:compaexpress/page/admin/categories/admin_categories_list_page.da
 import 'package:compaexpress/page/admin/inventory/admin_view_inventory_screen.dart';
 import 'package:compaexpress/page/admin/invoice/admin_invoice_list_page.dart';
 import 'package:compaexpress/page/admin/order/admin_order_list_page.dart';
+import 'package:compaexpress/page/admin/order/create_preoder_page.dart';
+import 'package:compaexpress/page/admin/order/preorder_page.dart';
 import 'package:compaexpress/page/admin/proveedor/admin_proveedor_list_page.dart';
 import 'package:compaexpress/page/admin/sellers/create_user_admin_page.dart';
 import 'package:compaexpress/page/admin/sellers/user_list_admin_page.dart';
@@ -78,14 +80,14 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeModeProvider);
+    final themePrefs = ref.watch(themeProvider);
 
     return MaterialApp(
       title: 'Login Page',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: themeMode,
+      theme: AppTheme.lightTheme(themePrefs.seedColor),
+      darkTheme: AppTheme.darkTheme(themePrefs.seedColor),
+      themeMode: themePrefs.themeMode,
       home: _isAmplifyConfigured
           ? const AuthCheckScreen()
           : const Scaffold(
@@ -130,6 +132,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         Routes.adminViewOrdenes: (context) => const AdminOrderListScreen(),
         Routes.adminViewProveedores: (context) =>
             const AdminProveedorListPage(),
+        Routes.preorders: (context) => const PreordersPage(),
+        Routes.preordersCreate: (context) => const CreatePreorderPage(),
       },
     );
   }

@@ -7,6 +7,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/page/vendedor/caja/vendedor_cierre_caja_page.dart';
 import 'package:compaexpress/page/vendedor/invoice/vendedor_invoice_create_page.dart';
 import 'package:compaexpress/page/vendedor/order/vendedor_order_create_page.dart';
+import 'package:compaexpress/page/vendedor/seller_settings_page.dart';
 import 'package:compaexpress/page/vendedor/user/edit_seller_user_page.dart';
 import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/caja_service.dart';
@@ -179,26 +180,20 @@ class _SellerPageState extends State<SellerPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Text(
           negocio != null
               ? 'Panel de vendedor\n${negocio!.nombre}'
               : 'Panel de vendedor',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-            color: Colors.white,
-            height: 1.2,
-          ),
           textAlign: TextAlign.center,
           softWrap: true,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF0D47A1),
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -220,7 +215,7 @@ class _SellerPageState extends State<SellerPage>
                     _buildUserInfoCard(),
                     const SizedBox(height: 6),
                     // Prominent menu options
-                     QuickAccessCarousel(
+                    QuickAccessCarousel(
                       items: [
                         QuickAccessItem(
                           icon: Icons.document_scanner,
@@ -245,13 +240,33 @@ class _SellerPageState extends State<SellerPage>
                           ),
                           isEnabled: negocio != null && vigenciaValida,
                         ),
+                        QuickAccessItem(
+                          icon: Icons.attach_money,
+                          title: 'Pre-Orden',
+                          subtitle: 'Crea una pre-orden',
+                          variant: QuickAccessVariant.primary,
+                          onTap: () =>
+                              Navigator.of(context).pushNamed(Routes.preorders),
+                          isEnabled: negocio != null && vigenciaValida,
+                        ),
+                        QuickAccessItem(
+                          icon: Icons.settings,
+                          title: 'Ajustes',
+                          subtitle: 'Configura tu experiencia',
+                          variant: QuickAccessVariant.primary,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => SellerSettingsPage(),
+                            ),
+                          ),
+                          isEnabled: negocio != null && vigenciaValida,
+                        ),
                       ],
                       height: 140,
                     ),
                     Expanded(
                       child: ListView(
                         children: [
-                          
                           _buildOptionTile(
                             icon: Icons.shopping_bag,
                             title: 'Productos',
@@ -302,7 +317,8 @@ class _SellerPageState extends State<SellerPage>
                               final caja = await CajaService.getCurrentCaja();
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => VendedorCierreCajaPage(caja: caja),
+                                  builder: (_) =>
+                                      VendedorCierreCajaPage(caja: caja),
                                 ),
                               );
                             },
@@ -423,7 +439,29 @@ class _SellerPageState extends State<SellerPage>
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    // Asume que 'negocio' y 'vigenciaValida' están disponibles en el contexto del widget padre.
     final bool isEnabled = negocio != null && vigenciaValida;
+    final theme = Theme.of(context);
+
+    // Colores principales del tema
+    final Color primaryColor = theme.colorScheme.primary;
+    final Color disabledColor =
+        theme.disabledColor; // Color estándar para elementos deshabilitados
+
+    // Colores basados en el estado (habilitado/deshabilitado)
+    final Color tileColor = isEnabled
+        ? theme.cardColor
+        : theme.colorScheme.surface;
+    final Color iconColor = isEnabled ? primaryColor : disabledColor;
+    final Color titleColor = isEnabled
+        ? theme.textTheme.titleLarge!.color!
+        : disabledColor.withOpacity(0.7);
+    final Color subtitleColor = isEnabled
+        ? theme.textTheme.bodyMedium!.color!
+        : disabledColor.withOpacity(0.5);
+    final Color borderColor = isEnabled
+        ? primaryColor.withOpacity(0.5)
+        : Colors.grey.withOpacity(0.2);
 
     return GestureDetector(
       onTap: isEnabled ? onTap : null,
@@ -431,21 +469,21 @@ class _SellerPageState extends State<SellerPage>
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+
+        // *** Ajuste de Decoración (Gradiente y Sombra) ***
         decoration: BoxDecoration(
+          color:
+              tileColor, // Usar un color de fondo si no quieres gradiente complejo
           gradient: isEnabled
               ? LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor.withOpacity(0.1),
-                    Theme.of(context).primaryColor.withOpacity(0.05),
+                    primaryColor.withOpacity(0.1),
+                    primaryColor.withOpacity(0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
-              : LinearGradient(
-                  colors: [Colors.grey[200]!, Colors.grey[300]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+              : null, // Sin gradiente cuando está deshabilitado
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -456,72 +494,62 @@ class _SellerPageState extends State<SellerPage>
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(
-            color: isEnabled
-                ? Theme.of(context).primaryColor.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.2),
-            width: 1,
-          ),
+          border: Border.all(color: borderColor, width: 1),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 12,
           ),
+
+          // *** Icono Principal (Adaptado al Tema) ***
           leading: AnimatedScale(
             scale: isEnabled ? 1.0 : 0.9,
             duration: const Duration(milliseconds: 200),
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
+                // Usamos un color de fondo más suave para el icono
                 color: isEnabled
-                    ? Theme.of(context).primaryColor.withOpacity(0.15)
-                    : Colors.grey.withOpacity(0.15),
+                    ? primaryColor.withOpacity(0.15)
+                    : disabledColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 30,
-                color: isEnabled
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey[400],
-              ),
+              child: Icon(icon, size: 30, color: iconColor),
             ),
           ),
+
+          // *** Título (Usando TextTheme del Tema) ***
           title: Text(
             title,
-            style: GoogleFonts.poppins(
+            // Puedes definir este estilo en tu ThemeData como 'titleLarge' o 'headlineSmall'
+            style: theme.textTheme.titleLarge?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: isEnabled ? Colors.black87 : Colors.grey[500],
+              color: titleColor,
             ),
           ),
+
+          // *** Subtítulo (Usando TextTheme del Tema) ***
           subtitle: Text(
             subtitle,
-            style: GoogleFonts.poppins(
+            // Puedes definir este estilo en tu ThemeData como 'bodyMedium' o similar
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: isEnabled ? Colors.grey[600] : Colors.grey[400],
+              color: subtitleColor,
             ),
           ),
+
+          // *** Icono de Trailing (Adaptado al Tema) ***
           trailing: AnimatedOpacity(
             opacity: isEnabled ? 1.0 : 0.5,
             duration: const Duration(milliseconds: 200),
-            child: Icon(
-              Icons.arrow_forward_ios,
-              size: 18,
-              color: isEnabled
-                  ? Theme.of(context).primaryColor
-                  : Colors.grey[400],
-            ),
+            child: Icon(Icons.arrow_forward_ios, size: 18, color: iconColor),
           ),
-          onTap: isEnabled
-              ? () {
-                  // Agregar feedback háptico (si está soportado)
-                  // HapticFeedback.lightImpact();
-                  onTap();
-                }
-              : null,
+          // No es necesario el onTap del ListTile si ya está en el GestureDetector,
+          // pero lo mantengo por si quisieras solo usar el ListTile.
+          // onTap: isEnabled ? onTap : null,
         ),
       ),
     );

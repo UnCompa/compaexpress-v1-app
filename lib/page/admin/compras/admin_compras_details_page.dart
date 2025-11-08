@@ -451,11 +451,8 @@ class _AdminCompraDetailPageState extends State<AdminCompraDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Detalle de Compra'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           if (!_isLoading && !_hasError) ...[

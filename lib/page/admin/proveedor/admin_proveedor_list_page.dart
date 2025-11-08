@@ -81,7 +81,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundBlue,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -110,8 +109,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
         overflow: TextOverflow.ellipsis,
       ),
       centerTitle: true,
-      backgroundColor: primaryBlue,
-      foregroundColor: Colors.white,
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh_rounded),
@@ -126,7 +123,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: primaryBlue,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -145,7 +141,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -386,7 +381,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
   Widget _buildProveedorList() {
     return RefreshIndicator(
       onRefresh: _loadProveedorList,
-      color: primaryBlue,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: filteredProveedores.length,
@@ -402,7 +396,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -427,12 +420,10 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: cardBlue,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.business_rounded,
-                        color: primaryBlue,
                         size: 24,
                       ),
                     ),
@@ -446,7 +437,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: darkBlue,
                             ),
                           ),
                           /*  if (proveedor.email != null)
@@ -556,8 +546,6 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
   Widget _buildFloatingActionButton() {
     return FloatingActionButton.extended(
       onPressed: _addNewProveedor,
-      backgroundColor: primaryBlue,
-      foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
       label: Text(
         'Nuevo Proveedor',
@@ -569,7 +557,10 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
   String _formatDate(TemporalDateTime? dateTime) {
     if (dateTime == null) return 'N/A';
     final date = dateTime.getDateTimeInUtc();
-    return '${date.day}/${date.month}/${date.year}';
+    final hour = date.hour;
+    final minute = date.minute;
+    final formattedDate = '${date.day}/${date.month}/${date.year} $hour:$minute';
+    return formattedDate;
   }
 
   void _showProveedorDetails(Proveedor proveedor) {

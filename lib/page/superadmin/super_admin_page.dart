@@ -1,6 +1,6 @@
 import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/views/logout_button.dart';
-import 'package:compaexpress/widget/theme_switch.dart';
+import 'package:compaexpress/widget/theme_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -46,7 +46,7 @@ class SuperAdminPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            ThemeSwitch(),
+            ThemeManager(),
             /// Gestión de Compradores
             Text(
               'Gestión de Negocios',

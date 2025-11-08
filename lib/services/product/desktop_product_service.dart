@@ -1,6 +1,7 @@
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/Producto.dart';
+import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/product/product_manager.dart';
 import 'package:flutter/material.dart';
 
@@ -58,9 +59,12 @@ class DesktopProductService implements ProductManager {
   @override
   Future<bool> productBarCodeUsed(String barCode) async {
     try {
+      final negocio = await NegocioService.getCurrentUserInfo();
       final request = ModelQueries.list(
         Producto.classType,
-        where: Producto.BARCODE.eq(barCode),
+        where: Producto.BARCODE
+            .eq(barCode)
+            .and(Producto.NEGOCIOID.eq(negocio.negocioId)),
       );
 
       final response = await Amplify.API.query(request: request).response;
@@ -82,13 +86,18 @@ class DesktopProductService implements ProductManager {
     // Consulta única para verificar ambos
     bool nameExists = false;
     bool barCodeExists = false;
+    final negocio = await NegocioService.getCurrentUserInfo();
     final requestForName = ModelQueries.list(
       Producto.classType,
-      where: Producto.NOMBRE.eq(name),
+      where: Producto.NOMBRE.eq(name).and(
+            Producto.NEGOCIOID.eq(negocio.negocioId),
+          ),
     );
     final requestForBarCode = ModelQueries.list(
       Producto.classType,
-      where: Producto.BARCODE.eq(barCode),
+      where: Producto.BARCODE.eq(barCode).and(
+            Producto.NEGOCIOID.eq(negocio.negocioId),
+          ),
     );
 
     final futures = await Future.wait([

@@ -34,7 +34,7 @@ class BarcodeTextField extends StatefulWidget {
 class _BarcodeTextFieldState extends State<BarcodeTextField>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<Color?> _colorAnimation;
+  late Animation<Color?>? _colorAnimation;
   bool _isScanning = false;
 
   @override
@@ -45,10 +45,7 @@ class _BarcodeTextFieldState extends State<BarcodeTextField>
       vsync: this,
     );
 
-    _colorAnimation = ColorTween(
-      begin: Colors.grey[900],
-      end: Colors.green,
-    ).animate(_animationController);
+    _colorAnimation = null;
 
     // Escuchar cambios en el controller para detectar escaneos
     widget.controller.addListener(_onControllerChanged);
@@ -70,6 +67,16 @@ class _BarcodeTextFieldState extends State<BarcodeTextField>
   void _triggerScanAnimation() {
     if (!_isScanning) {
       setState(() => _isScanning = true);
+
+      // Animación de color usando el tema
+      final theme = Theme.of(context);
+      final colorScheme = theme.colorScheme;
+
+      _colorAnimation = ColorTween(
+        begin: colorScheme.outline,
+        end: colorScheme.tertiary, // Verde de éxito del tema
+      ).animate(_animationController);
+
       _animationController.forward().then((_) {
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
@@ -86,51 +93,89 @@ class _BarcodeTextFieldState extends State<BarcodeTextField>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AnimatedBuilder(
-      animation: _colorAnimation,
+      animation: _animationController,
       builder: (context, child) {
         return Row(
           children: [
             Expanded(
               child: TextFormField(
                 controller: widget.controller,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
                 decoration: InputDecoration(
                   labelText: widget.labelText,
                   hintText: widget.hintText,
-                  labelStyle: const TextStyle(color: Colors.blue),
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  ),
+                  labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: _isScanning
+                        ? colorScheme.tertiary
+                        : colorScheme.onSurfaceVariant,
+                  ),
                   prefixIcon: Icon(
                     widget.prefixIcon,
-                    color: _isScanning ? Colors.green : Colors.blueAccent,
+                    color: _isScanning
+                        ? colorScheme.tertiary
+                        : colorScheme.primary,
                   ),
                   suffixText: widget.suffixText,
+                  suffixStyle: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  filled: true,
+                  fillColor: theme.scaffoldBackgroundColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _colorAnimation.value ?? Colors.grey[800]!,
+                      color: _colorAnimation?.value ?? colorScheme.outline,
                       width: 1,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: _colorAnimation.value ?? Colors.grey[900]!,
+                      color: _colorAnimation?.value ?? colorScheme.outline,
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: _isScanning ? Colors.green : Colors.blue,
+                      color: _isScanning
+                          ? colorScheme.tertiary
+                          : colorScheme.primary,
                       width: 2.5,
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.red[400]!, width: 1.5),
+                    borderSide: BorderSide(
+                      color: colorScheme.error,
+                      width: 1.5,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.red[600]!, width: 2.5),
+                    borderSide: BorderSide(
+                      color: colorScheme.error,
+                      width: 2.5,
+                    ),
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: colorScheme.onSurface.withOpacity(0.2),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  counterStyle: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   counterText: widget.maxLength != null ? null : '',
                 ),
@@ -138,6 +183,8 @@ class _BarcodeTextFieldState extends State<BarcodeTextField>
                 validator: widget.validator,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                cursorColor: colorScheme.primary,
+                cursorWidth: 2.0,
               ),
             ),
             if (widget.onManualScan != null) ...[
@@ -146,7 +193,11 @@ class _BarcodeTextFieldState extends State<BarcodeTextField>
                 onPressed: widget.onManualScan,
                 icon: const Icon(Icons.qr_code_scanner),
                 tooltip: 'Escanear con cámara',
-                color: Colors.blue,
+                color: colorScheme.primary,
+                style: IconButton.styleFrom(
+                  backgroundColor: colorScheme.primary.withOpacity(0.1),
+                  padding: const EdgeInsets.all(12),
+                ),
               ),
             ],
           ],

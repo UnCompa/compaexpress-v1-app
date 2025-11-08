@@ -1,5 +1,6 @@
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:compaexpress/entities/order_item_data.dart';
 import 'package:compaexpress/entities/payment_option.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/services/caja_service.dart';
@@ -9,8 +10,8 @@ import 'package:flutter/material.dart';
 class OrderService {
   static Future<String?> saveOrder(
     BuildContext context,
-    GlobalKey<dynamic> formKey,
-    orderItems,
+    GlobalKey<dynamic>? formKey,
+    List<OrderItemData> orderItems,
     double totalOrden,
     double totalPago,
     double cambio,
@@ -21,11 +22,12 @@ class OrderService {
   ) async {
     debugPrint('Iniciando _saveOrder');
 
-    if (!formKey.currentState!.validate()) {
-      debugPrint('Validación del formulario fallida');
-      return null;
+   if (formKey != null && formKey.currentState != null) {
+      if (!formKey.currentState!.validate()) {
+        debugPrint('Validación del formulario fallida');
+        return null;
+      }
     }
-
     if (orderItems.isEmpty) {
       _showSnackBar(context, 'Debe agregar al menos un producto');
       return null;

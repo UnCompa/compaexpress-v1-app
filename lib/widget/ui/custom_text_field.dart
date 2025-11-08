@@ -8,6 +8,8 @@ class CustomTextField extends StatelessWidget {
   final IconData prefixIcon;
   final String? hintText;
   final String? suffixText;
+  final Widget? suffixIcon;
+  final bool obscureText;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
@@ -23,6 +25,8 @@ class CustomTextField extends StatelessWidget {
     required this.prefixIcon,
     this.hintText,
     this.suffixText,
+    this.suffixIcon,
+    this.obscureText = false,
     this.validator,
     this.keyboardType,
     this.inputFormatters,
@@ -34,36 +38,73 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextFormField(
       controller: controller,
       enabled: enabled,
+      obscureText: obscureText,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        labelStyle: const TextStyle(color: Colors.blue),
-        prefixIcon: Icon(prefixIcon, color: Colors.blueAccent),
+        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+        ),
+        labelStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: enabled
+              ? colorScheme.onSurfaceVariant
+              : colorScheme.onSurface.withOpacity(0.4),
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          color: enabled
+              ? colorScheme.primary
+              : colorScheme.onSurface.withOpacity(0.4),
+        ),
         suffixText: suffixText,
+        suffixIcon: suffixIcon,
+        suffixStyle: theme.textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+        filled: true,
+        fillColor: theme.scaffoldBackgroundColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[800]!, width: 1),
+          borderSide: BorderSide(color: colorScheme.outline, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[900]!, width: 1),
+          borderSide: BorderSide(color: colorScheme.outline, width: 1),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 2.5),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2.5),
           borderRadius: BorderRadius.circular(12),
         ),
         errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.red[400]!, width: 1.5),
+          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.red[600]!, width: 2.5),
+          borderSide: BorderSide(color: colorScheme.error, width: 2.5),
           borderRadius: BorderRadius.circular(12),
         ),
+        disabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: colorScheme.onSurface.withOpacity(0.2),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        counterStyle: theme.textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
         counterText: maxLength != null ? null : '',
+      ),
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: enabled
+            ? colorScheme.onSurface
+            : colorScheme.onSurface.withOpacity(0.4),
       ),
       validator: validator,
       keyboardType: keyboardType,
@@ -71,6 +112,8 @@ class CustomTextField extends StatelessWidget {
       textCapitalization: textCapitalization,
       maxLines: maxLines,
       maxLength: maxLength,
+      cursorColor: colorScheme.primary,
+      cursorWidth: 2.0,
     );
   }
 }

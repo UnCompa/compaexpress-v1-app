@@ -29,5 +29,26 @@ class OrderItemData {
       tax: tax ?? this.tax,
     );
   }
-}
 
+  /// 🔹 Convierte la clase a un mapa JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'producto': producto.toJson(),
+      'precio': precio?.toJson(),
+      'quantity': quantity,
+      'tax': tax,
+    };
+  }
+
+  /// 🔹 Crea una instancia desde un mapa JSON
+  factory OrderItemData.fromJson(Map<String, dynamic> json) {
+    return OrderItemData(
+      producto: Producto.fromJson(Map<String, dynamic>.from(json['producto'])),
+      precio: json['precio'] != null
+          ? ProductoPrecios.fromJson(Map<String, dynamic>.from(json['precio']))
+          : null,
+      quantity: json['quantity'] ?? 0,
+      tax: json['tax'] ?? 0,
+    );
+  }
+}

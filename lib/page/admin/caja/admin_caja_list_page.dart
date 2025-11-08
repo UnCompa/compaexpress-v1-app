@@ -63,8 +63,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Administrar Cajas'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        
         elevation: 2,
         actions: [
           IconButton(
@@ -77,7 +76,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
       ),
       body: Column(
         children: [
-          _buildTotalGeneralCard(),
+          _buildTotalGeneralCard(Theme.of(context)),
           PaginationWidget(
             currentPage: currentPage,
             totalItems: _cajas.length,
@@ -98,33 +97,32 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                     ),
                   )
                 : _paginatedCaja.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(Theme.of(context))
                 : _buildCajasList(),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createCaja,
-        backgroundColor: Theme.of(context).primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildTotalGeneralCard() {
+  Widget _buildTotalGeneralCard(ThemeData theme) {
     return Container(
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade600, Colors.blue.shade800],
+          colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -137,12 +135,12 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.account_balance_wallet,
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                   size: 24,
                 ),
               ),
@@ -154,7 +152,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                     Text(
                       'Total General',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -162,8 +160,8 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                     const SizedBox(height: 4),
                     Text(
                       '\$${_totalGeneral.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimary,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
@@ -177,7 +175,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: theme.colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -185,14 +183,14 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
               children: [
                 Icon(
                   Icons.trending_up,
-                  color: Colors.white.withOpacity(0.9),
+                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                   size: 16,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${_cajas.length} cajas activas',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -205,7 +203,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(ThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -213,14 +211,14 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
           Icon(
             Icons.account_balance_wallet_outlined,
             size: 80,
-            color: Colors.grey[400],
+            color: theme.colorScheme.onPrimary.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
             'No hay cajas registradas',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
+              color: theme.colorScheme.onPrimary.withValues(alpha: 0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -242,13 +240,13 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
         itemCount: _paginatedCaja.length,
         itemBuilder: (context, index) {
           final caja = _paginatedCaja[index];
-          return _buildCajaCard(caja);
+          return _buildCajaCard(caja, Theme.of(context));
         },
       ),
     );
   }
 
-  Widget _buildCajaCard(Caja caja) {
+  Widget _buildCajaCard(Caja caja, ThemeData theme) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
@@ -274,12 +272,12 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
+                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 Icons.account_balance_wallet,
-                                color: Colors.blue.shade600,
+                                color: theme.colorScheme.primary,
                                 size: 20,
                               ),
                             ),
@@ -292,7 +290,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.grey[800],
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.8),
                                   ),
                                 ),
                                 Text(
@@ -301,7 +299,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                   ),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[500],
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
                                   ),
                                 ),
                               ],
@@ -319,7 +317,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: caja.isActive ? Colors.green : Colors.orange,
+                          color: caja.isActive ? theme.colorScheme.primary : Colors.orange,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -329,14 +327,14 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                               caja.isActive
                                   ? Icons.check_circle
                                   : Icons.pause_circle,
-                              color: Colors.white,
+                              color: theme.colorScheme.onPrimary,
                               size: 14,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               caja.isActive ? 'Activa' : 'Inactiva',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -347,7 +345,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                       const SizedBox(width: 8),
                       PopupMenuButton<String>(
                         onSelected: (value) => _handleMenuAction(value, caja),
-                        icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                        icon: Icon(Icons.more_vert, color: theme.colorScheme.primary.withValues(alpha: 0.6)),
                         itemBuilder: (context) => [
                           const PopupMenuItem(
                             value: 'editar',
@@ -384,19 +382,20 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                         PopupMenuItem(
                             value: 'cierre',
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.close_fullscreen_rounded,
                                   size: 18,
-                                  color: Colors.black,
+                                  color: theme.colorScheme.primary,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
                                   'Cerrar caja',
-                                  style: TextStyle(color: Colors.black),
+                                  style: TextStyle(color: theme.colorScheme.primary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -440,7 +439,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -484,12 +483,10 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors
-                            .lightBlue
-                            .shade50,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.lightBlue.shade300,
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           width: 1,
                         ),
                       ),
@@ -502,14 +499,14 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                 Icons
                                     .account_balance_wallet, // Ícono más relevante para balance
                                 size: 16,
-                                color: Colors.lightBlue.shade700,
+                                color: theme.colorScheme.primary.withValues(alpha: 0.6),
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 'Balance total',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.lightBlue.shade900,
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.6),
                                   fontWeight: FontWeight
                                       .w600, // Mayor peso para el título
                                 ),
@@ -522,8 +519,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                             style: TextStyle(
                               fontSize:
                                   16, // Tamaño de fuente ligeramente mayor
-                              color: Colors
-                                  .grey[800], // Color más oscuro para contraste
+                              color: theme.colorScheme.primary.withValues(alpha: 0.6), // Color más oscuro para contraste
                               fontWeight:
                                   FontWeight.w700, // Mayor peso para destacar
                             ),

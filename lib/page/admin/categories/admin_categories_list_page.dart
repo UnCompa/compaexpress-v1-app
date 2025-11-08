@@ -114,13 +114,7 @@ class _AdminCategoriesListPageState extends State<AdminCategoriesListPage> {
       appBar: AppBar(
         title: Text(
           'Categorías',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
         ),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -178,8 +172,6 @@ class _AdminCategoriesListPageState extends State<AdminCategoriesListPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );

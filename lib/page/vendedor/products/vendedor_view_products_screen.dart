@@ -327,11 +327,8 @@ class _VendedorViewProductsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
+        appBar: AppBar(
         title: Text('Productos'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
         elevation: 2,
         actions: [
           IconButton(
@@ -368,7 +365,6 @@ class _VendedorViewProductsScreenState
               children: [
                 // Filtros y búsqueda
                 Container(
-                  color: Colors.white,
                   padding: EdgeInsets.all(16),
                   child: Column(
                     children: [

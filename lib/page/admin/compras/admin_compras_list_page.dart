@@ -153,11 +153,10 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Listado de Compras'),
-        backgroundColor: Colors.blue[800], // Azul oscuro
-        foregroundColor: Colors.white, // Texto blanco para contraste
         elevation: 2,
       ),
       floatingActionButton: FloatingActionButton(
@@ -172,15 +171,13 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
             _fetchPurchases();
           }
         },
-        backgroundColor: Colors.blue[600], // Azul medio
-        foregroundColor: Colors.white,
         tooltip: 'Nueva Compra',
         child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
           Container(
-            color: Colors.blue[50], // Fondo azul claro
+            color: theme.colorScheme.primary.withValues(alpha: 0.1), // Fondo azul claro
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
@@ -190,9 +187,9 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                     value: _selectedProveedorId,
                     isExpanded: true,
                     dropdownColor:
-                        Colors.white, // Fondo blanco para el dropdown
-                    style: const TextStyle(
-                      color: Colors.black87,
+                        theme.colorScheme.surface, // Fondo blanco para el dropdown
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
                     ), // Texto oscuro
                     items: [
                       const DropdownMenuItem(
@@ -214,13 +211,13 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                     },
                     underline: Container(
                       height: 2,
-                      color: Colors.blue[300], // Línea azul clara
+                      color: theme.colorScheme.surface.withValues(alpha: 0.6), // Línea azul clara
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.calendar_today, color: Colors.blue),
+                  icon: Icon(Icons.calendar_today, color: theme.colorScheme.primary),
                   onPressed: () => _selectDate(context),
                   tooltip: _selectedDate == null
                       ? 'Filtrar por fecha'
@@ -228,7 +225,7 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                 ),
                 if (_selectedDate != null)
                   IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.blue),
+                    icon: Icon(Icons.clear, color: theme.colorScheme.primary),
                     onPressed: () {
                       setState(() {
                         _selectedDate = null;
@@ -241,14 +238,14 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.blue),
+                ? Center(
+                    child: CircularProgressIndicator(color: theme.colorScheme.primary),
                   )
                 : _purchases.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'No hay compras registradas',
-                      style: TextStyle(color: Colors.blueGrey, fontSize: 16),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
                     ),
                   )
                 : ListView.builder(
@@ -281,27 +278,26 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: Colors.blue[100]!,
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           ), // Borde azul claro
                         ),
-                        color: Colors.white, // Fondo blanco para contraste
+                        color: theme.colorScheme.surface, // Fondo blanco para contraste
                         child: ListTile(
                           title: Text(
                             proveedor.nombre,
                             style: TextStyle(
-                              color: Colors
-                                  .blue[900], // Azul oscuro para el título
+                              color: theme.colorScheme.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           subtitle: Text(
                             'Fecha: ${DateFormat('dd/MM/yyyy').format(purchase.fechaCompra.getDateTimeInUtc())} '
                             'Total: \$${purchase.totalCompra.toStringAsFixed(2)}',
-                            style: TextStyle(color: Colors.blueGrey[600]),
+                            style: TextStyle(color: theme.colorScheme.primary.withValues(alpha: 0.6)),
                           ),
                           trailing: Icon(
                             Icons.arrow_forward,
-                            color: Colors.blue[600], // Azul medio para el ícono
+                            color: theme.colorScheme.primary,
                           ),
                           onTap: () async {
                             final result = await Navigator.of(context).push(

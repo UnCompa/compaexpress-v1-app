@@ -87,12 +87,8 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Cierre de Caja'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
-        elevation: 2,
         actions: [
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -245,7 +241,6 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
                 ),
                 helperText:
                     'Opcional: Ingrese cualquier observación sobre el cierre',
-                fillColor: Colors.grey[50],
                 filled: true,
               ),
               maxLines: 3,
@@ -273,7 +268,6 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -324,13 +318,7 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -345,11 +333,6 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade400, Colors.blue.shade600],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -437,7 +420,6 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
                   horizontal: 12,
                   vertical: 12,
                 ),
-                fillColor: Colors.white,
                 filled: true,
               ),
               keyboardType: TextInputType.number,
@@ -473,12 +455,6 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade100, Colors.white],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        border: Border(top: BorderSide(color: Colors.grey[300]!, width: 2)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -492,7 +468,6 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(

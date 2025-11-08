@@ -445,6 +445,7 @@ class _VendedorCreateInvoiceScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return BarcodeListenerWrapper(
       onBarcodeScanned: _getProductByBarCode,
       contextName: 'invoice',
@@ -453,8 +454,6 @@ class _VendedorCreateInvoiceScreenState
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Crear Factura'),
-            backgroundColor: Colors.blue[800],
-            foregroundColor: Colors.white,
             actions: [
               _isLoading
                   ? const Padding(
@@ -475,8 +474,8 @@ class _VendedorCreateInvoiceScreenState
                       icon: const Icon(Icons.save, size: 18),
                       label: const Text('Guardar'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -484,9 +483,11 @@ class _VendedorCreateInvoiceScreenState
                     ),
             ],
             bottom: TabBar(
-              indicatorColor: Colors.white,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
+              indicatorColor: theme.colorScheme.onPrimary,
+              labelColor: theme.colorScheme.onPrimary,
+              unselectedLabelColor: theme.colorScheme.onPrimary.withValues(
+                alpha: 0.6,
+              ),
               tabs: [
                 Tab(icon: Icon(Icons.shopping_cart), text: 'Productos'),
                 Tab(icon: Icon(Icons.receipt_long), text: 'Datos de Factura'),
@@ -496,9 +497,9 @@ class _VendedorCreateInvoiceScreenState
           body: _isLoadingProducts || _isLoadingCaja
               ? _buildLoadingSection()
               : TabBarView(
-                  children: [_buildProductsTab(), _buildInvoiceDataTab()],
+                  children: [_buildProductsTab(), _buildInvoiceDataTab(theme)],
                 ),
-          floatingActionButton: _buildFloatingActionButtons(),
+          floatingActionButton: _buildFloatingActionButtons(theme),
         ),
       ),
     );
@@ -565,15 +566,11 @@ class _VendedorCreateInvoiceScreenState
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.shopping_cart, color: Colors.blue[800]),
+                        Icon(Icons.shopping_cart),
                         const SizedBox(width: 8),
                         Text(
                           'Productos Seleccionados',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[800],
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ],
                     ),
@@ -588,7 +585,6 @@ class _VendedorCreateInvoiceScreenState
             // Resumen de totales (solo lectura en este tab)
             Card(
               elevation: 2,
-              color: Colors.grey[50],
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -596,7 +592,7 @@ class _VendedorCreateInvoiceScreenState
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calculate, color: Colors.green[700]),
+                        Icon(Icons.calculate),
                         const SizedBox(width: 8),
                         Text(
                           'Resumen',
@@ -641,7 +637,7 @@ class _VendedorCreateInvoiceScreenState
   }
 
   // Tab de Datos de Factura
-  Widget _buildInvoiceDataTab() {
+  Widget _buildInvoiceDataTab(ThemeData theme) {
     final total = _calculateTotal();
     final totalPagado = _getTotalPagos();
     final cambio = _getCambio();
@@ -665,16 +661,12 @@ class _VendedorCreateInvoiceScreenState
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue[800]),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Información Básica',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[800],
-                          ),
+                        Icon(
+                          Icons.info_outline,
+                          color: theme.colorScheme.primary,
                         ),
+                        const SizedBox(width: 8),
+                        Text('Información Básica'),
                       ],
                     ),
 
@@ -743,10 +735,6 @@ class _VendedorCreateInvoiceScreenState
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: Theme.of(
-                                    context,
-                                  ).primaryColor,
                                   side: BorderSide(
                                     color: Theme.of(context).primaryColor,
                                   ),
@@ -814,7 +802,7 @@ class _VendedorCreateInvoiceScreenState
               ),
             ),
             const SizedBox(height: 16),
-            buildTotalAndPagoSection(),
+            buildTotalAndPagoSection(theme),
           ],
         ),
       ),
@@ -822,14 +810,14 @@ class _VendedorCreateInvoiceScreenState
   }
 
   // Floating Action Buttons
-  Widget _buildFloatingActionButtons() {
+  Widget _buildFloatingActionButtons(ThemeData theme) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         FloatingActionButton(
           onPressed: _scanBarcode,
-          backgroundColor: Colors.blue[600],
-          foregroundColor: Colors.white,
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
           tooltip: 'Escanear código',
           heroTag: "scan", // Importante: diferentes heroTag para múltiples FABs
           child: const Icon(Icons.qr_code_scanner),
@@ -837,8 +825,8 @@ class _VendedorCreateInvoiceScreenState
         const SizedBox(height: 8),
         FloatingActionButton.extended(
           onPressed: _addInvoiceItem,
-          backgroundColor: Colors.blue[600],
-          foregroundColor: Colors.white,
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
           label: const Text('Agregar Producto'),
           icon: const Icon(Icons.add),
           tooltip: 'Agregar producto',
@@ -870,7 +858,6 @@ class _VendedorCreateInvoiceScreenState
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                fillColor: Colors.grey[100],
               ),
               validator: (value) => value == null || value.isEmpty
                   ? 'Ingrese número de factura'
@@ -887,7 +874,6 @@ class _VendedorCreateInvoiceScreenState
                   ),
                   suffixIcon: const Icon(Icons.calendar_today),
                   filled: true,
-                  fillColor: Colors.grey[100],
                 ),
                 child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
               ),
@@ -901,7 +887,6 @@ class _VendedorCreateInvoiceScreenState
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                fillColor: Colors.grey[100],
               ),
               items: _statusOptions
                   .map(
@@ -1151,10 +1136,7 @@ class _VendedorCreateInvoiceScreenState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Productos Seleccionados',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Productos Seleccionados'),
                 Row(
                   children: [
                     Text(
@@ -1225,9 +1207,7 @@ class _VendedorCreateInvoiceScreenState
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -1447,7 +1427,6 @@ class _VendedorCreateInvoiceScreenState
           vertical: 16,
         ),
         filled: true,
-        fillColor: Colors.grey[50],
       ),
       items: precios.map((ProductoPrecios precio) {
         return DropdownMenuItem<ProductoPrecios>(
@@ -1494,7 +1473,6 @@ class _VendedorCreateInvoiceScreenState
           vertical: 16,
         ),
         filled: true,
-        fillColor: Colors.grey[50],
       ),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -1562,7 +1540,6 @@ class _VendedorCreateInvoiceScreenState
           vertical: 16,
         ),
         filled: true,
-        fillColor: Colors.grey[50],
       ),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -1586,9 +1563,7 @@ class _VendedorCreateInvoiceScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
       ),
       child: Column(
         children: [
@@ -1619,9 +1594,7 @@ class _VendedorCreateInvoiceScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[200]!),
       ),
       child: Column(
         children: [
@@ -1665,7 +1638,6 @@ class _VendedorCreateInvoiceScreenState
             icon: const Icon(Icons.delete_outline, size: 18),
             label: const Text('Eliminar'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[50],
               foregroundColor: Colors.red,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1798,7 +1770,7 @@ class _VendedorCreateInvoiceScreenState
     );
   }
 
-  Widget buildTotalAndPagoSection() {
+  Widget buildTotalAndPagoSection(ThemeData theme) {
     final total = _calculateTotal();
     final totalPagado = _getTotalPagos();
     final cambio = _getCambio();
@@ -1872,7 +1844,6 @@ class _VendedorCreateInvoiceScreenState
                     child: Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
                         borderRadius: isPaymentSectionExpanded
                             ? BorderRadius.only(
                                 topLeft: Radius.circular(4),
@@ -1894,7 +1865,6 @@ class _VendedorCreateInvoiceScreenState
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey[700],
                               ),
                             ),
                           ),
@@ -1967,13 +1937,15 @@ class _VendedorCreateInvoiceScreenState
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
                                         color: option.seleccionado
-                                            ? Colors.blue[50]
-                                            : Colors.grey[50],
+                                            ? theme.colorScheme.primary
+                                                  .withValues(alpha: 0.4)
+                                            : theme.colorScheme.surface,
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: option.seleccionado
-                                              ? Colors.blue[300]!
-                                              : Colors.grey[300]!,
+                                              ? theme.colorScheme.primary
+                                                    .withValues(alpha: 0.4)
+                                              : theme.colorScheme.onSurface,
                                           width: option.seleccionado ? 2 : 1,
                                         ),
                                       ),
@@ -1986,8 +1958,15 @@ class _VendedorCreateInvoiceScreenState
                                                 padding: EdgeInsets.all(8),
                                                 decoration: BoxDecoration(
                                                   color: option.seleccionado
-                                                      ? Colors.blue[100]
-                                                      : Colors.grey[200],
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
+                                                            .withValues(
+                                                              alpha: 0.4,
+                                                            )
+                                                      : theme
+                                                            .colorScheme
+                                                            .surface,
                                                   borderRadius:
                                                       BorderRadius.circular(6),
                                                 ),
@@ -1997,8 +1976,15 @@ class _VendedorCreateInvoiceScreenState
                                                   ),
                                                   size: 20,
                                                   color: option.seleccionado
-                                                      ? Colors.blue[700]
-                                                      : Colors.grey[600],
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
+                                                      : theme
+                                                            .colorScheme
+                                                            .primary
+                                                            .withValues(
+                                                              alpha: 0.4,
+                                                            ),
                                                 ),
                                               ),
                                               SizedBox(width: 12),
@@ -2014,8 +2000,15 @@ class _VendedorCreateInvoiceScreenState
                                                         : FontWeight.w500,
                                                     fontSize: 16,
                                                     color: option.seleccionado
-                                                        ? Colors.blue[800]
-                                                        : Colors.grey[700],
+                                                        ? theme
+                                                              .colorScheme
+                                                              .primary
+                                                        : theme
+                                                              .colorScheme
+                                                              .primary
+                                                              .withValues(
+                                                                alpha: 0.7,
+                                                              ),
                                                   ),
                                                 ),
                                               ),
@@ -2028,14 +2021,23 @@ class _VendedorCreateInvoiceScreenState
                                                 padding: EdgeInsets.all(4),
                                                 decoration: BoxDecoration(
                                                   color: option.seleccionado
-                                                      ? Colors.blue[600]
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
                                                       : Colors.transparent,
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   border: Border.all(
                                                     color: option.seleccionado
-                                                        ? Colors.blue[600]!
-                                                        : Colors.grey[400]!,
+                                                        ? theme
+                                                              .colorScheme
+                                                              .primary
+                                                        : theme
+                                                              .colorScheme
+                                                              .primary
+                                                              .withValues(
+                                                                alpha: 0.7,
+                                                              ),
                                                     width: 2,
                                                   ),
                                                 ),
@@ -2082,25 +2084,12 @@ class _VendedorCreateInvoiceScreenState
                                                                 8,
                                                               ),
                                                         ),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
-                                                                  ),
-                                                              borderSide: BorderSide(
-                                                                color: Colors
-                                                                    .blue[600]!,
-                                                                width: 2,
-                                                              ),
-                                                            ),
                                                         contentPadding:
                                                             EdgeInsets.symmetric(
                                                               horizontal: 12,
                                                               vertical: 12,
                                                             ),
                                                         filled: true,
-                                                        fillColor: Colors.white,
                                                       ),
                                                       onChanged: (value) {
                                                         setState(() {
@@ -2149,7 +2138,6 @@ class _VendedorCreateInvoiceScreenState
                                 margin: EdgeInsets.only(top: 8),
                                 padding: EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.green[50],
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: Colors.green[200]!),
                                 ),
@@ -2188,7 +2176,6 @@ class _VendedorCreateInvoiceScreenState
             if (_getSelectedPayments().isNotEmpty)
               Card(
                 elevation: 2,
-                color: Colors.green[50],
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -2249,7 +2236,9 @@ class _VendedorCreateInvoiceScreenState
             // Estado del pago y cambio
             Card(
               elevation: 2,
-              color: isValid ? Colors.green[50] : Colors.red[50],
+              color: isValid
+                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                  : theme.colorScheme.error.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -2347,9 +2336,11 @@ class _VendedorCreateInvoiceScreenState
                 child: Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red[100],
+                    color: theme.colorScheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red[300]!),
+                    border: Border.all(
+                      color: theme.colorScheme.error.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [

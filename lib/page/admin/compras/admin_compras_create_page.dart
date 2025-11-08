@@ -374,11 +374,10 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nueva Compra'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           if (_itemsCompra.isNotEmpty)
@@ -389,15 +388,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Center(
-                child: Text(
-                  '$_totalItems items',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              child: Center(child: Text('$_totalItems items')),
             ),
           _isSaving
               ? const Padding(
@@ -426,16 +417,16 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
         key: _formKey,
         child: Column(
           children: [
-            _buildHeader(),
-            _buildSearchBar(),
+            _buildHeader(theme),
+            _buildSearchBar(theme),
             Expanded(
               child: Column(
                 children: [
                   TabBar(
                     controller: _tabController,
-                    indicatorColor: Colors.blue[700],
-                    labelColor: Colors.blue[900],
-                    unselectedLabelColor: Colors.grey[600],
+                    indicatorColor: theme.colorScheme.primary,
+                    labelColor: theme.colorScheme.primary,
+                    unselectedLabelColor: theme.colorScheme.onSurface,
                     isScrollable: false,
                     tabs: const [
                       Tab(text: 'Productos'),
@@ -452,23 +443,25 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                   Expanded(
                     child: TabBarView(
                       controller: _tabController,
-                      children: [_buildProductosList(), _buildCarrito()],
+                      children: [
+                        _buildProductosList(theme),
+                        _buildCarrito(theme),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            if (_itemsCompra.isNotEmpty) _buildFooter(),
+            if (_itemsCompra.isNotEmpty) _buildFooter(theme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.blue[50],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -479,8 +472,10 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                 borderRadius: BorderRadius.circular(8),
               ),
               filled: true,
-              fillColor: Colors.white,
-              prefixIcon: Icon(Icons.business, color: Colors.blue[700]),
+              prefixIcon: Icon(
+                Icons.business,
+                color: theme.colorScheme.primary,
+              ),
             ),
             value: _selectedProveedorId,
             autofocus: true,
@@ -518,9 +513,9 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                         return Theme(
                           data: Theme.of(context).copyWith(
                             colorScheme: ColorScheme.light(
-                              primary: Colors.blue[700]!,
+                              primary: theme.colorScheme.primary,
                               onPrimary: Colors.white,
-                              onSurface: Colors.blue[900]!,
+                              onSurface: theme.colorScheme.primary,
                             ),
                           ),
                           child: child!,
@@ -536,10 +531,9 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
                       prefixIcon: Icon(
                         Icons.calendar_today,
-                        color: Colors.blue[700],
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     child: Text(DateFormat('dd/MM/yyyy').format(_fechaCompra)),
@@ -550,9 +544,11 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue[100],
+                  color: theme.colorScheme.surface.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[300]!),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withOpacity(0.2),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -561,7 +557,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue[700],
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     Text(
@@ -569,7 +565,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue[900],
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                   ],
@@ -583,7 +579,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: TextField(
@@ -592,7 +588,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
             _selectedProveedorId != null, // Deshabilita si no hay proveedor
         decoration: InputDecoration(
           labelText: 'Buscar productos por nombre o código',
-          prefixIcon: Icon(Icons.search, color: Colors.blue[700]),
+          prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
           suffixIcon:
               _searchController.text.isNotEmpty && _selectedProveedorId != null
               ? IconButton(
@@ -606,8 +602,8 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           filled: true,
           fillColor: _selectedProveedorId == null
-              ? Colors.grey[200]
-              : Colors.white,
+              ? theme.colorScheme.surface.withValues(alpha: 0.2)
+              : theme.colorScheme.surface,
           hintText: _selectedProveedorId == null
               ? 'Seleccione un proveedor primero'
               : null,
@@ -617,7 +613,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
     );
   }
 
-  Widget _buildProductosList() {
+  Widget _buildProductosList(ThemeData theme) {
     if (_selectedProveedorId == null) {
       return Center(
         child: Column(
@@ -627,7 +623,10 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
             const SizedBox(height: 16),
             Text(
               'Por favor, seleccione un proveedor para ver los productos.',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -641,14 +640,14 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              Icon(Icons.inventory, color: Colors.blue[700]),
+              Icon(Icons.inventory, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'Productos (${_productosFiltrados.length})',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue[900],
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -657,7 +656,9 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
         Expanded(
           child: _isLoadingProductos
               ? Center(
-                  child: CircularProgressIndicator(color: Colors.blue[700]),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 )
               : _productosFiltrados.isEmpty
               ? Center(
@@ -697,19 +698,21 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: Colors.blue[100],
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.inventory_2,
-                            color: Colors.blue[700],
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                         title: Text(
                           producto.nombre,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue[900],
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                         subtitle: Column(
@@ -726,7 +729,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                             Text(
                               'Precio compra: \$${producto.precioCompra.toStringAsFixed(2)}',
                               style: TextStyle(
-                                color: Colors.blue[700],
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -737,7 +740,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                           decoration: BoxDecoration(
                             color: isInCart
                                 ? Colors.green[600]
-                                : Colors.blue[700],
+                                : theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -776,7 +779,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
     );
   }
 
-  Widget _buildCarrito() {
+  Widget _buildCarrito(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -787,14 +790,14 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
             children: [
               Row(
                 children: [
-                  Icon(Icons.shopping_cart, color: Colors.blue[700]),
+                  Icon(Icons.shopping_cart, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Carrito (${_itemsCompra.length})',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[900],
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                 ],
@@ -808,7 +811,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                       }
                       _itemsCompra.clear();
                     });
-                    _showSnackBar('Carrito vaciado', Colors.blue);
+                    _showSnackBar('Carrito vaciado', theme.colorScheme.primary);
                   },
                   child: const Text(
                     'Vaciar carrito',
@@ -865,7 +868,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                                     item.productoNombre,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue[900],
+                                      color: theme.colorScheme.primary,
                                     ),
                                   ),
                                 ),
@@ -902,7 +905,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                                 IconButton(
                                   icon: Icon(
                                     Icons.remove,
-                                    color: Colors.blue[700],
+                                    color: theme.colorScheme.primary,
                                   ),
                                   onPressed: () =>
                                       _updateItemCantidadRemove(index),
@@ -936,7 +939,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                                 IconButton(
                                   icon: Icon(
                                     Icons.add,
-                                    color: Colors.blue[700],
+                                    color: theme.colorScheme.primary,
                                   ),
                                   onPressed: () =>
                                       _updateItemCantidadPlus(index),
@@ -986,7 +989,9 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.blue[50],
+                                color: theme.colorScheme.surface.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
@@ -1003,7 +1008,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                                     '\$${item.subtotal.toStringAsFixed(2)}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue[700],
+                                      color: theme.colorScheme.primary,
                                       fontSize: 16,
                                     ),
                                   ),
@@ -1021,14 +1026,14 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue[700],
+        color: theme.colorScheme.primary,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -1043,12 +1048,15 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
             children: [
               Text(
                 '$_totalItems productos',
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
+                  fontSize: 14,
+                ),
               ),
               Text(
                 'Total: \$${_totalCompra.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1060,19 +1068,21 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                 ? null
                 : _saveCompra,
             icon: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.primary,
+                      ),
                     ),
                   )
                 : const Icon(Icons.save),
             label: Text(_isSaving ? 'Guardando...' : 'Guardar Compra'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue[700],
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),

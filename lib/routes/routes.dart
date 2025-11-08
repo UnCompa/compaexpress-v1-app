@@ -25,4 +25,7 @@ class Routes {
   static const vendedorHomeProductos = "/vendedor/products";
   static const vendedorHomeOrder = "/vendedor/orders";
   static const vendedorCierreCaja = "/vendedor/cierre";
+  static const preorders = "/preorders";
+  static const preordersCreate = "/preorders/create";
+  static const preordersEdit = "/preorders/edit";
 }

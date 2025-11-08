@@ -10,14 +10,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AdminAccountPage extends ConsumerStatefulWidget {
-  const AdminAccountPage({super.key});
+class SellerSettingsPage extends ConsumerStatefulWidget {
+  const SellerSettingsPage({super.key});
 
   @override
-  ConsumerState<AdminAccountPage> createState() => _AdminAccountPageState();
+  ConsumerState<SellerSettingsPage> createState() => _SellerSettingsPageState();
 }
 
-class _AdminAccountPageState extends ConsumerState<AdminAccountPage>
+class _SellerSettingsPageState extends ConsumerState<SellerSettingsPage>
     with WidgetsBindingObserver, SessionControlMixin {
   @override
   void initState() {
@@ -40,8 +40,10 @@ class _AdminAccountPageState extends ConsumerState<AdminAccountPage>
   @override
   Widget build(BuildContext context) {
     final userBusinessAsync = ref.watch(userBusinessProvider);
-    final themePrefs = ref.watch(themeProvider);
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ajustes'),
+      ),
       body: userBusinessAsync.when(
         data: (userBusiness) => RefreshIndicator(
           onRefresh: _refreshData,

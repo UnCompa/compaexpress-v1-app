@@ -68,7 +68,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cargar datos de productos: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -91,7 +91,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cargar resumen del negocio: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -131,19 +131,21 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cargar análisis del negocio: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
     }
   }
 
-  Widget _buildDashboardMetrics() {
+  Widget _buildDashboardMetrics(ThemeData theme) {
     if (_isDashboardLoading) {
       return Container(
         height: 120,
         margin: const EdgeInsets.only(bottom: 20),
-        child: const Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+        ),
       );
     }
 
@@ -163,7 +165,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -176,7 +178,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Total en General',
                   '\$${totalGeneral.toStringAsFixed(2)}',
                   Icons.account_balance_wallet_outlined,
-                  Colors.blue[600]!,
+                  theme.colorScheme.primary,
+                  theme,
                 ),
               ),
               const SizedBox(width: 12),
@@ -185,7 +188,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Total en Efectivo',
                   '\$${totalCaja.toStringAsFixed(2)}',
                   Icons.account_balance_wallet,
-                  Colors.green[600]!,
+                  theme.colorScheme.secondary,
+                  theme,
                 ),
               ),
               const SizedBox(width: 12),
@@ -194,7 +198,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Mayor Cierre',
                   '\$${maxCierreCaja.toStringAsFixed(2)}',
                   Icons.trending_up,
-                  Colors.blue[600]!,
+                  theme.colorScheme.tertiary,
+                  theme,
                 ),
               ),
               const SizedBox(width: 12),
@@ -203,7 +208,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Vendedores',
                   '${ventasPorVendedor.length}',
                   Icons.people,
-                  Colors.orange[600]!,
+                  theme.colorScheme.primary,
+                  theme,
                 ),
               ),
             ],
@@ -217,7 +223,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 8),
@@ -225,9 +231,11 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               height: 200,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                ),
               ),
               child: BarChart(
                 BarChartData(
@@ -237,6 +245,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                       1.2,
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
+                      
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final vendedor = ventasPorVendedor.keys.elementAt(
                           group.x.toInt(),
@@ -244,8 +253,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                         final valor = rod.toY;
                         return BarTooltipItem(
                           'Vendedor $vendedor\n\$${valor.toStringAsFixed(2)}',
-                          const TextStyle(
-                            color: Colors.white,
+                          TextStyle(
+                            color: theme.colorScheme.onInverseSurface,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -277,7 +286,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.grey[600],
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.7),
                                 ),
                               ),
                             );
@@ -296,7 +306,9 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                             '\$${value.toInt()}',
                             style: GoogleFonts.poppins(
                               fontSize: 10,
-                              color: Colors.grey[600],
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.7,
+                              ),
                             ),
                           );
                         },
@@ -313,7 +325,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                       barRods: [
                         BarChartRodData(
                           toY: entry.value,
-                          color: Colors.purple[600],
+                          color: theme.colorScheme.primary,
                           width: 16,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(4),
@@ -333,7 +345,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                             1.2) /
                         5,
                     getDrawingHorizontalLine: (value) {
-                      return FlLine(color: Colors.grey[300], strokeWidth: 1);
+                      return FlLine(
+                        color: theme.colorScheme.outline.withOpacity(0.1),
+                        strokeWidth: 1,
+                      );
                     },
                   ),
                 ),
@@ -345,12 +360,14 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
     );
   }
 
-  Widget _buildBusinessAnalytics() {
+  Widget _buildBusinessAnalytics(ThemeData theme) {
     if (_isBusinessLoading) {
       return Container(
         height: 200,
         margin: const EdgeInsets.only(bottom: 20),
-        child: const Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+        ),
       );
     }
 
@@ -384,7 +401,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -397,7 +414,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Diferencia Cierres',
                   '\$${diferenciaCierre.toStringAsFixed(2)}',
                   Icons.compare_arrows,
-                  diferenciaCierre >= 0 ? Colors.green[600]! : Colors.red[600]!,
+                  diferenciaCierre >= 0
+                      ? theme.colorScheme.secondary
+                      : theme.colorScheme.error,
+                  theme,
                 ),
               ),
               const SizedBox(width: 12),
@@ -406,7 +426,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Ganancias Porcentual',
                   '${ganancias.toStringAsFixed(2)}%',
                   Icons.arrow_circle_up,
-                  ganancias >= 0 ? Colors.green[600]! : Colors.red[600]!,
+                  ganancias >= 0
+                      ? theme.colorScheme.secondary
+                      : theme.colorScheme.error,
+                  theme,
                 ),
               ),
               const SizedBox(width: 12),
@@ -415,7 +438,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Total Órdenes',
                   '${ordenesFacturas['ordenes'] ?? 0}',
                   Icons.list_alt,
-                  Colors.indigo[600]!,
+                  theme.colorScheme.primary,
+                  theme,
                 ),
               ),
               const SizedBox(width: 12),
@@ -424,7 +448,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   'Total Facturas',
                   '${ordenesFacturas['facturas'] ?? 0}',
                   Icons.receipt_long,
-                  Colors.teal[600]!,
+                  theme.colorScheme.tertiary,
+                  theme,
                 ),
               ),
             ],
@@ -445,7 +470,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -455,7 +480,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                           child: _buildSmallMetricCard(
                             'Sin Stock',
                             '${stockBajo['sinStock'] ?? 0}',
-                            Colors.red[600]!,
+                            theme.colorScheme.error,
+                            theme,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -463,7 +489,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                           child: _buildSmallMetricCard(
                             'Bajo Stock',
                             '${stockBajo['bajoStock'] ?? 0}',
-                            Colors.orange[600]!,
+                            theme.colorScheme.tertiary,
+                            theme,
                           ),
                         ),
                       ],
@@ -484,7 +511,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -494,7 +521,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                           child: _buildSmallMetricCard(
                             'Efectivo',
                             '${tiposPago['EFECTIVO'] ?? 0}',
-                            Colors.green[600]!,
+                            theme.colorScheme.secondary,
+                            theme,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -502,7 +530,8 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                           child: _buildSmallMetricCard(
                             'Transferencia',
                             '${tiposPago['TRASNFERENCIA'] ?? 0}',
-                            Colors.blue[600]!,
+                            theme.colorScheme.primary,
+                            theme,
                           ),
                         ),
                       ],
@@ -521,7 +550,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 8),
@@ -529,11 +558,13 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               height: 200,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                ),
               ),
-              child: _buildIncomeChart(ingresosPorFecha),
+              child: _buildIncomeChart(ingresosPorFecha, theme),
             ),
           ],
         ],
@@ -541,7 +572,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
     );
   }
 
-  Widget _buildIncomeChart(Map<String, double> ingresosPorFecha) {
+  Widget _buildIncomeChart(
+    Map<String, double> ingresosPorFecha,
+    ThemeData theme,
+  ) {
     final sortedEntries = ingresosPorFecha.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -549,7 +583,9 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
       return Center(
         child: Text(
           'No hay datos de ingresos',
-          style: GoogleFonts.poppins(color: Colors.grey[600]),
+          style: GoogleFonts.poppins(
+            color: theme.colorScheme.onSurface.withOpacity(0.5),
+          ),
         ),
       );
     }
@@ -562,8 +598,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
       LineChartData(
         gridData: FlGridData(
           show: true,
-          getDrawingHorizontalLine: (value) =>
-              FlLine(color: Colors.grey[200]!, strokeWidth: 1),
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: theme.colorScheme.outline.withOpacity(0.1),
+            strokeWidth: 1,
+          ),
         ),
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
@@ -571,7 +609,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               showTitles: true,
               getTitlesWidget: (value, meta) => Text(
                 '\$${value.toInt()}',
-                style: GoogleFonts.poppins(fontSize: 10),
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
               ),
               reservedSize: 50,
             ),
@@ -586,7 +627,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                     final date = DateTime.parse(sortedEntries[index].key);
                     return Text(
                       '${date.day}/${date.month}',
-                      style: GoogleFonts.poppins(fontSize: 10),
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
                     );
                   } catch (e) {
                     return const Text('');
@@ -606,7 +650,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
         ),
         borderData: FlBorderData(
           show: true,
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
         ),
         minX: 0,
         maxX: (sortedEntries.length - 1).toDouble(),
@@ -618,12 +662,12 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               return FlSpot(entry.key.toDouble(), entry.value.value);
             }).toList(),
             isCurved: true,
-            color: Colors.blue[600]!,
+            color: theme.colorScheme.primary,
             barWidth: 3,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blue[600]!.withOpacity(0.1),
+              color: theme.colorScheme.primary.withOpacity(0.1),
             ),
           ),
         ],
@@ -631,13 +675,18 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
     );
   }
 
-  Widget _buildSmallMetricCard(String title, String value, Color color) {
+  Widget _buildSmallMetricCard(
+    String title,
+    String value,
+    Color color,
+    ThemeData theme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,7 +696,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 4),
@@ -669,16 +718,17 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
     String value,
     IconData icon,
     Color color,
+    ThemeData theme,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: theme.shadowColor.withOpacity(0.05),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -698,7 +748,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -721,6 +771,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
   }
 
   Widget _buildChartSelector() {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
@@ -730,6 +781,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(width: 12),
@@ -793,16 +845,25 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
   }
 
   Widget _buildBarChart() {
+    final theme = Theme.of(context);
+
     if (_products.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bar_chart, size: 64, color: Colors.grey[400]),
+            Icon(
+              Icons.bar_chart,
+              size: 64,
+              color: theme.colorScheme.onSurface.withOpacity(0.3),
+            ),
             const SizedBox(height: 16),
             Text(
               'No hay datos disponibles',
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600]),
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
             ),
           ],
         ),
@@ -815,8 +876,6 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               .reduce((a, b) => a > b ? a : b)
         : 10.0;
 
-    //final safeMaxValue = maxValue > 0 ? maxValue : 10.0;
-
     return Column(
       children: [
         Text(
@@ -826,7 +885,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 20),
@@ -846,7 +905,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   barRods: [
                     BarChartRodData(
                       toY: value,
-                      color: _getBarColor(index),
+                      color: _getBarColor(index, theme),
                       width: 35,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(4),
@@ -863,7 +922,10 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                     showTitles: true,
                     getTitlesWidget: (value, meta) => Text(
                       value.toInt().toString(),
-                      style: GoogleFonts.poppins(fontSize: 11),
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
                     ),
                     reservedSize: 45,
                   ),
@@ -883,7 +945,12 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                               productName.length > 10
                                   ? '${productName.substring(0, 10)}...'
                                   : productName,
-                              style: GoogleFonts.poppins(fontSize: 10),
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.7,
+                                ),
+                              ),
                               textAlign: TextAlign.center,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -906,13 +973,17 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
 
               borderData: FlBorderData(
                 show: true,
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                ),
               ),
 
               gridData: FlGridData(
                 show: true,
-                getDrawingHorizontalLine: (value) =>
-                    FlLine(color: Colors.grey[200]!, strokeWidth: 1),
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: theme.colorScheme.outline.withOpacity(0.1),
+                  strokeWidth: 1,
+                ),
                 horizontalInterval: maxValue > 0 ? (maxValue / 5) : 1.0,
               ),
 
@@ -928,7 +999,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                     return BarTooltipItem(
                       '${product.nombre}\n${value.toInt()} $unit',
                       GoogleFonts.poppins(
-                        color: Colors.white,
+                        color: theme.colorScheme.onInverseSurface,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -943,18 +1014,20 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
     );
   }
 
-  Color _getBarColor(int index) {
+  Color _getBarColor(int index, ThemeData theme) {
     final colors = [
-      Colors.blue[600]!,
-      Colors.green[600]!,
-      Colors.orange[600]!,
-      Colors.purple[600]!,
-      Colors.red[600]!,
+      theme.colorScheme.primary,
+      theme.colorScheme.secondary,
+      theme.colorScheme.tertiary,
+      theme.colorScheme.primary.withOpacity(0.7),
+      theme.colorScheme.secondary.withOpacity(0.7),
     ];
     return colors[index % colors.length];
   }
 
   Widget _buildStatsCards() {
+    final theme = Theme.of(context);
+
     if (_products.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -973,12 +1046,14 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(
+                color: theme.colorScheme.outline.withOpacity(0.2),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: theme.shadowColor.withOpacity(0.05),
                   spreadRadius: 1,
                   blurRadius: 6,
                   offset: const Offset(0, 3),
@@ -992,11 +1067,11 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   children: [
                     CircleAvatar(
                       radius: 12,
-                      backgroundColor: _getBarColor(index),
+                      backgroundColor: _getBarColor(index, theme),
                       child: Text(
                         '${index + 1}',
                         style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1009,6 +1084,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1024,7 +1100,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: _getBarColor(index),
+                        color: _getBarColor(index, theme),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -1032,7 +1108,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                       unit,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -1047,35 +1123,47 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.onSurface,
         title: Text(
           'Dashboard Completo',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: Colors.white,
         elevation: 1,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchAllData),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchAllData,
+            color: theme.colorScheme.primary,
+          ),
         ],
       ),
+      backgroundColor: theme.colorScheme.surface,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Resumen Financiero
-            _buildDashboardMetrics(),
+            _buildDashboardMetrics(theme),
 
             // Divisor
-            Divider(color: Colors.grey[300], thickness: 1),
+            Divider(
+              color: theme.colorScheme.outline.withOpacity(0.2),
+              thickness: 1,
+            ),
 
             // Análisis del Negocio
-            _buildBusinessAnalytics(),
+            _buildBusinessAnalytics(theme),
 
             // Divisor
-            Divider(color: Colors.grey[300], thickness: 1),
+            Divider(
+              color: theme.colorScheme.outline.withOpacity(0.2),
+              thickness: 1,
+            ),
 
             // Sección de productos
             Text(
@@ -1083,7 +1171,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+                color: theme.colorScheme.onSurface,
               ),
             ),
 
@@ -1092,13 +1180,20 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
             if (_isLoading)
               SizedBox(
                 height: 400,
-                child: const Center(
+                child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Cargando datos de productos...'),
+                      CircularProgressIndicator(
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Cargando datos de productos...',
+                        style: GoogleFonts.poppins(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
                     ],
                   ),
                 ),

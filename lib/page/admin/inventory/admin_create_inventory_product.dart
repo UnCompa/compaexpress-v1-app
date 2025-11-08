@@ -453,8 +453,6 @@ class _AdminCreateInventoryProductState
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Crear Producto'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
           actions: [
             FavoriteToggleButton(
               isFavorite: _isFavorite,

@@ -14,6 +14,7 @@ import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/print_invoice_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -466,8 +467,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Facturas del vendedor'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
+        
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -489,8 +489,6 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
             _loadInvoices();
           }
         },
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
         tooltip: 'Nueva Factura',
         child: const Icon(Icons.add),
       ),
@@ -677,7 +675,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   Text(
-                    '\$${invoice.invoiceReceivedTotal}',
+                    '\$${invoice.invoiceReceivedTotal.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -715,6 +713,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
                         ),
                       ),
                     ),
+                    PrintInvoiceButton(invoice: invoice),
                 ],
               ),
             ],
