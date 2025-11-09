@@ -3,36 +3,37 @@ import 'dart:io';
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
-import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/product/product_controller.dart';
 import 'package:compaexpress/services/product/product_service.dart';
-import 'package:compaexpress/services/proveedor/proveedor_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/widget/ui/barcode_field.dart';
 import 'package:compaexpress/widget/ui/custom_buttons.dart';
-import 'package:compaexpress/widget/ui/custom_dropdown.dart';
-// Importar los widgets personalizados
 import 'package:compaexpress/widget/ui/custom_text_field.dart';
 import 'package:compaexpress/widget/ui/image_picker_section.dart';
 import 'package:compaexpress/widget/ui/price_section_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:searchfield/searchfield.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+import 'package:toastification/toastification.dart';
 import 'package:uuid/uuid.dart';
 
-class AdminCreateInventoryProduct extends StatefulWidget {
+class AdminCreateInventoryProduct extends ConsumerStatefulWidget {
   final String negocioID;
 
   const AdminCreateInventoryProduct({super.key, required this.negocioID});
 
   @override
-  State<AdminCreateInventoryProduct> createState() =>
+  ConsumerState<AdminCreateInventoryProduct> createState() =>
       _AdminCreateInventoryProductState();
 }
 
 class _AdminCreateInventoryProductState
-    extends State<AdminCreateInventoryProduct> {
+    extends ConsumerState<AdminCreateInventoryProduct>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -45,16 +46,12 @@ class _AdminCreateInventoryProductState
 
   // Estados de carga
   bool _isLoading = false;
-  bool _isLoadingCategorias = true;
-  bool _isLoadingProveedores = true;
   bool _isUploadingImages = false;
   bool _isFavorite = false;
+  bool _isGeneratingDescription = false;
 
   // Datos
-  List<Categoria> _categorias = [];
-  List<Categoria> _categoriasFiltradas = [];
   Categoria? _categoriaSeleccionada;
-  List<Proveedor> _proveedores = [];
   Proveedor? _proveedorSeleccionado;
   List<File> _imagenesSeleccionadas = [];
   final ImagePicker _picker = ImagePicker();
@@ -66,12 +63,26 @@ class _AdminCreateInventoryProductState
   // Precios
   final List<Map<String, TextEditingController>> _preciosControllers = [];
 
+  // Animation
+  late AnimationController _animationController;
+
+  // Focus nodes para mejor navegación
+  final _nombreFocusNode = FocusNode();
+  final _precioCompraFocusNode = FocusNode();
+  final _tipoFocusNode = FocusNode();
+  final _descripcionFocusNode = FocusNode();
+  final _stockFocusNode = FocusNode();
+  final _barcodeFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
-    _cargarCategorias();
-    _cargarProveedores();
     _agregarPrecio();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _animationController.forward();
   }
 
   @override
@@ -82,6 +93,13 @@ class _AdminCreateInventoryProductState
     _descripcionController.dispose();
     _stockController.dispose();
     _barCodeController.dispose();
+    _nombreFocusNode.dispose();
+    _precioCompraFocusNode.dispose();
+    _tipoFocusNode.dispose();
+    _descripcionFocusNode.dispose();
+    _stockFocusNode.dispose();
+    _barcodeFocusNode.dispose();
+    _animationController.dispose();
     for (var precio in _preciosControllers) {
       precio['nombre']!.dispose();
       precio['precio']!.dispose();
@@ -90,60 +108,55 @@ class _AdminCreateInventoryProductState
     super.dispose();
   }
 
-  // ========== MÉTODOS DE CARGA DE DATOS ==========
+  // ========== GENERACIÓN AUTOMÁTICA DE DESCRIPCIÓN ==========
 
-  Future<void> _cargarCategorias() async {
-    try {
-      final negocioInfo = await NegocioService.getCurrentUserInfo();
-      final request = ModelQueries.list(
-        Categoria.classType,
-        where: Categoria.NEGOCIOID.eq(negocioInfo.negocioId),
+  Future<void> _generarDescripcion() async {
+    if (_nombreController.text.trim().isEmpty) {
+      _mostrarToast(
+        'Ingresa el nombre del producto primero',
+        ToastificationType.warning,
       );
-      final response = await Amplify.API.query(request: request).response;
-      if (response.data?.items != null) {
-        setState(() {
-          _categorias = response.data!.items.whereType<Categoria>().toList();
-          _categoriasFiltradas = _categorias;
-          _isLoadingCategorias = false;
-        });
-      }
-    } catch (e) {
-      safePrint('Error cargando categorías: $e');
-      setState(() => _isLoadingCategorias = false);
-      _mostrarError('Error al cargar las categorías');
+      return;
     }
-  }
 
-  Future<void> _cargarProveedores() async {
+    setState(() => _isGeneratingDescription = true);
+
     try {
-      final proveedores = await ProveedorService.getAllProveedores();
-      setState(() {
-        _proveedores = proveedores.whereType<Proveedor>().toList();
-        _isLoadingProveedores = false;
-      });
+      // Simular generación (puedes integrar con API de IA si lo deseas)
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      final nombre = _nombreController.text.trim();
+      final tipo = _tipoCompraController.text.trim();
+      final categoria = _categoriaSeleccionada?.nombre ?? '';
+
+      String descripcion = '$nombre';
+      if (tipo.isNotEmpty) descripcion += ' tipo $tipo';
+      if (categoria.isNotEmpty) descripcion += ' de categoría $categoria';
+      descripcion +=
+          '. Producto de alta calidad con excelentes características y acabados.';
+
+      _descripcionController.text = descripcion;
+      _mostrarToast(
+        'Descripción generada exitosamente',
+        ToastificationType.success,
+      );
     } catch (e) {
-      safePrint('Error cargando los proveedores: $e');
-      setState(() => _isLoadingProveedores = false);
-      _mostrarError('Error al cargar los proveedores');
+      _mostrarToast('Error al generar descripción', ToastificationType.error);
+    } finally {
+      setState(() => _isGeneratingDescription = false);
     }
   }
 
   // ========== MANEJO DE CÓDIGO DE BARRAS ==========
 
-  /// Callback para cuando se escanea un código con el lector USB
   void _onBarcodeScannedFromUSB(String barcode) {
     setState(() {
       _barCodeController.text = barcode;
     });
-
-    // Mostrar feedback visual
-    _mostrarExito('Código escaneado: $barcode');
-
-    // Auto-focus en el siguiente campo (opcional)
+    _mostrarToast('Código escaneado: $barcode', ToastificationType.success);
     FocusScope.of(context).nextFocus();
   }
 
-  /// Escanear código con cámara (método manual)
   Future<void> _scanBarcodeWithCamera(BuildContext context) async {
     try {
       final result = await SimpleBarcodeScanner.scanBarcode(
@@ -165,7 +178,7 @@ class _AdminCreateInventoryProductState
       }
     } catch (e) {
       safePrint('Error al escanear: $e');
-      _mostrarError('Error al escanear código de barras');
+      _mostrarToast('Error al escanear código', ToastificationType.error);
     }
   }
 
@@ -189,7 +202,7 @@ class _AdminCreateInventoryProductState
       }
     } catch (e) {
       safePrint('Error seleccionando imágenes: $e');
-      _mostrarError('Error al seleccionar las imágenes');
+      _mostrarToast('Error al seleccionar imágenes', ToastificationType.error);
     }
   }
 
@@ -209,7 +222,7 @@ class _AdminCreateInventoryProductState
       }
     } catch (e) {
       safePrint('Error tomando foto: $e');
-      _mostrarError('Error al tomar la foto');
+      _mostrarToast('Error al tomar la foto', ToastificationType.error);
     }
   }
 
@@ -245,7 +258,7 @@ class _AdminCreateInventoryProductState
       }
     } catch (e) {
       safePrint('Error subiendo imágenes: $e');
-      _mostrarError('Error al subir las imágenes');
+      _mostrarToast('Error al subir imágenes', ToastificationType.error);
       return [];
     } finally {
       setState(() => _isUploadingImages = false);
@@ -278,7 +291,13 @@ class _AdminCreateInventoryProductState
   // ========== MÉTODOS DE CREACIÓN DE PRODUCTO ==========
 
   Future<void> _crearProducto() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      _mostrarToast(
+        'Completa todos los campos requeridos',
+        ToastificationType.warning,
+      );
+      return;
+    }
 
     if (!_validarFormulario()) return;
 
@@ -289,11 +308,17 @@ class _AdminCreateInventoryProductState
     );
 
     if (validation['nameExists']!) {
-      _mostrarError('Ya existe un producto con ese nombre.');
+      _mostrarToast(
+        'Ya existe un producto con ese nombre',
+        ToastificationType.error,
+      );
       return;
     }
     if (validation['barCodeExists']!) {
-      _mostrarError('Ya existe un producto con ese código de barras.');
+      _mostrarToast(
+        'Ya existe un producto con ese código de barras',
+        ToastificationType.error,
+      );
       return;
     }
 
@@ -305,7 +330,8 @@ class _AdminCreateInventoryProductState
       if (_imagenesSeleccionadas.isNotEmpty) {
         imageKeys = await _subirImagenes();
         if (imageKeys.isEmpty) {
-          _mostrarError('Error al subir imágenes.');
+          _mostrarToast('Error al subir imágenes', ToastificationType.error);
+          setState(() => _isLoading = false);
           return;
         }
       }
@@ -336,15 +362,14 @@ class _AdminCreateInventoryProductState
       // Crear precios en lote
       await _crearPrecios(createdProducto!.id, now);
 
-      _mostrarExito('Producto y precios creados exitosamente');
+      _mostrarToast('Producto creado exitosamente', ToastificationType.success);
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
-      _handleError(
-        'Error de conexión. Verifica tu internet e intenta de nuevo.',
-        e,
-      );
+      _handleError('Error de conexión. Verifica tu internet', e);
     } catch (e) {
-      _handleError('Error inesperado. Intenta de nuevo.', e);
+      _handleError('Error inesperado. Intenta de nuevo', e);
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -371,7 +396,7 @@ class _AdminCreateInventoryProductState
 
     for (var response in responses) {
       if (response.data == null) {
-        _mostrarError('Error al crear un precio. Intenta de nuevo.');
+        _mostrarToast('Error al crear un precio', ToastificationType.error);
         return;
       }
     }
@@ -379,12 +404,18 @@ class _AdminCreateInventoryProductState
 
   bool _validarFormulario() {
     if (_categoriaSeleccionada == null) {
-      _mostrarError('Por favor selecciona una categoría');
+      _mostrarToast(
+        'Por favor selecciona una categoría',
+        ToastificationType.warning,
+      );
       return false;
     }
 
     if (_proveedorSeleccionado == null) {
-      _mostrarError('Por favor selecciona un proveedor');
+      _mostrarToast(
+        'Por favor selecciona un proveedor',
+        ToastificationType.warning,
+      );
       return false;
     }
 
@@ -392,19 +423,28 @@ class _AdminCreateInventoryProductState
       if (precio['nombre']!.text.trim().isEmpty ||
           precio['cantidad']!.text.trim().isEmpty ||
           precio['precio']!.text.trim().isEmpty) {
-        _mostrarError('Todos los campos de precios deben estar completos');
+        _mostrarToast(
+          'Todos los campos de precios deben estar completos',
+          ToastificationType.warning,
+        );
         return false;
       }
 
       final valorPrecio = double.tryParse(precio['precio']!.text);
       if (valorPrecio == null || valorPrecio <= 0) {
-        _mostrarError('Todos los precios deben ser válidos y mayores a 0');
+        _mostrarToast(
+          'Todos los precios deben ser válidos y mayores a 0',
+          ToastificationType.warning,
+        );
         return false;
       }
 
       final valorCantidad = double.tryParse(precio['cantidad']!.text);
       if (valorCantidad == null || valorCantidad <= 0) {
-        _mostrarError('Todas las cantidades deben ser válidas y mayores a 0');
+        _mostrarToast(
+          'Todas las cantidades deben ser válidas y mayores a 0',
+          ToastificationType.warning,
+        );
         return false;
       }
     }
@@ -416,29 +456,50 @@ class _AdminCreateInventoryProductState
 
   void _handleError(String message, dynamic error) {
     safePrint('Error: $error');
-    _mostrarError(message);
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    _mostrarToast(message, ToastificationType.error);
   }
 
-  void _mostrarError(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensaje),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
+  void _mostrarToast(String mensaje, ToastificationType type) {
+    toastification.show(
+      context: context,
+      type: type,
+      style: ToastificationStyle.flatColored,
+      title: Text(mensaje),
+      autoCloseDuration: const Duration(seconds: 3),
+      alignment: Alignment.topCenter,
+      showProgressBar: false,
     );
   }
 
-  void _mostrarExito(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensaje),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
+  // ========== NAVEGACIÓN A PANTALLAS DE CREACIÓN ==========
+
+  Future<void> _navegarACrearCategoria() async {
+    // Navegar a pantalla de creación de categoría
+    // final result = await Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => CreateCategoryScreen()),
+    // );
+    // if (result == true) {
+    //   ref.refresh(categoriesProvider);
+    // }
+    _mostrarToast(
+      'Funcionalidad de crear categoría próximamente',
+      ToastificationType.info,
+    );
+  }
+
+  Future<void> _navegarACrearProveedor() async {
+    // Navegar a pantalla de creación de proveedor
+    // final result = await Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => CreateProveedorScreen()),
+    // );
+    // if (result == true) {
+    //   ref.refresh(proveedorProvider);
+    // }
+    _mostrarToast(
+      'Funcionalidad de crear proveedor próximamente',
+      ToastificationType.info,
     );
   }
 
@@ -446,256 +507,321 @@ class _AdminCreateInventoryProductState
 
   @override
   Widget build(BuildContext context) {
+    // Observar los providers (descomenta cuando tengas los providers configurados)
+    // final categoriasState = ref.watch(categoriesProvider);
+    // final proveedoresState = ref.watch(proveedorProvider);
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return BarcodeListenerWrapper(
       contextName: 'create_product',
       onBarcodeScanned: _onBarcodeScannedFromUSB,
       enabled: !_isLoading && !_isUploadingImages,
       child: Scaffold(
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('Crear Producto'),
+          elevation: 0,
           actions: [
-            FavoriteToggleButton(
-              isFavorite: _isFavorite,
-              onToggle: () => setState(() => _isFavorite = !_isFavorite),
+            IconButton(
+              icon: Icon(
+                _isFavorite ? Icons.star : Icons.star_border,
+                color: _isFavorite ? Colors.amber : null,
+              ),
+              onPressed: () => setState(() => _isFavorite = !_isFavorite),
+              tooltip: 'Marcar como favorito',
             ),
           ],
         ),
         body: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Indicador de lector USB activo
-                _buildUSBReaderIndicator(),
-
-                const SizedBox(height: 16),
-
-                // Nombre del producto
-                CustomTextField(
-                  controller: _nombreController,
-                  labelText: "Nombre del Producto *",
-                  prefixIcon: Icons.shopping_bag,
-                  textCapitalization: TextCapitalization.words,
-                  inputFormatters: [LengthLimitingTextInputFormatter(50)],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El nombre es obligatorio';
-                    }
-                    if (value.trim().length < 2) {
-                      return 'El nombre debe tener al menos 2 caracteres';
-                    }
-                    return null;
-                  },
+          child: AnimationLimiter(
+            child: ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: AnimationConfiguration.toStaggeredList(
+                duration: const Duration(milliseconds: 375),
+                childAnimationBuilder: (widget) => SlideAnimation(
+                  verticalOffset: 50.0,
+                  child: FadeInAnimation(child: widget),
                 ),
+                children: [
+                  // Indicador USB
+                  _buildUSBReaderIndicator(colorScheme),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 16),
-
-                // Precio compra y Tipo
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _precioCompraController,
-                        labelText: "Precio compra",
-                        prefixIcon: Icons.money_off,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(10),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,2}'),
+                  // Información básica
+                  _buildSectionCard(
+                    colorScheme: colorScheme,
+                    title: 'Información Básica',
+                    icon: Icons.info_outline,
+                    children: [
+                      CustomTextField(
+                        controller: _nombreController,
+                        focusNode: _nombreFocusNode,
+                        labelText: "Nombre del Producto *",
+                        prefixIcon: Icons.shopping_bag,
+                        textCapitalization: TextCapitalization.words,
+                        inputFormatters: [LengthLimitingTextInputFormatter(50)],
+                        onEditingComplete: () =>
+                            _precioCompraFocusNode.requestFocus(),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'El nombre es obligatorio';
+                          }
+                          if (value.trim().length < 2) {
+                            return 'Mínimo 2 caracteres';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              controller: _precioCompraController,
+                              focusNode: _precioCompraFocusNode,
+                              labelText: "Precio compra *",
+                              prefixIcon: Icons.attach_money,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(10),
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d{0,2}'),
+                                ),
+                              ],
+                              onEditingComplete: () =>
+                                  _tipoFocusNode.requestFocus(),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Requerido';
+                                }
+                                final precio = double.tryParse(value);
+                                if (precio == null || precio <= 0) {
+                                  return 'Mayor a 0';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomTextField(
+                              controller: _tipoCompraController,
+                              focusNode: _tipoFocusNode,
+                              labelText: "Tipo *",
+                              hintText: "Ej: XL, Normal",
+                              prefixIcon: Icons.style,
+                              textCapitalization: TextCapitalization.words,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(12),
+                              ],
+                              onEditingComplete: () =>
+                                  _descripcionFocusNode.requestFocus(),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Requerido';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              controller: _descripcionController,
+                              focusNode: _descripcionFocusNode,
+                              labelText: "Descripción *",
+                              hintText: 'Describe el producto',
+                              prefixIcon: Icons.description,
+                              maxLines: 3,
+                              maxLength: 150,
+                              textCapitalization: TextCapitalization.sentences,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Requerido';
+                                }
+                                if (value.trim().length < 5) {
+                                  return 'Mínimo 5 caracteres';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Tooltip(
+                              message: 'Generar descripción automática',
+                              child: Material(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                                child: InkWell(
+                                  onTap: _isGeneratingDescription
+                                      ? null
+                                      : _generarDescripcion,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    width: 48,
+                                    height: 48,
+                                    alignment: Alignment.center,
+                                    child: _isGeneratingDescription
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: colorScheme
+                                                  .onPrimaryContainer,
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.auto_awesome,
+                                            color:
+                                                colorScheme.onPrimaryContainer,
+                                            size: 24,
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Categoría y Proveedor
+                  _buildSectionCard(
+                    colorScheme: colorScheme,
+                    title: 'Clasificación',
+                    icon: Icons.category,
+                    children: [
+                      _buildCategoriaSelector(colorScheme),
+                      const SizedBox(height: 16),
+                      _buildProveedorSelector(colorScheme),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Precios
+                  _buildSectionCard(
+                    colorScheme: colorScheme,
+                    title: 'Precios de Venta',
+                    icon: Icons.payments,
+                    children: [
+                      PriceSectionWidget(
+                        preciosControllers: _preciosControllers,
+                        onAddPrice: _agregarPrecio,
+                        onDeletePrice: _eliminarPrecio,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Inventario
+                  _buildSectionCard(
+                    colorScheme: colorScheme,
+                    title: 'Inventario',
+                    icon: Icons.inventory_2,
+                    children: [
+                      BarcodeTextField(
+                        controller: _barCodeController,
+                        onManualScan: () => _scanBarcodeWithCamera(context),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'El precio de compra es obligatorio';
-                          }
-                          final precio = double.tryParse(value);
-                          if (precio == null || precio <= 0) {
-                            return 'El precio debe ser mayor a 0';
+                            return 'El código de barras es obligatorio';
                           }
                           return null;
                         },
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _tipoCompraController,
-                        labelText: "Tipo *",
-                        hintText: "Ej: XL, Normal",
-                        prefixIcon: Icons.type_specimen_outlined,
-                        textCapitalization: TextCapitalization.words,
-                        inputFormatters: [LengthLimitingTextInputFormatter(12)],
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'El tipo es obligatorio';
-                          }
-                          return null;
-                        },
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: CustomTextField(
+                              controller: _stockController,
+                              focusNode: _stockFocusNode,
+                              labelText: 'Stock Inicial *',
+                              hintText: 'Ej: 10',
+                              prefixIcon: Icons.numbers,
+                              suffixText: 'unidades',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(10),
+                              ],
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Requerido';
+                                }
+                                final stock = int.tryParse(value);
+                                if (stock == null || stock < 0) {
+                                  return 'No negativo';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildEstadoDropdown(colorScheme)),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
-                // Descripción
-                CustomTextField(
-                  controller: _descripcionController,
-                  labelText: "Descripción",
-                  hintText: 'Describe las características del producto',
-                  prefixIcon: Icons.description,
-                  maxLines: 3,
-                  maxLength: 150,
-                  textCapitalization: TextCapitalization.sentences,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'La descripción es obligatoria';
-                    }
-                    if (value.trim().length < 5) {
-                      return 'La descripción debe tener al menos 5 caracteres';
-                    }
-                    return null;
-                  },
-                ),
+                  // Imágenes
+                  _buildSectionCard(
+                    colorScheme: colorScheme,
+                    title: 'Imágenes',
+                    icon: Icons.photo_library,
+                    children: [
+                      ImagePickerSection(
+                        imagenesSeleccionadas: _imagenesSeleccionadas,
+                        onSelectFromGallery: _seleccionarImagenes,
+                        onTakePhoto: _tomarFoto,
+                        onDeleteImage: _eliminarImagen,
+                        isLoading: _isLoading,
+                      ),
+                    ],
+                  ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                // Categoría
-                CustomDropdownField<Categoria>(
-                  value: _categoriaSeleccionada,
-                  labelText: "Categoría *",
-                  prefixIcon: Icons.category,
-                  hintText: 'Selecciona una categoría',
-                  items: _categoriasFiltradas,
-                  itemLabel: (categoria) => categoria.nombre,
-                  isLoading: _isLoadingCategorias,
-                  onChanged: (value) =>
-                      setState(() => _categoriaSeleccionada = value),
-                  validator: (value) {
-                    if (value == null) return 'Selecciona una categoría';
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Proveedor
-                CustomDropdownField<Proveedor>(
-                  value: _proveedorSeleccionado,
-                  labelText: "Proveedor *",
-                  prefixIcon: Icons.car_rental,
-                  hintText: 'Selecciona un Proveedor',
-                  items: _proveedores,
-                  itemLabel: (proveedor) => proveedor.nombre,
-                  isLoading: _isLoadingProveedores,
-                  onChanged: (value) =>
-                      setState(() => _proveedorSeleccionado = value),
-                  validator: (value) {
-                    if (value == null) return 'Selecciona un proveedor';
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Sección de Precios
-                PriceSectionWidget(
-                  preciosControllers: _preciosControllers,
-                  onAddPrice: _agregarPrecio,
-                  onDeletePrice: _eliminarPrecio,
-                ),
-
-                const SizedBox(height: 16),
-
-                // Código de Barras con soporte USB y cámara
-                BarcodeTextField(
-                  controller: _barCodeController,
-                  onManualScan: () => _scanBarcodeWithCamera(context),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El código de barras es obligatorio';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Stock
-                CustomTextField(
-                  controller: _stockController,
-                  labelText: 'Stock *',
-                  hintText: 'Ej: 10',
-                  prefixIcon: Icons.inventory,
-                  suffixText: 'unidades',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El stock es obligatorio';
-                    }
-                    final stock = int.tryParse(value);
-                    if (stock == null || stock < 0) {
-                      return 'El stock no puede ser negativo';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Estado
-                CustomDropdownField<String>(
-                  value: _estadoSeleccionado,
-                  labelText: 'Estado *',
-                  prefixIcon: Icons.toggle_on,
-                  hintText: 'Selecciona el estado',
-                  items: _estadosDisponibles,
-                  itemLabel: (estado) => estado.toUpperCase(),
-                  onChanged: (value) =>
-                      setState(() => _estadoSeleccionado = value!),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Sección de Imágenes
-                ImagePickerSection(
-                  imagenesSeleccionadas: _imagenesSeleccionadas,
-                  onSelectFromGallery: _seleccionarImagenes,
-                  onTakePhoto: _tomarFoto,
-                  onDeleteImage: _eliminarImagen,
-                  isLoading: _isLoading,
-                ),
-
-                const SizedBox(height: 24),
-
-                // Botón Crear
-                PrimaryButton(
-                  onPressed: _crearProducto,
-                  text: 'Crear Producto',
-                  isLoading: _isLoading || _isUploadingImages,
-                  loadingText: _isUploadingImages
-                      ? 'Subiendo imágenes...'
-                      : 'Creando producto...',
-                ),
-
-                const SizedBox(height: 12),
-
-                // Botón Cancelar
-                SecondaryButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  text: 'Cancelar',
-                  isLoading: _isLoading || _isUploadingImages,
-                ),
-              ],
+                  // Botones de acción
+                  PrimaryButton(
+                    onPressed: _crearProducto,
+                    text: 'Crear Producto',
+                    isLoading: _isLoading || _isUploadingImages,
+                    loadingText: _isUploadingImages
+                        ? 'Subiendo imágenes...'
+                        : 'Creando producto...',
+                  ),
+                  const SizedBox(height: 12),
+                  SecondaryButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    text: 'Cancelar',
+                    isLoading: _isLoading || _isUploadingImages,
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -703,23 +829,86 @@ class _AdminCreateInventoryProductState
     );
   }
 
-  Widget _buildUSBReaderIndicator() {
-    return Container(
+  // ========== WIDGETS AUXILIARES ==========
+
+  Widget _buildSectionCard({
+    required ColorScheme colorScheme,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUSBReaderIndicator(ColorScheme colorScheme) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primaryContainer.withOpacity(0.7),
+          ],
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.usb, color: Colors.blue[700], size: 20),
+          Icon(Icons.usb, color: colorScheme.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Lector USB activo - Escanea un código de barras',
               style: TextStyle(
-                color: Colors.blue[700],
+                color: colorScheme.onPrimaryContainer,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -741,6 +930,339 @@ class _AdminCreateInventoryProductState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCategoriaSelector(ColorScheme colorScheme) {
+    // Simular lista de categorías (reemplazar con el provider real)
+    final categorias =
+        <Categoria>[]; // ref.watch(categoriesProvider).categorias
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: SearchField<Categoria>(
+                controller: TextEditingController(
+                  text: _categoriaSeleccionada?.nombre ?? '',
+                ),
+                hint: 'Buscar categoría...',
+                suggestions: categorias
+                    .map(
+                      (cat) => SearchFieldListItem<Categoria>(
+                        cat.nombre,
+                        item: cat,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.folder,
+                                size: 18,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(cat.nombre),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                maxSuggestionsInViewPort: 5,
+                itemHeight: 50,
+                onSuggestionTap: (suggestion) {
+                  setState(() {
+                    _categoriaSeleccionada = suggestion.item;
+                  });
+                },
+                emptyWidget: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 48,
+                        color: colorScheme.outline,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No se encontraron categorías',
+                        style: TextStyle(color: colorScheme.outline),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Crear nueva categoría',
+              child: Material(
+                color: colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: _navegarACrearCategoria,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 48,
+                    height: 56,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.add,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_categoriaSeleccionada != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle, size: 16, color: colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  'Seleccionado: ${_categoriaSeleccionada!.nombre}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: () => setState(() => _categoriaSeleccionada = null),
+                  child: Icon(
+                    Icons.close,
+                    size: 16,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProveedorSelector(ColorScheme colorScheme) {
+    // Simular lista de proveedores (reemplazar con el provider real)
+    final proveedores = <Proveedor>[]; // ref.watch(proveedorProvider).items
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: SearchField<Proveedor>(
+                controller: TextEditingController(
+                  text: _proveedorSeleccionado?.nombre ?? '',
+                ),
+                hint: 'Buscar proveedor...',
+
+                suggestions: proveedores
+                    .map(
+                      (prov) => SearchFieldListItem<Proveedor>(
+                        prov.nombre,
+                        item: prov,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.business,
+                                size: 18,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      prov.nombre,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (prov.ciudad.isNotEmpty)
+                                      Text(
+                                        prov.ciudad,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: colorScheme.outline,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                maxSuggestionsInViewPort: 5,
+                itemHeight: 60,
+                onSuggestionTap: (suggestion) {
+                  setState(() {
+                    _proveedorSeleccionado = suggestion.item;
+                  });
+                },
+                emptyWidget: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 48,
+                        color: colorScheme.outline,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No se encontraron proveedores',
+                        style: TextStyle(color: colorScheme.outline),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Crear nuevo proveedor',
+              child: Material(
+                color: colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: _navegarACrearProveedor,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 48,
+                    height: 56,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.add,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_proveedorSeleccionado != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.secondaryContainer.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: colorScheme.secondary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Seleccionado: ${_proveedorSeleccionado!.nombre}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: () => setState(() => _proveedorSeleccionado = null),
+                  child: Icon(
+                    Icons.close,
+                    size: 16,
+                    color: colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEstadoDropdown(ColorScheme colorScheme) {
+    final estadoColors = {
+      'activo': Colors.green,
+      'inactivo': Colors.orange,
+      'agotado': Colors.red,
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _estadoSeleccionado,
+          isExpanded: true,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          borderRadius: BorderRadius.circular(12),
+          icon: Icon(Icons.arrow_drop_down, color: colorScheme.primary),
+          items: _estadosDisponibles.map((String estado) {
+            return DropdownMenuItem<String>(
+              value: estado,
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: estadoColors[estado],
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    estado.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: estadoColors[estado],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _estadoSeleccionado = newValue;
+              });
+            }
+          },
+        ),
       ),
     );
   }

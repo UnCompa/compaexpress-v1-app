@@ -503,6 +503,8 @@ class _AdminViewInventoryDetailsScreenState
           updatedAt: TemporalDateTime.now(),
         );
 
+        debugPrint('Agregando o Actualizando precio: $productoPrecio');
+
         final precioRequest = precioId.isNotEmpty
             ? ModelMutations.update(productoPrecio)
             : ModelMutations.create(productoPrecio);
@@ -742,7 +744,7 @@ class _AdminViewInventoryDetailsScreenState
       filled: true,
       fillColor: _isEditing
           ? theme.scaffoldBackgroundColor
-          : colorScheme.surfaceVariant.withOpacity(0.5),
+          : colorScheme.surfaceContainerHighest.withOpacity(0.5),
       enabled: _isEditing,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -1000,7 +1002,7 @@ class _AdminViewInventoryDetailsScreenState
                               Container(
                                 height: 200,
                                 decoration: BoxDecoration(
-                                  color: colorScheme.surfaceVariant.withOpacity(
+                                  color: colorScheme.surfaceContainerHighest.withOpacity(
                                     0.3,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -1092,7 +1094,7 @@ class _AdminViewInventoryDetailsScreenState
                                 width: double.infinity,
                                 height: 200,
                                 decoration: BoxDecoration(
-                                  color: colorScheme.surfaceVariant.withOpacity(
+                                  color: colorScheme.surfaceContainerHighest.withOpacity(
                                     0.3,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -1268,7 +1270,7 @@ class _AdminViewInventoryDetailsScreenState
                                           ),
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
-                                            color: colorScheme.surfaceVariant
+                                            color: colorScheme.surfaceContainerHighest
                                                 .withOpacity(0.3),
                                             borderRadius: BorderRadius.circular(
                                               12,
@@ -1587,7 +1589,7 @@ class _AdminViewInventoryDetailsScreenState
                               Container(
                                 padding: EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.surfaceVariant.withOpacity(
+                                  color: colorScheme.surfaceContainerHighest.withOpacity(
                                     0.3,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -1964,7 +1966,7 @@ class _AdminViewInventoryDetailsScreenState
         width: 200,
         height: 200,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceVariant.withOpacity(0.3),
+          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
@@ -1977,7 +1979,7 @@ class _AdminViewInventoryDetailsScreenState
         width: 200,
         height: 200,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceVariant.withOpacity(0.3),
+          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

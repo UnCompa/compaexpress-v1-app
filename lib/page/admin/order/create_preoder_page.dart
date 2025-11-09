@@ -342,6 +342,7 @@ class _CreatePreorderPageState extends ConsumerState<CreatePreorderPage> {
                     const SizedBox(height: 16),
                     ProductQuickSelector(
                       productos: productsState.productos,
+                      preciosLoaded: productsState.preciosLoaded,
                       productoPrecios: productsState.productoPrecios,
                       onProductSelected: (invoiceItem, orderItem) {
                         _addOrderItemSmart(

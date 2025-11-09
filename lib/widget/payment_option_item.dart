@@ -112,7 +112,7 @@ class PaymentOptionItem extends StatelessWidget {
                             initialValue: option.monto > 0
                                 ? option.monto.toString()
                                 : '',
-                            labelText: "Monto a pagar",
+                            labelText: "Dinero recibido",
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),

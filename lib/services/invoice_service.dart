@@ -63,7 +63,7 @@ class InvoiceService {
     try {
       final futures = await Future.wait([
         NegocioService.getCurrentUserInfo(),
-        CajaService.getCurrentCaja(),
+        CajaService.getCurrentCaja(forceRefresh: true),
       ]);
 
       final userData = futures[0] as UserInfo;

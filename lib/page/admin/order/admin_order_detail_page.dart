@@ -3,7 +3,6 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_with_product.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class OrderDetailScreen extends StatelessWidget {
@@ -13,65 +12,78 @@ class OrderDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FF),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Detalles de Orden #${order.orderNumber}',
-          style: GoogleFonts.inter(
+          style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: colorScheme.onPrimary,
           ),
         ),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<List<OrderItemWithProduct>>(
         future: _fetchOrderItems(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
               ),
             );
           }
+
           if (snapshot.hasError) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Color(0xFFE57373),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error al cargar los datos',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF424242),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: colorScheme.error,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${snapshot.error}',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: const Color(0xFF757575),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error al cargar los datos',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Volver'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
+
           final orderItems = snapshot.data ?? [];
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -79,17 +91,20 @@ class OrderDetailScreen extends StatelessWidget {
               children: [
                 // Order Header Card
                 Card(
-                  elevation: 4,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primary,
+                          colorScheme.primary.withOpacity(0.8),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -99,105 +114,93 @@ class OrderDetailScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.receipt_long,
-                              color: Colors.white,
-                              size: 28,
+                              color: colorScheme.onPrimary,
+                              size: 32,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 'Orden #${order.orderNumber}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 24,
+                                style: textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: colorScheme.onPrimary,
                                 ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            _getStatusText(order.orderStatus),
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                        Row(
+                          children: [
+                            _buildStatusChip(context, order.orderStatus),
+                            const Spacer(),
+                            Text(
+                              dateFormat.format(
+                                DateTime.parse(order.orderDate.toString()),
+                              ),
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onPrimary.withOpacity(0.9),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Order Summary Card
                 Card(
-                  elevation: 2,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Información de la Orden',
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1565C0),
-                          ),
-                        ),
-                      ],
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: colorScheme.outlineVariant,
+                      width: 1,
                     ),
                   ),
-                ),
-                // Order Information Card
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Información de la Orden',
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1565C0),
-                          ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: colorScheme.primary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Resumen de la Orden',
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         _buildInfoRow(
-                          Icons.calendar_today,
-                          'Fecha',
-                          dateFormat.format(
-                            DateTime.parse(order.orderDate.toString()),
-                          ),
+                          context,
+                          Icons.tag,
+                          'Número de Orden',
+                          order.orderNumber.toString(),
                         ),
-                        const SizedBox(height: 12),
+                        const Divider(height: 24),
                         _buildInfoRow(
-                          Icons.info_outline,
+                          context,
+                          Icons.signal_cellular_alt,
                           'Estado',
                           _getStatusText(order.orderStatus),
                         ),
-                        const SizedBox(height: 12),
+                        const Divider(height: 24),
                         _buildInfoRow(
+                          context,
                           Icons.attach_money,
                           'Total',
                           '\$${order.orderReceivedTotal.toStringAsFixed(2)}',
@@ -211,9 +214,13 @@ class OrderDetailScreen extends StatelessWidget {
 
                 // Order Items Card
                 Card(
-                  elevation: 2,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: colorScheme.outlineVariant,
+                      width: 1,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
@@ -222,61 +229,61 @@ class OrderDetailScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.shopping_cart,
-                              color: Color(0xFF1565C0),
+                              color: colorScheme.primary,
                               size: 24,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Ítems de la Orden',
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
+                              'Productos',
+                              style: textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1565C0),
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 12,
+                                vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1565C0).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '${orderItems.length} items',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
+                                '${orderItems.length} ${orderItems.length == 1 ? 'item' : 'items'}',
+                                style: textTheme.labelMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1565C0),
+                                  color: colorScheme.onPrimaryContainer,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         if (orderItems.isEmpty)
                           Center(
-                            child: Column(
-                              children: [
-                                const Icon(
-                                  Icons.shopping_cart_outlined,
-                                  size: 48,
-                                  color: Color(0xFFBDBDBD),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'No hay ítems en esta orden',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontStyle: FontStyle.italic,
-                                    color: const Color(0xFF757575),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.shopping_cart_outlined,
+                                    size: 64,
+                                    color: colorScheme.outline,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No hay productos en esta orden',
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         else
@@ -284,19 +291,20 @@ class OrderDetailScreen extends StatelessWidget {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: orderItems.length,
-                            separatorBuilder: (context, index) => const Divider(
-                              height: 1,
-                              color: Color(0xFFE0E0E0),
+                            separatorBuilder: (context, index) => Divider(
+                              height: 32,
+                              color: colorScheme.outlineVariant,
                             ),
                             itemBuilder: (context, index) {
                               final item = orderItems[index];
-                              return _buildOrderItem(item);
+                              return _buildOrderItem(context, item);
                             },
                           ),
                       ],
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
               ],
             ),
           );
@@ -305,106 +313,158 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildStatusChip(BuildContext context, String? status) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.onPrimary.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colorScheme.onPrimary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        _getStatusText(status),
+        style: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onPrimary,
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoRow(
+    BuildContext context,
     IconData icon,
     String label,
     String value, {
     bool isTotal = false,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF1565C0)),
+        Icon(
+          icon,
+          size: 20,
+          color: isTotal ? colorScheme.tertiary : colorScheme.primary,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
+            style: textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF424242),
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-            color: isTotal ? const Color(0xFF2E7D32) : const Color(0xFF1565C0),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            style: textTheme.bodyLarge?.copyWith(
+              fontSize: isTotal ? 18 : null,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+              color: isTotal ? colorScheme.tertiary : colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.end,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildOrderItem(OrderItemWithProduct item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+  Widget _buildOrderItem(BuildContext context, OrderItemWithProduct item) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF1565C0).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.inventory_2_outlined,
-              color: Color(0xFF1565C0),
-              size: 20,
+              color: colorScheme.onPrimaryContainer,
+              size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Producto: ${item.producto!.nombre}',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
+                  item.producto?.nombre ?? 'Producto sin nombre',
+                  style: textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF424242),
+                    color: colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Row(
                   children: [
+                    Icon(
+                      Icons.shopping_basket_outlined,
+                      size: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       'Cantidad: ',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFF757575),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     Text(
                       '${item.orderItem.quantity}',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1565C0),
+                        color: colorScheme.primary,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Row(
                   children: [
+                    Icon(
+                      Icons.price_check_outlined,
+                      size: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       'Subtotal: ',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFF757575),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     Text(
                       '\$${item.orderItem.subtotal.toStringAsFixed(2)}',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF424242),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -412,15 +472,15 @@ class OrderDetailScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 '\$${item.orderItem.total.toStringAsFixed(2)}',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
+                style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2E7D32),
+                  color: colorScheme.tertiary,
                 ),
               ),
             ],

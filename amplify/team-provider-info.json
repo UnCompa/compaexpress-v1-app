@@ -96,5 +96,96 @@
         }
       }
     }
+  },
+  "fixrelease": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-compaexpress-fixrelease-d2044-authRole",
+      "UnauthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-fixrelease-d2044-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-fixrelease-d2044-authRole",
+      "Region": "sa-east-1",
+      "DeploymentBucketName": "amplify-compaexpress-fixrelease-d2044-deployment",
+      "UnauthRoleName": "amplify-compaexpress-fixrelease-d2044-unauthRole",
+      "StackName": "amplify-compaexpress-fixrelease-d2044",
+      "StackId": "arn:aws:cloudformation:sa-east-1:882816896815:stack/amplify-compaexpress-fixrelease-d2044/2eb54780-bcff-11f0-aa1a-06f6a959442d",
+      "AmplifyAppId": "d35vso9rdxwm47",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-compaexpress-fixrelease-d2044-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
+    },
+    "categories": {
+      "auth": {
+        "compaexpress1bfc17d6": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "adminassign": {
+          "deploymentBucketName": "amplify-compaexpress-fixrelease-d2044-deployment",
+          "s3Key": "amplify-builds/adminassign-51756b5575784a4a6f7a-build.zip"
+        },
+        "desactivateuser": {
+          "deploymentBucketName": "amplify-compaexpress-fixrelease-d2044-deployment",
+          "s3Key": "amplify-builds/desactivateuser-4c2b70536d316731374c-build.zip"
+        },
+        "generatepdf": {
+          "deploymentBucketName": "amplify-compaexpress-fixrelease-d2044-deployment",
+          "s3Key": "amplify-builds/generatepdf-55776261696475566372-build.zip"
+        },
+        "getusers": {
+          "deploymentBucketName": "amplify-compaexpress-fixrelease-d2044-deployment",
+          "s3Key": "amplify-builds/getusers-5037633665632f615943-build.zip"
+        },
+        "compaexpress1bfc17d6": {}
+      },
+      "api": {
+        "apidcebec22": {},
+        "compaexpress": {}
+      },
+      "storage": {
+        "s322de2a4c": {}
+      }
+    }
+  },
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-compaexpress-staging-b82ac-authRole",
+      "UnauthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-staging-b82ac-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::882816896815:role/amplify-compaexpress-staging-b82ac-authRole",
+      "Region": "sa-east-1",
+      "DeploymentBucketName": "amplify-compaexpress-staging-b82ac-deployment",
+      "UnauthRoleName": "amplify-compaexpress-staging-b82ac-unauthRole",
+      "StackName": "amplify-compaexpress-staging-b82ac",
+      "StackId": "arn:aws:cloudformation:sa-east-1:882816896815:stack/amplify-compaexpress-staging-b82ac/615f29e0-bd08-11f0-847e-023d3bcbe8f5",
+      "AmplifyAppId": "d35vso9rdxwm47"
+    },
+    "categories": {
+      "auth": {
+        "compaexpress1bfc17d6": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "adminassign": {
+          "deploymentBucketName": "amplify-compaexpress-staging-b82ac-deployment",
+          "s3Key": "amplify-builds/adminassign-51756b5575784a4a6f7a-build.zip"
+        },
+        "desactivateuser": {
+          "deploymentBucketName": "amplify-compaexpress-staging-b82ac-deployment",
+          "s3Key": "amplify-builds/desactivateuser-4c2b70536d316731374c-build.zip"
+        },
+        "generatepdf": {
+          "deploymentBucketName": "amplify-compaexpress-staging-b82ac-deployment",
+          "s3Key": "amplify-builds/generatepdf-55776261696475566372-build.zip"
+        },
+        "getusers": {
+          "deploymentBucketName": "amplify-compaexpress-staging-b82ac-deployment",
+          "s3Key": "amplify-builds/getusers-5037633665632f615943-build.zip"
+        },
+        "compaexpress1bfc17d6": {}
+      },
+      "api": {
+        "apidcebec22": {},
+        "compaexpress": {}
+      },
+      "storage": {
+        "s322de2a4c": {}
+      }
+    }
   }
 }

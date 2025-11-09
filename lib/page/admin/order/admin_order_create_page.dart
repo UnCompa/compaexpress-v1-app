@@ -5,6 +5,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_item_data.dart';
 import 'package:compaexpress/entities/pago_moneda.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/providers/products_provider.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/get_token.dart';
@@ -12,18 +13,19 @@ import 'package:compaexpress/utils/product_quick_selector.dart';
 import 'package:compaexpress/widget/ui/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
-class CreateOrderScreen extends StatefulWidget {
+class CreateOrderScreen extends ConsumerStatefulWidget {
   const CreateOrderScreen({super.key});
 
   @override
-  State<CreateOrderScreen> createState() => _CreateOrderScreenState();
+  ConsumerState<CreateOrderScreen> createState() => _CreateOrderScreenState();
 }
 
-class _CreateOrderScreenState extends State<CreateOrderScreen> {
+class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _orderNumberController = TextEditingController();
   final _scrollController = ScrollController();
@@ -691,12 +693,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   }
 
   Widget buildCompleteItemsSection() {
+    final productState = ref.watch(productsProvider);
     return Column(
       children: [
         // Selector rápido de productos
         ProductQuickSelector(
-          productos: _productos,
-          productoPrecios: _productoPrecios,
+          productos: productState.productos,
+          productoPrecios: productState.productoPrecios,
+          preciosLoaded: productState.preciosLoaded,
           onProductSelected: (_, orderData) {
             setState(() {
               _orderItems.add(orderData);

@@ -6,18 +6,40 @@ class NewPasswordScreen extends StatefulWidget {
   const NewPasswordScreen({super.key});
 
   @override
-  State<NewPasswordScreen> createState()=> _NewPasswordScreenState();
+  State<NewPasswordScreen> createState() => _NewPasswordScreenState();
 }
 
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
-  Future<void> _submitNewPassword()async {
-    if (!_formKey.currentState!.validate())return;
+  String? _passwordError;
 
-    setState((){
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
+  bool _hasDigit = false;
+  bool _hasSpecial = false;
+  bool _hasMinLength = false;
+
+  void _validatePassword(String value) {
+    setState(() {
+      _hasUppercase = value.contains(RegExp(r'[A-Z]'));
+      _hasLowercase = value.contains(RegExp(r'[a-z]'));
+      _hasDigit = value.contains(RegExp(r'[0-9]'));
+      _hasSpecial = value.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>-_]'));
+      _hasMinLength = value.length >= 8;
+    });
+  }
+
+  Future<void> _submitNewPassword() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
       _isLoading = true;
     });
 
@@ -25,7 +47,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
     try {
       final signInResult = LoginScreen.pendingSignInResult;
-      if (signInResult == null){
+      if (signInResult == null) {
         throw Exception("No hay sesión pendiente para cambio de contraseña.");
       }
 
@@ -33,34 +55,31 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         confirmationValue: newPassword,
       );
 
-      if (result.isSignedIn){
-        // Navegar a la pantalla principal, o según el rol
-        Navigator.of(
-          context,
-        ).pushReplacementNamed('/'); // o cualquier ruta que uses
+      if (result.isSignedIn) {
+        Navigator.of(context).pushReplacementNamed('/');
       } else {
         _showError("No se pudo completar el cambio de contraseña.");
       }
-    } on AuthException catch (e){
+    } on AuthException catch (e) {
       _showError(e.message);
-    } catch (e){
+    } catch (e) {
       _showError(e.toString());
     } finally {
-      setState((){
+      setState(() {
         _isLoading = false;
       });
     }
   }
 
-  void _showError(String? message){
+  void _showError(String? message) {
     showDialog(
       context: context,
-      builder: (_)=> AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Error'),
         content: Text(message ?? 'Error desconocido'),
         actions: [
           TextButton(
-            onPressed: ()=> Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(),
             child: const Text('OK'),
           ),
         ],
@@ -69,7 +88,9 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Cambiar Contraseña')),
       body: Padding(
@@ -77,27 +98,91 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Debes cambiar tu contraseña para continuar.'),
+              const SizedBox(height: 16),
+
+              // Nueva contraseña
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
                   labelText: 'Nueva contraseña',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
-                validator: (value){
-                  if (value == null || value.isEmpty){
+                onChanged: _validatePassword,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'La contraseña no puede estar vacía';
                   }
-                  if (value.length < 8){
-                    return 'La contraseña debe tener al menos 8 caracteres';
+                  if (!(_hasUppercase &&
+                      _hasLowercase &&
+                      _hasDigit &&
+                      _hasSpecial &&
+                      _hasMinLength)) {
+                    return 'No cumple con los requisitos';
                   }
                   return null;
                 },
               ),
+              const SizedBox(height: 10),
+
+              // Confirmar contraseña
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirm,
+                decoration: InputDecoration(
+                  labelText: 'Confirmar contraseña',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirm = !_obscureConfirm;
+                      });
+                    },
+                  ),
+                ),
+                validator: (value) {
+                  if (value != _passwordController.text) {
+                    return 'Las contraseñas no coinciden';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+
+              // Requisitos de contraseña
+              Text(
+                'La contraseña debe tener:',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _buildRequirement('Al menos 8 caracteres', _hasMinLength),
+              _buildRequirement('Una mayúscula', _hasUppercase),
+              _buildRequirement('Una minúscula', _hasLowercase),
+              _buildRequirement('Un número', _hasDigit),
+              _buildRequirement('Un símbolo especial', _hasSpecial),
+
               const SizedBox(height: 20),
+
               _isLoading
-                  ? const CircularProgressIndicator()
+                  ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
                       onPressed: _submitNewPassword,
                       child: const Text('Confirmar'),
@@ -106,6 +191,26 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRequirement(String text, bool met) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(
+          met ? Icons.check_circle : Icons.circle,
+          color: met ? Colors.green : Colors.grey,
+          size: 16,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: met ? Colors.green : Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 }

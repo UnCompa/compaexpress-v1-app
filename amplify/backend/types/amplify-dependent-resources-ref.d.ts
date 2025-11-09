@@ -1,10 +1,5 @@
 export type AmplifyDependentResourcesAttributes = {
   "api": {
-    "apidcebec22": {
-      "ApiId": "string",
-      "ApiName": "string",
-      "RootUrl": "string"
-    },
     "compaexpress": {
       "GraphQLAPIEndpointOutput": "string",
       "GraphQLAPIIdOutput": "string"

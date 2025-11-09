@@ -11,6 +11,7 @@ import 'package:compaexpress/services/auditoria_service.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/user_service.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
@@ -281,7 +282,7 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
       }
 
       // Obtener caja y usuario
-      final caja = await CajaService.getCurrentCaja();
+      final caja = await CajaService.getCurrentCaja(forceRefresh: true);
       if (!caja.isActive) {
         throw Exception('La caja no está activa');
       }
@@ -659,7 +660,7 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Fecha: ${dateFormat.format(DateTime.parse(order.orderDate.toString()))}',
+                    'Fecha: ${FechaEcuador.formatearDesdeTemporal(order.orderDate.toString(), conHora: true)}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   Text(

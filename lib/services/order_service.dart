@@ -5,6 +5,7 @@ import 'package:compaexpress/entities/payment_option.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:flutter/material.dart';
 
 class OrderService {
@@ -22,7 +23,7 @@ class OrderService {
   ) async {
     debugPrint('Iniciando _saveOrder');
 
-   if (formKey != null && formKey.currentState != null) {
+    if (formKey != null && formKey.currentState != null) {
       if (!formKey.currentState!.validate()) {
         debugPrint('Validación del formulario fallida');
         return null;
@@ -50,7 +51,7 @@ class OrderService {
     try {
       final futures = await Future.wait([
         NegocioService.getCurrentUserInfo(),
-        CajaService.getCurrentCaja(),
+        CajaService.getCurrentCaja(forceRefresh: true),
       ]);
 
       final userData = futures[0];
@@ -59,10 +60,11 @@ class OrderService {
       if (!caja.isActive) {
         throw Exception('La caja no está activa');
       }
-
+      debugPrint("Guardando: $totalOrden, Pago: $totalPago, Cambio: $cambio");
+      final formatDate = FechaEcuador.aZonaEcuador(selectDate);
       final order = _createOrder(
         orderNumber,
-        selectDate,
+        formatDate,
         totalOrden,
         cambio,
         orderStatus,
@@ -72,7 +74,7 @@ class OrderService {
 
       final orderResponse = await _createOrderInDB(order);
       final createdOrder = orderResponse.data!;
-      debugPrint('Orden creada con ID: ${createdOrder.id}');
+      debugPrint('Orden creada: $createdOrder');
 
       await _processOrderInParallel(
         context,
@@ -176,17 +178,20 @@ class OrderService {
     for (var payment in paymentOptions.where(
       (p) => p.seleccionado && p.monto > 0,
     )) {
+      debugPrint('Monto del pago: ${payment.monto}');
+      debugPrint("Retorno: ${createdOrder.orderReturnedTotal}");
       switch (payment.tipo) {
         case TiposPago.EFECTIVO:
-          saldoEfectivo += payment.monto;
+          saldoEfectivo += payment.monto - createdOrder.orderReturnedTotal;
           break;
         case TiposPago.TRANSFERENCIA:
         case TiposPago.DEPOSITO_BANCARIO:
-          saldoTransferencias += payment.monto;
+          saldoTransferencias +=
+              payment.monto - createdOrder.orderReturnedTotal;
           break;
         case TiposPago.TARJETA_DEBITO:
         case TiposPago.TARJETA_CREDITO:
-          saldoTarjetas += payment.monto;
+          saldoTarjetas += payment.monto - createdOrder.orderReturnedTotal;
           break;
         case TiposPago.CHEQUE:
         case TiposPago.PAYPHONE:
@@ -196,10 +201,15 @@ class OrderService {
         case TiposPago.CRIPTOMONEDA:
         case TiposPago.VALE:
         case TiposPago.OTRO:
-          saldoOtros += payment.monto;
+          saldoOtros += payment.monto - createdOrder.orderReturnedTotal;
           break;
       }
     }
+
+    debugPrint('Saldo efectivo - Antes/Ahora: ${caja.saldoInicial}/$saldoEfectivo');
+    debugPrint('Saldo transferencias - Antes/Ahora: ${caja.saldoTransferencias}/$saldoTransferencias');
+    debugPrint('Saldo tarjetas - Antes/Ahora: ${caja.saldoTarjetas}/$saldoTarjetas');
+    debugPrint('Saldo otros - Antes/Ahora: ${caja.saldoOtros}/$saldoOtros');
 
     final cajaActualizada = caja.copyWith(
       saldoInicial: (caja.saldoInicial) + saldoEfectivo,
@@ -209,6 +219,8 @@ class OrderService {
       saldoOtros: (caja.saldoOtros ?? 0.0) + saldoOtros,
       updatedAt: TemporalDateTime.now(),
     );
+
+    debugPrint('Caja actualizada: $cajaActualizada');
 
     final updatedOrder = createdOrder.copyWith(cajaMovimientoID: movementId);
 
@@ -341,9 +353,10 @@ class OrderService {
     userData,
     caja,
   ) {
+    final dateSave = FechaEcuador.aZonaEcuador(selectDate);
     return Order(
       orderNumber: orderNumber,
-      orderDate: TemporalDateTime(selectDate),
+      orderDate: TemporalDateTime(dateSave),
       orderReceivedTotal: totalOrden,
       orderReturnedTotal: cambio,
       orderStatus: orderStatus,

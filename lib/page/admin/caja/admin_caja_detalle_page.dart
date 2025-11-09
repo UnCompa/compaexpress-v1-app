@@ -1,6 +1,7 @@
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -106,38 +107,40 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FF),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Detalles de Caja',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.mulish(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: colorScheme.onPrimary,
           ),
         ),
-        backgroundColor: const Color(0xFF1565C0),
+        backgroundColor: colorScheme.primary,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: colorScheme.onPrimary),
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1976D2)),
-              ),
-            )
+          ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
           : _error != null
           ? Center(
               child: Text(
                 _error!,
-                style: GoogleFonts.inter(fontSize: 16, color: Colors.red[700]),
+                style: GoogleFonts.mulish(
+                  fontSize: 16,
+                  color: colorScheme.error,
+                ),
               ),
             )
           : _caja == null
           ? Center(
               child: Text(
                 'No se encontraron datos',
-                style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[600]),
+                style: GoogleFonts.mulish(fontSize: 16, color: theme.hintColor),
               ),
             )
           : SingleChildScrollView(
@@ -150,11 +153,11 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: colorScheme.shadow.withOpacity(0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -168,12 +171,12 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1976D2).withOpacity(0.1),
+                                color: colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 Icons.account_balance_wallet,
-                                color: const Color(0xFF1976D2),
+                                color: colorScheme.onPrimaryContainer,
                                 size: 24,
                               ),
                             ),
@@ -181,40 +184,45 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
                             Expanded(
                               child: Text(
                                 'Información de la Caja',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.mulish(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1565C0),
+                                  color: colorScheme.primary,
                                 ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _buildInfoRow('ID de Caja', _caja!.id),
+                        _buildInfoRow(context, 'ID de Caja', _caja!.id),
                         _buildInfoRow(
+                          context,
                           'Saldo Inicial',
                           '\$${_caja!.saldoInicial.toStringAsFixed(2)}',
                         ),
                         _buildInfoRow(
+                          context,
                           'Saldo Transferencias',
                           _caja!.saldoTransferencias != null
                               ? '\$${_caja!.saldoTransferencias!.toStringAsFixed(2)}'
                               : 'N/A',
                         ),
                         _buildInfoRow(
+                          context,
                           'Saldo Tarjetas',
                           _caja!.saldoTarjetas != null
                               ? '\$${_caja!.saldoTarjetas!.toStringAsFixed(2)}'
                               : 'N/A',
                         ),
                         _buildInfoRow(
+                          context,
                           'Saldo Otros',
                           _caja!.saldoOtros != null
                               ? '\$${_caja!.saldoOtros!.toStringAsFixed(2)}'
                               : 'N/A',
                         ),
                         _buildInfoRow(
+                          context,
                           'Estado',
                           _caja!.isActive ? "Activa" : "Inactiva",
                           valueColor: _caja!.isActive
@@ -222,10 +230,12 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
                               : Colors.red[600],
                         ),
                         _buildInfoRow(
+                          context,
                           'Fecha de Creación',
                           _formatDate(_caja!.createdAt.getDateTimeInUtc()),
                         ),
                         _buildInfoRow(
+                          context,
                           'Última Actualización',
                           _formatDate(_caja!.updatedAt.getDateTimeInUtc()),
                         ),
@@ -236,26 +246,40 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
 
                   // Monedas
                   _buildSection(
+                    context,
                     'Monedas',
                     Icons.monetization_on,
                     _cajaMonedas.isEmpty
-                        ? [_buildEmptyState('No hay monedas registradas')]
+                        ? [
+                            _buildEmptyState(
+                              context,
+                              'No hay monedas registradas',
+                            ),
+                          ]
                         : _cajaMonedas
-                              .map((moneda) => _buildMonedaCard(moneda))
+                              .map(
+                                (moneda) => _buildMonedaCard(context, moneda),
+                              )
                               .toList(),
                   ),
                   const SizedBox(height: 20),
 
                   // Movimientos
                   _buildSection(
+                    context,
                     'Movimientos',
                     Icons.swap_horiz,
                     _cajaMovimientos.isEmpty
-                        ? [_buildEmptyState('No hay movimientos registrados')]
+                        ? [
+                            _buildEmptyState(
+                              context,
+                              'No hay movimientos registrados',
+                            ),
+                          ]
                         : _cajaMovimientos
                               .map(
                                 (movimiento) =>
-                                    _buildMovimientoCard(movimiento),
+                                    _buildMovimientoCard(context, movimiento),
                               )
                               .toList(),
                   ),
@@ -263,12 +287,20 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
 
                   // Cierres de caja
                   _buildSection(
+                    context,
                     'Cierres de Caja',
                     Icons.lock_clock,
                     _cierresCaja.isEmpty
-                        ? [_buildEmptyState('No hay cierres registrados')]
+                        ? [
+                            _buildEmptyState(
+                              context,
+                              'No hay cierres registrados',
+                            ),
+                          ]
                         : _cierresCaja
-                              .map((cierre) => _buildCierreCard(cierre))
+                              .map(
+                                (cierre) => _buildCierreCard(context, cierre),
+                              )
                               .toList(),
                   ),
                   const SizedBox(height: 20),
@@ -278,7 +310,15 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -288,10 +328,10 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
             width: 120,
             child: Text(
               label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.mulish(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -299,10 +339,10 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.mulish(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: valueColor ?? const Color(0xFF263238),
+                color: valueColor ?? colorScheme.onSurface,
               ),
             ),
           ),
@@ -311,15 +351,23 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
     );
   }
 
-  Widget _buildSection(String title, IconData icon, List<Widget> children) {
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    IconData icon,
+    List<Widget> children,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.1),
+            color: colorScheme.shadow.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -331,7 +379,7 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1976D2).withOpacity(0.05),
+              color: colorScheme.primaryContainer.withOpacity(0.5),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -339,14 +387,14 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF1976D2), size: 24),
+                Icon(icon, color: colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.mulish(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1565C0),
+                    color: colorScheme.primary,
                   ),
                 ),
               ],
@@ -361,15 +409,17 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(BuildContext context, String message) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(24),
       child: Center(
         child: Text(
           message,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.mulish(
             fontSize: 14,
-            color: Colors.grey[500],
+            color: theme.hintColor,
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -377,49 +427,109 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
     );
   }
 
-  Widget _buildMonedaCard(CajaMoneda moneda) {
+  Widget _buildMonedaCard(BuildContext context, CajaMoneda moneda) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // Calcular cantidad de billetes/monedas
+    final cantidad = (moneda.monto / moneda.denominacion).round();
+    final total = moneda.monto;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFE),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE3F2FD)),
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant, width: 1),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF2196F3).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+              color: Colors.amber.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.monetization_on,
-              color: const Color(0xFF2196F3),
-              size: 20,
-            ),
+            child: Icon(Icons.attach_money, color: Colors.amber[700], size: 24),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${moneda.moneda} - ${moneda.denominacion}',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF263238),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      moneda.moneda,
+                      style: GoogleFonts.mulish(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '\$${moneda.denominacion.toStringAsFixed(2)}',
+                      style: GoogleFonts.mulish(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Monto: \$${moneda.monto}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.numbers,
+                            size: 14,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$cantidad',
+                            style: GoogleFonts.mulish(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Total:',
+                      style: GoogleFonts.mulish(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '\$${total.toStringAsFixed(2)}',
+                      style: GoogleFonts.mulish(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -429,52 +539,66 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
     );
   }
 
-  Widget _buildMovimientoCard(CajaMovimiento movimiento) {
-    final isIngreso =
-        movimiento.tipo.toLowerCase().contains('ingreso') ?? false;
+  Widget _buildMovimientoCard(BuildContext context, CajaMovimiento movimiento) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isIngreso = movimiento.tipo.toLowerCase().contains('ingreso');
     final color = isIngreso ? Colors.green : Colors.orange;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFE),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE3F2FD)),
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant, width: 1),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               isIngreso ? Icons.arrow_upward : Icons.arrow_downward,
               color: color,
-              size: 20,
+              size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${movimiento.tipo} - \$${movimiento.monto}',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF263238),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      movimiento.tipo,
+                      style: GoogleFonts.mulish(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      '\$${movimiento.monto.toStringAsFixed(2)}',
+                      style: GoogleFonts.mulish(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   movimiento.descripcion ?? 'Sin descripción',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.mulish(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -485,58 +609,104 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
     );
   }
 
-  Widget _buildCierreCard(CierreCaja cierre) {
+  Widget _buildCierreCard(BuildContext context, CierreCaja cierre) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFE),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE3F2FD)),
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant, width: 1),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF673AB7).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+              color: Colors.deepPurple.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.lock_clock,
-              color: const Color(0xFF673AB7),
-              size: 20,
+              color: Colors.deepPurple[400],
+              size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Saldo Final: \$${cierre.saldoFinal}',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF263238),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Saldo Final:',
+                      style: GoogleFonts.mulish(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      '\$${cierre.saldoFinal.toStringAsFixed(2)}',
+                      style: GoogleFonts.mulish(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Diferencia: \$${cierre.diferencia}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Diferencia:',
+                      style: GoogleFonts.mulish(
+                        fontSize: 13,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '\$${cierre.diferencia.toStringAsFixed(2)}',
+                      style: GoogleFonts.mulish(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: cierre.diferencia == 0
+                            ? Colors.green[700]
+                            : Colors.orange[700],
+                      ),
+                    ),
+                  ],
                 ),
                 if (cierre.observaciones != null &&
                     cierre.observaciones!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Observaciones: ${cierre.observaciones}',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.grey[600],
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.notes, size: 14, color: colorScheme.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            cierre.observaciones!,
+                            style: GoogleFonts.mulish(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -550,6 +720,7 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'N/A';
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    final ecuadorDate = FechaEcuador.aZonaEcuador(date);
+    return '${ecuadorDate.day}/${ecuadorDate.month}/${ecuadorDate.year} ${ecuadorDate.hour}:${ecuadorDate.minute.toString().padLeft(2, '0')}';
   }
 }

@@ -10,7 +10,7 @@ class ThemeNotifier extends StateNotifier<ThemePreferences> {
 
   ThemeNotifier()
     : super(
-        ThemePreferences(themeMode: ThemeMode.light, seedColor: Colors.blue),
+        ThemePreferences(themeMode: ThemeMode.system, seedColor: Colors.blue),
       ) {
     _loadPreferences();
   }

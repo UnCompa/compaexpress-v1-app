@@ -6,7 +6,7 @@ class EditSellerUserPage extends StatefulWidget {
   const EditSellerUserPage({super.key});
 
   @override
-  State<StatefulWidget> createState(){
+  State<StatefulWidget> createState() {
     return _EditSellerUserPageState();
   }
 }
@@ -20,23 +20,24 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
   String? _currentRole;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _loadUserData();
   }
 
-  Future<void> _loadUserData()async {
-    setState((){
+  Future<void> _loadUserData() async {
+    setState(() {
       _isLoading = true;
     });
 
     try {
       final attributes = await Amplify.Auth.fetchUserAttributes();
 
-      for (final attribute in attributes){
-        print("ATRIBUTOS");
-        print(attribute);
-        switch (attribute.userAttributeKey.key){
+      for (final attribute in attributes) {
+        debugPrint(
+          'Attribute: ${attribute.userAttributeKey.key} = ${attribute.value}',
+        );
+        switch (attribute.userAttributeKey.key) {
           case 'email':
             _emailController.text = attribute.value;
             break;
@@ -48,21 +49,25 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
             break;
         }
       }
-    } catch (e){
-      _showErrorSnackBar('Error al cargar los datos del usuario: $e');
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar('Error al cargar los datos del usuario: $e');
+      }
     } finally {
-      setState((){
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _updateUserAttributes()async {
-    if (!_formKey.currentState!.validate()){
+  Future<void> _updateUserAttributes() async {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState((){
+    setState(() {
       _isLoading = true;
     });
 
@@ -74,25 +79,25 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
       final currentAttributes = await Amplify.Auth.fetchUserAttributes();
       final currentEmail = currentAttributes
           .firstWhere(
-            (attr)=> attr.userAttributeKey.key == 'email',
-            orElse: ()=> const AuthUserAttribute(
+            (attr) => attr.userAttributeKey.key == 'email',
+            orElse: () => const AuthUserAttribute(
               userAttributeKey: AuthUserAttributeKey.email,
               value: '',
             ),
-)
+          )
           .value;
       final currentPhone = currentAttributes
           .firstWhere(
-            (attr)=> attr.userAttributeKey.key == 'phone_number',
-            orElse: ()=> const AuthUserAttribute(
+            (attr) => attr.userAttributeKey.key == 'phone_number',
+            orElse: () => const AuthUserAttribute(
               userAttributeKey: AuthUserAttributeKey.phoneNumber,
               value: '',
             ),
-)
+          )
           .value;
 
       // Email
-      if (_emailController.text.trim()!= currentEmail){
+      if (_emailController.text.trim() != currentEmail) {
         final emailAttribute = AuthUserAttribute(
           userAttributeKey: AuthUserAttributeKey.email,
           value: _emailController.text.trim(),
@@ -102,8 +107,8 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
       }
 
       // Teléfono
-      if (_phoneController.text.trim()!= currentPhone &&
-          _phoneController.text.trim().isNotEmpty){
+      if (_phoneController.text.trim() != currentPhone &&
+          _phoneController.text.trim().isNotEmpty) {
         final phoneAttribute = AuthUserAttribute(
           userAttributeKey: AuthUserAttributeKey.phoneNumber,
           value: _phoneController.text.trim(),
@@ -113,38 +118,52 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
             AuthUserAttributeKey.phoneNumber;
       }
 
+      if (attributes.isEmpty) {
+        _showInfoSnackBar('No hay cambios para guardar');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
       await Amplify.Auth.updateUserAttributes(attributes: attributes);
 
-      if (attributesNeedingVerification.isNotEmpty){
+      if (attributesNeedingVerification.isNotEmpty) {
         // Navegar a verificación
         await _handleVerification(attributesNeedingVerification);
       } else {
         _showSuccessSnackBar('Perfil actualizado exitosamente');
-        Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
       }
-    } catch (e){
+    } catch (e) {
       _showErrorSnackBar('Error al actualizar el perfil: $e');
     } finally {
-      setState((){
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _handleVerification(
     Map<String, AuthUserAttributeKey> attributesToVerify,
-  )async {
-    for (final entry in attributesToVerify.entries){
+  ) async {
+    for (final entry in attributesToVerify.entries) {
       final attributeName = entry.key;
       final attributeKey = entry.value;
       final attributeValue = attributeKey.key == 'email'
           ? _emailController.text.trim()
           : _phoneController.text.trim();
 
+      if (!mounted) return;
+
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context)=> VerifyAttributePage(
+          builder: (context) => VerifyAttributePage(
             attributeKey: attributeKey,
             attributeValue: attributeValue,
             attributeName: attributeName,
@@ -152,7 +171,7 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
         ),
       );
 
-      if (result == true){
+      if (result == true) {
         // Verificación exitosa, continuar con siguiente atributo si existe
         continue;
       } else {
@@ -164,47 +183,121 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
 
     // Todas las verificaciones completadas
     _showSuccessSnackBar('¡Perfil actualizado y verificado exitosamente!');
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context, true);
+    }
   }
 
-  void _showErrorSnackBar(String message){
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+        content: Row(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.onError,
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
       ),
     );
   }
 
-  void _showSuccessSnackBar(String message){
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              color: Theme.of(context).colorScheme.onTertiary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.tertiary,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showInfoSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
       ),
     );
   }
 
   @override
-  void dispose(){
+  void dispose() {
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Edita tu perfil'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Editar Perfil',
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onPrimary,
+          ),
+        ),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Cargando datos...',
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -213,55 +306,121 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Header con información del usuario
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.greenAccent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.greenAccent.withOpacity(0.3),
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.greenAccent,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Rol: ${_currentRole ?? "N/A"}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.person,
+                                size: 48,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Text(
+                              'Información del Usuario',
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Rol: ${_currentRole ?? "No asignado"}',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 24),
 
+                    // Título de la sección
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text(
+                        'Datos de Contacto',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+
                     // Campo Email
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(color: colorScheme.primary),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: colorScheme.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: colorScheme.primary,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.error),
+                        ),
                         helperText:
                             'Requerirá verificación si cambias el email',
+                        helperStyle: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withOpacity(0.3),
                       ),
-                      validator: (value){
-                        if (value == null || value.isEmpty){
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
                           return 'El email es requerido';
                         }
                         if (!RegExp(
                           r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)){
+                        ).hasMatch(value)) {
                           return 'Ingresa un email válido';
                         }
                         return null;
@@ -274,24 +433,87 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Número de teléfono',
-                        prefixIcon: Icon(Icons.phone),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: 'Número de teléfono (opcional)',
+                        labelStyle: TextStyle(color: colorScheme.primary),
+                        prefixIcon: Icon(
+                          Icons.phone_outlined,
+                          color: colorScheme.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: colorScheme.primary,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.error),
+                        ),
                         helperText: 'Formato: +593XXXXXXXXX',
+                        helperStyle: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withOpacity(0.3),
                       ),
-                      validator: (value){
-                        if (value == null || value.isEmpty){
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
                           return null; // Teléfono es opcional
                         }
-                        if (!value.startsWith('+')){
+                        if (!value.startsWith('+')) {
                           return 'El teléfono debe incluir el código de país (+593)';
+                        }
+                        if (value.length < 12) {
+                          return 'Ingresa un número válido';
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
+
+                    // Información adicional
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondaryContainer.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.secondary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: colorScheme.onSecondaryContainer,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Los cambios en email y teléfono requieren verificación mediante código.',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // Botones de acción
                     Row(
                       children: [
@@ -299,69 +521,57 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
                           child: OutlinedButton(
                             onPressed: _isLoading
                                 ? null
-                                : (){
+                                : () {
                                     Navigator.pop(context);
                                   },
-                            child: const Text('Cancelar'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: BorderSide(color: colorScheme.outline),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancelar',
+                              style: textTheme.labelLarge?.copyWith(
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           flex: 2,
-                          child: ElevatedButton(
+                          child: FilledButton(
                             onPressed: _isLoading
                                 ? null
                                 : _updateUserAttributes,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.greenAccent,
-                              foregroundColor: Colors.white,
+                            style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             child: _isLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     height: 20,
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        colorScheme.onPrimary,
                                       ),
                                     ),
-)
-                                : const Text('Guardar Cambios'),
+                                  )
+                                : Text(
+                                    'Guardar Cambios',
+                                    style: textTheme.labelLarge?.copyWith(
+                                      color: colorScheme.onPrimary,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Información adicional
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.blue,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Los cambios en email y teléfono requieren verificación.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),

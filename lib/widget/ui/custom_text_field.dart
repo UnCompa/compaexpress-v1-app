@@ -17,6 +17,17 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
   final int? maxLength;
   final bool enabled;
+  final FocusNode? focusNode;
+  final VoidCallback? onEditingComplete;
+  final Function(String)? onChanged;
+  final Function(String)? onFieldSubmitted;
+  final TextInputAction? textInputAction;
+  final bool autofocus;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final String? errorText;
+  final String? helperText;
+  final int? minLines;
 
   const CustomTextField({
     super.key,
@@ -34,6 +45,17 @@ class CustomTextField extends StatelessWidget {
     this.maxLines = 1,
     this.maxLength,
     this.enabled = true,
+    this.focusNode,
+    this.onEditingComplete,
+    this.onChanged,
+    this.onFieldSubmitted,
+    this.textInputAction,
+    this.autofocus = false,
+    this.readOnly = false,
+    this.onTap,
+    this.errorText,
+    this.helperText,
+    this.minLines,
   });
 
   @override
@@ -43,11 +65,17 @@ class CustomTextField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       enabled: enabled,
       obscureText: obscureText,
+      autofocus: autofocus,
+      readOnly: readOnly,
+      onTap: onTap,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
+        errorText: errorText,
+        helperText: helperText,
         hintStyle: theme.textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurfaceVariant.withOpacity(0.5),
         ),
@@ -55,6 +83,9 @@ class CustomTextField extends StatelessWidget {
           color: enabled
               ? colorScheme.onSurfaceVariant
               : colorScheme.onSurface.withOpacity(0.4),
+        ),
+        helperStyle: theme.textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
         ),
         prefixIcon: Icon(
           prefixIcon,
@@ -68,7 +99,9 @@ class CustomTextField extends StatelessWidget {
           color: colorScheme.onSurfaceVariant,
         ),
         filled: true,
-        fillColor: theme.scaffoldBackgroundColor,
+        fillColor: enabled
+            ? theme.scaffoldBackgroundColor
+            : colorScheme.surfaceContainerHighest.withOpacity(0.3),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outline, width: 1),
@@ -111,9 +144,14 @@ class CustomTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       textCapitalization: textCapitalization,
       maxLines: maxLines,
+      minLines: minLines,
       maxLength: maxLength,
       cursorColor: colorScheme.primary,
       cursorWidth: 2.0,
+      onEditingComplete: onEditingComplete,
+      onChanged: onChanged,
+      onFieldSubmitted: onFieldSubmitted,
+      textInputAction: textInputAction,
     );
   }
 }

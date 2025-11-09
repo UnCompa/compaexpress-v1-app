@@ -1,9 +1,4 @@
-import 'dart:async';
-
-import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:compaexpress/models/Categoria.dart';
 import 'package:compaexpress/models/Producto.dart';
 import 'package:compaexpress/models/ProductoPrecios.dart';
 import 'package:compaexpress/page/admin/inventory/admin__view_inventory_details_screen.dart';
@@ -11,240 +6,66 @@ import 'package:compaexpress/page/admin/inventory/admin_create_inventory_product
 import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
+import 'package:compaexpress/providers/products_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
-class AdminViewInventoryScreen extends StatefulWidget {
+class AdminViewInventoryScreen extends ConsumerStatefulWidget {
   const AdminViewInventoryScreen({super.key});
 
   @override
-  _AdminViewInventoryScreenState createState() =>
+  ConsumerState<AdminViewInventoryScreen> createState() =>
       _AdminViewInventoryScreenState();
 }
 
-class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
-  List<Producto> _allProducts = [];
-  List<Producto> _filteredProducts = [];
-
-  SubscriptionStatus prevSubscriptionStatus = SubscriptionStatus.disconnected;
-  StreamSubscription<GraphQLResponse<Producto>>? onCreateSubscription;
-  StreamSubscription<GraphQLResponse<Producto>>? onUpdateSubscription;
-
-  List<Categoria> _categories = [];
+class _AdminViewInventoryScreenState
+    extends ConsumerState<AdminViewInventoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategoryId;
   String _negocioID = "";
-  bool _isLoading = true;
-  String _sortBy = 'nombre'; // nombre, precio, stock
+  String _sortBy = 'nombre';
+  bool _onlyFavorites = false;
+  bool _onlyLowStock = false;
 
   @override
   void initState() {
     super.initState();
-    Amplify.Hub.listen(HubChannel.Api, (ApiHubEvent event) {
-      if (event is SubscriptionHubEvent) {
-        if (prevSubscriptionStatus == SubscriptionStatus.connecting &&
-            event.status == SubscriptionStatus.connected) {
-          _getProductosByNegocio();
-        }
-        prevSubscriptionStatus = event.status;
-      }
-    });
     _initializeData();
-    _searchController.addListener(_filterProducts);
-    subscribe();
+    _searchController.addListener(_onSearchChanged);
   }
 
-  void subscribe() {
-    // Suscripción para onCreate
-    final subscriptionRequest = ModelSubscriptions.onCreate(Producto.classType);
-    onCreateSubscription = Amplify.API
-        .subscribe(
-          subscriptionRequest,
-          onEstablished: () => safePrint('Subscription on Created established'),
-        )
-        .listen(
-          (event) {
-            if (event.data != null) {
-              safePrint('Data Event: ${event.data}');
-              // MEJORA 1: Verificar que el producto pertenece al negocio actual
-              if (event.data!.negocioID == _negocioID) {
-                setState(() {
-                  _allProducts.add(event.data!);
-                  _filterProducts(); // MEJORA 2: Aplicar filtros después de agregar
-                });
-
-                // MEJORA 3: Mostrar notificación opcional
-                _showProductAddedNotification(event.data!);
-              }
-            }
-          },
-          onError: (Object e) =>
-              safePrint('Error in onCreate subscription: $e'),
-        );
-
-    // Suscripción para onUpdate
-    final subscriptionRequestUpdated = ModelSubscriptions.onUpdate(
-      Producto.classType,
-    );
-    onUpdateSubscription = Amplify.API
-        .subscribe(
-          subscriptionRequestUpdated,
-          onEstablished: () => safePrint('Subscription on Updated established'),
-        )
-        .listen(
-          (event) {
-            if (event.data != null) {
-              safePrint('Data Event: ${event.data}');
-              // MEJORA 4: Verificar que el producto pertenece al negocio actual
-              if (event.data!.negocioID == _negocioID) {
-                setState(() {
-                  final index = _allProducts.indexWhere(
-                    (p) => p.id == event.data!.id,
-                  );
-                  if (index != -1) {
-                    _allProducts[index] = event.data!;
-                  } else {
-                    _allProducts.add(event.data!);
-                  }
-                  _filterProducts(); // MEJORA 5: Aplicar filtros después de actualizar
-                });
-
-                // MEJORA 6: Mostrar notificación opcional
-                _showProductUpdatedNotification(event.data!);
-              }
-            }
-          },
-          onError: (Object e) =>
-              safePrint('Error in onUpdate subscription: $e'),
-        );
+  Future<void> _initializeData() async {
+    final info = await NegocioService.getCurrentUserInfo();
+    setState(() {
+      _negocioID = info.negocioId;
+    });
   }
 
-  void _showProductAddedNotification(Producto product) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Nuevo producto agregado: ${product.nombre}'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-          action: SnackBarAction(
-            label: 'Ver',
-            textColor: Colors.white,
-            onPressed: () {
-              // Navegar al producto o hacer scroll hasta él
-            },
-          ),
-        ),
-      );
-    }
-  }
-
-  void _showProductUpdatedNotification(Producto product) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Producto actualizado: ${product.nombre}'),
-          backgroundColor: Colors.blue,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+  void _onSearchChanged() {
+    setState(() {}); // Trigger rebuild to apply filters
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_filterProducts);
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    onCreateSubscription?.cancel();
-    onUpdateSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _initializeData() async {
-    await Future.wait([_getProductosByNegocio(), _getCategorias()]);
-    setState(() {
-      _isLoading = false;
-    });
-  }
+  List<Producto> _getFilteredAndSortedProducts() {
+    final productsState = ref.watch(productsProvider);
 
-  Future<void> _getProductosByNegocio() async {
-    try {
-      final info = await NegocioService.getCurrentUserInfo();
-      final negocioId = info.negocioId;
-      _negocioID = negocioId;
+    var filtered = productsState.filterProducts(
+      searchQuery: _searchController.text,
+      categoryId: _selectedCategoryId,
+      onlyFavorites: _onlyFavorites,
+      onlyLowStock: _onlyLowStock,
+    );
 
-      final request = ModelQueries.list(
-        Producto.classType,
-        where: Producto.NEGOCIOID.eq(negocioId) & Producto.ISDELETED.eq(false),
-      );
-
-      final response = await Amplify.API.query(request: request).response;
-      print("DATA $response");
-      if (response.data != null) {
-        final products = response.data!.items.whereType<Producto>().toList();
-
-        setState(() {
-          _allProducts = products;
-          _filteredProducts = List.from(products);
-          _sortProducts();
-        });
-      } else if (response.errors.isNotEmpty) {
-        print('Query failed: ${response.errors}');
-      }
-    } catch (e) {
-      print('Error fetching products: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al recuperar los productos")),
-      );
-    }
-  }
-
-  Future<void> _getCategorias() async {
-    try {
-      final negocioInfo = await NegocioService.getCurrentUserInfo();
-      final request = ModelQueries.list(
-        Categoria.classType,
-        where:
-            Categoria.NEGOCIOID.eq(negocioInfo.negocioId) &
-            Categoria.ISDELETED.eq(false),
-      );
-      final response = await Amplify.API.query(request: request).response;
-
-      if (response.data != null) {
-        final categories = response.data!.items.whereType<Categoria>().toList();
-
-        setState(() {
-          _categories = categories;
-        });
-      }
-    } catch (e) {
-      print('Error fetching categories: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al recuperar las categorias")),
-      );
-    }
-  }
-
-  void _filterProducts() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredProducts = _allProducts.where((product) {
-        // Verificar que no esté eliminado
-        if (product.isDeleted == true) return false;
-
-        final matchesName = product.nombre.toLowerCase().contains(query);
-        final matchesBarcode = product.barCode.toLowerCase().contains(query);
-        final matchesCategory =
-            _selectedCategoryId == null ||
-            product.categoriaID == _selectedCategoryId;
-
-        return (matchesName || matchesBarcode) && matchesCategory;
-      }).toList();
-
-      _sortProducts();
-    });
-  }
-
-  void _sortProducts() {
-    _filteredProducts.sort((a, b) {
+    // Ordenar
+    filtered.sort((a, b) {
       switch (_sortBy) {
         case 'stock':
           return a.stock.compareTo(b.stock);
@@ -253,27 +74,11 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
           return a.favorito ? -1 : 1;
         case 'nombre':
         default:
-          return a.nombre.compareTo(b.nombre);
+          return a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase());
       }
     });
-  }
 
-  String _getCategoryName(String? categoryId) {
-    if (categoryId == null) return 'Sin categoría';
-
-    final category = _categories.firstWhere(
-      (cat) => cat.id == categoryId,
-      orElse: () => Categoria(
-        nombre: 'Sin categoría',
-        id: '',
-        negocioID: '',
-        isDeleted: false,
-        createdAt: TemporalDateTime.now(),
-        updatedAt: TemporalDateTime.now(),
-      ),
-    );
-
-    return category.nombre;
+    return filtered;
   }
 
   Color _getStockColor(int stock) {
@@ -282,249 +87,117 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
     return Colors.green;
   }
 
-  Widget _buildStockChip(int stock) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _getStockColor(stock).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getStockColor(stock), width: 1),
-      ),
-      child: Text(
-        'Stock: $stock',
-        style: TextStyle(
-          color: _getStockColor(stock),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _changedFavoriteProduct(Producto product) async {
-    try {
-      final model = product.copyWith(favorito: !product.favorito);
-      final request = ModelMutations.update(model);
-      final response = await Amplify.API.mutate(request: request).response;
-      if (!response.hasErrors) {
-        _getProductosByNegocio();
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Cambio exitoso")));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Ocurrio un error al cambiar a favorito"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final productsState = ref.watch(productsProvider);
+    final filteredProducts = _getFilteredAndSortedProducts();
+    final lowStockCount = ref.watch(lowStockProductsProvider).length;
+    final outOfStockCount = ref.watch(outOfStockProductsProvider).length;
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text('Gestionar Inventario'),
-        elevation: 2,
+        title: Text(
+          'Gestionar Inventario',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         actions: [
+          // Indicador de alertas de stock
+          if (lowStockCount > 0 || outOfStockCount > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: Badge(
+                  label: Text('${lowStockCount + outOfStockCount}'),
+                  backgroundColor: Colors.red,
+                  child: IconButton(
+                    icon: Icon(Icons.warning_amber_rounded),
+                    onPressed: () {
+                      _showStockAlertsDialog(context, theme);
+                    },
+                    tooltip: 'Alertas de stock',
+                  ),
+                ),
+              ),
+            ),
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.refresh_rounded),
             onPressed: () {
-              setState(() {
-                _isLoading = true;
-              });
-              _initializeData();
+              ref
+                  .read(productsProvider.notifier)
+                  .loadProducts(forceRefresh: true);
             },
+            tooltip: 'Refrescar',
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.sort),
+            icon: Icon(Icons.sort_rounded),
+            tooltip: 'Ordenar',
             onSelected: (value) {
               setState(() {
                 _sortBy = value;
-                _sortProducts();
               });
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'nombre', child: Text('Ordenar por Nombre')),
+              PopupMenuItem(
+                value: 'nombre',
+                child: Row(
+                  children: [
+                    Icon(Icons.sort_by_alpha, size: 20),
+                    SizedBox(width: 12),
+                    Text('Por Nombre'),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: 'favorito',
-                child: Text('Ordenar por Favorito'),
+                child: Row(
+                  children: [
+                    Icon(Icons.star, size: 20),
+                    SizedBox(width: 12),
+                    Text('Por Favorito'),
+                  ],
+                ),
               ),
-              PopupMenuItem(value: 'stock', child: Text('Ordenar por Stock')),
+              PopupMenuItem(
+                value: 'stock',
+                child: Row(
+                  children: [
+                    Icon(Icons.inventory_2, size: 20),
+                    SizedBox(width: 12),
+                    Text('Por Stock'),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+      body: productsState.isLoading && !productsState.productosLoaded
+          ? _buildLoadingState(theme)
           : Column(
               children: [
-                // Filtros y búsqueda
-                Container(
-                  color: theme.colorScheme.surface,
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // Botón categorías
-                      Container(
-                        width: double.infinity,
-                        margin: EdgeInsets.only(bottom: 16),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.of(
-                              context,
-                            ).pushNamed(Routes.adminViewCategorias);
-                          },
-                          icon: Icon(Icons.category),
-                          label: Text("Gestionar Categorías"),
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
+                // Filtros y búsqueda con mejor diseño
+                _buildFiltersSection(theme, productsState),
 
-                      // Barra de búsqueda
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          labelText: 'Buscar...',
-                          prefixIcon: Icon(Icons.search),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                  },
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
+                // Chips de filtrado rápido
+                _buildQuickFilters(theme),
 
-                      SizedBox(height: 16),
-
-                      // Filtro por categoría
-                      DropdownButtonFormField<String?>(
-                        value: _selectedCategoryId,
-                        decoration: InputDecoration(
-                          labelText: 'Filtrar por categoría',
-                          prefixIcon: Icon(Icons.filter_list),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        items: [
-                          DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text('Todas las categorías'),
-                          ),
-                          ..._categories.map((categoria) {
-                            return DropdownMenuItem<String?>(
-                              value: categoria.id,
-                              child: Text(categoria.nombre),
-                            );
-                          }),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCategoryId = value;
-                            _filterProducts();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
+                // Estadísticas rápidas
+                _buildStatsBar(
+                  theme,
+                  filteredProducts.length,
+                  productsState.productos.length,
                 ),
 
-                // Contador de productos
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${_filteredProducts.length} productos encontrados',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-                      Spacer(),
-                      Text(
-                        'Ordenado por $_sortBy',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Lista de productos
+                // Lista de productos con animaciones
                 Expanded(
-                  child: _filteredProducts.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                'No se encontraron productos',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              if (_searchController.text.isNotEmpty ||
-                                  _selectedCategoryId != null)
-                                TextButton(
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      _selectedCategoryId = null;
-                                      _filterProducts();
-                                    });
-                                  },
-                                  child: Text('Limpiar filtros'),
-                                ),
-                            ],
-                          ),
-                        )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            final width = constraints.maxWidth;
-                            final crossAxisCount = width > 1000 ? 2 : 1;
-                            final childAspectRatio = width > 1000
-                                ? 2.4
-                                : width > 800
-                                ? 1.9
-                                : 1.3;
-                            return GridView.builder(
-                              padding: EdgeInsets.all(16),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    childAspectRatio: childAspectRatio,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                  ),
-                              itemCount: _filteredProducts.length,
-                              itemBuilder: (context, index) {
-                                final product = _filteredProducts[index];
-                                return _buildProductCard(product, theme);
-                              },
-                            );
-                          },
-                        ),
+                  child: filteredProducts.isEmpty
+                      ? _buildEmptyState(theme)
+                      : _buildProductsList(filteredProducts, theme),
                 ),
               ],
             ),
@@ -536,320 +209,57 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
                   AdminCreateInventoryProduct(negocioID: _negocioID),
             ),
           );
-          if (result == null) return;
-
-          if (result) {
-            _initializeData();
+          if (result == true) {
+            ref
+                .read(productsProvider.notifier)
+                .loadProducts(forceRefresh: true);
           }
         },
-        label: Text("Crear Producto"),
-        icon: Icon(Icons.add),
+        icon: Icon(Icons.add_rounded),
+        label: Text('Crear Producto'),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
     );
   }
 
-  Widget _buildProductCard(Producto product, ThemeData theme) {
-    return FutureBuilder<List<ProductoPrecios>>(
-      future: _getProductoPrecios(product.id),
-      builder: (context, snapshot) {
-        List<ProductoPrecios> precios = [];
-        if (snapshot.hasData) {
-          precios = snapshot.data!.where((p) => !p.isDeleted).toList();
-        }
-
-        return Card(
-          margin: EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: InkWell(
-            onTap: () async {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AdminViewInventoryDetailsScreen(
-                    product: product,
-                    negocioID: _negocioID,
-                  ),
-                ),
-              );
-
-              if (result == true) {
-                // Refrescar la lista si se editó o eliminó un producto
-                _getProductosByNegocio();
-              }
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
+  Widget _buildLoadingState(ThemeData theme) {
+    return ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: theme.colorScheme.surfaceContainerHighest,
+          highlightColor: theme.colorScheme.surface,
+          child: Card(
+            margin: EdgeInsets.only(bottom: 12),
+            child: Container(
+              height: 120,
               padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  // Header con imagen y nombre
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Miniatura de la primera imagen (si existe)
-                      if (product.productoImages != null &&
-                          product.productoImages!.isNotEmpty)
-                        FutureBuilder<List<String>>(
-                          future: GetImageFromBucket.getSignedImageUrls(
-                            s3Keys: [product.productoImages!.first],
-                            expiresIn: Duration(minutes: 30),
-                          ),
-                          builder: (context, imageSnapshot) {
-                            if (imageSnapshot.hasData &&
-                                imageSnapshot.data!.isNotEmpty) {
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: buildCachedImage(
-                                  imageSnapshot.data!.first,
-                                  primaryBlue: Colors.blue,
-                                  lightBlue: Colors.lightBlue,
-                                ),
-                              );
-                            }
-                            return Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surface,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.image,
-                                color: theme.colorScheme.primary,
-                                size: 30,
-                              ),
-                            );
-                          },
-                        )
-                      else
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.image,
-                            color: theme.colorScheme.primary,
-                            size: 30,
-                          ),
-                        ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    product.nombre,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                              ],
-                            ),
-                            if (product.barCode.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Código: ${product.barCode}',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Botón de favorito más pequeño y visible
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: product.favorito
-                                  ? Colors.yellow[700]!.withValues(alpha: 0.15)
-                                  : Colors.grey[300]!.withValues(alpha: 0.8),
-                              border: Border.all(
-                                color: product.favorito
-                                    ? Colors.yellow[800]!
-                                    : Colors.grey[400]!,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                product.favorito
-                                    ? Icons.star
-                                    : Icons.star_border,
-                              ),
-                              onPressed: () => _changedFavoriteProduct(product),
-                              color: product.favorito
-                                  ? Colors.yellow[800]
-                                  : Colors.grey[600],
-                              iconSize: 18,
-                              padding: EdgeInsets.all(4),
-                              constraints: BoxConstraints(
-                                minWidth: 28,
-                                minHeight: 28,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          _buildStockChip(product.stock),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  // Descripción (si existe)
-                  if (product.descripcion.isNotEmpty)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        product.descripcion,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  // Información adicional
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      // Precios
-                      if (snapshot.connectionState == ConnectionState.waiting)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Cargando precios...',
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        )
-                      else if (precios.isNotEmpty)
-                        ...precios.take(2).map((precio) {
-                          return Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${precio.nombre}: \$${precio.precio.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                color: Colors.green[700],
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                              ),
-                            ),
-                          );
-                        })
-                      else
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Sin precios',
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      // Categoría
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _getCategoryName(product.categoriaID),
-                          style: TextStyle(
-                            color: theme.colorScheme.secondary,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      // Estado
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: product.estado == 'activo'
-                              ? theme.colorScheme.surface
-                              : Colors.red[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          product.estado?.toUpperCase() ?? 'N/A',
-                          style: TextStyle(
-                            color: product.estado == 'activo'
-                                ? theme.colorScheme.tertiary
-                                : theme.colorScheme.error,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
-                  SizedBox(height: 12),
-                  // Footer con fecha y acción
-                  Row(
-                    children: [
-                      Text(
-                        'Actualizado: ${product.updatedAt.getDateTimeInUtc().day}/${product.updatedAt.getDateTimeInUtc().month}/${product.updatedAt.getDateTimeInUtc().year}',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                      ),
-                      Spacer(),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey[400],
-                      ),
-                    ],
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 20,
+                          width: double.infinity,
+                          color: Colors.white,
+                        ),
+                        SizedBox(height: 8),
+                        Container(height: 14, width: 150, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -860,63 +270,656 @@ class _AdminViewInventoryScreenState extends State<AdminViewInventoryScreen> {
     );
   }
 
-  Future<List<ProductoPrecios>> _getProductoPrecios(String productId) async {
-    try {
-      final request = ModelQueries.list(
-        ProductoPrecios.classType,
-        where: ProductoPrecios.PRODUCTOID
-            .eq(productId)
-            .and(ProductoPrecios.ISDELETED.eq(false)),
-      );
-      final response = await Amplify.API.query(request: request).response;
-      return response.data?.items.whereType<ProductoPrecios>().toList() ?? [];
-    } catch (e) {
-      print('Error fetching product prices: $e');
-      return [];
-    }
+  Widget _buildFiltersSection(ThemeData theme, ProductsState productsState) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Botón categorías con mejor diseño
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed(Routes.adminViewCategorias);
+              },
+              icon: Icon(Icons.category_rounded),
+              label: Text('Gestionar Categorías'),
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14),
+                side: BorderSide(color: theme.colorScheme.primary),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 16),
+
+          // Barra de búsqueda mejorada
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Buscar por nombre o código...',
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: theme.colorScheme.primary,
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Icons.clear_rounded),
+                      onPressed: () {
+                        _searchController.clear();
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 16),
+
+          // Filtro por categoría mejorado
+          DropdownButtonFormField<String?>(
+            value: _selectedCategoryId,
+            decoration: InputDecoration(
+              labelText: 'Categoría',
+              prefixIcon: Icon(
+                Icons.filter_list_rounded,
+                color: theme.colorScheme.primary,
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            items: [
+              DropdownMenuItem<String?>(
+                value: null,
+                child: Text('Todas las categorías'),
+              ),
+              ...productsState.categorias.values.map((categoria) {
+                return DropdownMenuItem<String?>(
+                  value: categoria.id,
+                  child: Text(categoria.nombre),
+                );
+              }),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedCategoryId = value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget buildCachedImage(
-    String imageUrl, {
-    required Color primaryBlue,
-    required Color lightBlue,
-  }) {
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      width: 50,
+  Widget _buildQuickFilters(ThemeData theme) {
+    return Container(
       height: 50,
-      fit: BoxFit.cover,
-      placeholder: (context, url) => Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: lightBlue.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          FilterChip(
+            label: Text('Favoritos'),
+            avatar: Icon(
+              _onlyFavorites ? Icons.star : Icons.star_border,
+              size: 18,
+            ),
+            selected: _onlyFavorites,
+            onSelected: (value) {
+              setState(() {
+                _onlyFavorites = value;
+              });
+            },
+            selectedColor: theme.colorScheme.primaryContainer,
+            checkmarkColor: theme.colorScheme.primary,
+          ),
+          SizedBox(width: 8),
+          FilterChip(
+            label: Text('Stock Bajo'),
+            avatar: Icon(Icons.warning_amber_rounded, size: 18),
+            selected: _onlyLowStock,
+            onSelected: (value) {
+              setState(() {
+                _onlyLowStock = value;
+              });
+            },
+            selectedColor: Colors.orange.shade100,
+            checkmarkColor: Colors.orange.shade700,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsBar(ThemeData theme, int filteredCount, int totalCount) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        border: Border(
+          top: BorderSide(color: theme.dividerColor, width: 1),
+          bottom: BorderSide(color: theme.dividerColor, width: 1),
         ),
-        child: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.inventory_2_rounded,
+            size: 16,
+            color: theme.colorScheme.primary,
+          ),
+          SizedBox(width: 8),
+          Text(
+            '$filteredCount de $totalCount productos',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          Spacer(),
+          Text(
+            'Por: $_sortBy',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 80,
+            color: theme.colorScheme.outline,
+          ),
+          SizedBox(height: 24),
+          Text(
+            'No se encontraron productos',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Intenta ajustar los filtros',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (_searchController.text.isNotEmpty ||
+              _selectedCategoryId != null ||
+              _onlyFavorites ||
+              _onlyLowStock)
+            Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _selectedCategoryId = null;
+                    _onlyFavorites = false;
+                    _onlyLowStock = false;
+                  });
+                },
+                icon: Icon(Icons.clear_all_rounded),
+                label: Text('Limpiar filtros'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductsList(List<Producto> products, ThemeData theme) {
+    return AnimationLimiter(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final crossAxisCount = width > 1000 ? 2 : 1;
+
+          return GridView.builder(
+            padding: EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: width > 1000 ? 2.4 : 1.4,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              return AnimationConfiguration.staggeredGrid(
+                position: index,
+                duration: const Duration(milliseconds: 375),
+                columnCount: crossAxisCount,
+                child: ScaleAnimation(
+                  child: FadeInAnimation(
+                    child: _buildProductCard(products[index], theme),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProductCard(Producto product, ThemeData theme) {
+    final productsState = ref.watch(productsProvider);
+    final precios = productsState.getPreciosForProducto(product.id);
+
+    return Card(
+      elevation: 2,
+      shadowColor: theme.shadowColor.withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: () async {
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => AdminViewInventoryDetailsScreen(
+                product: product,
+                negocioID: _negocioID,
+              ),
+            ),
+          );
+          if (result == true) {
+            ref
+                .read(productsProvider.notifier)
+                .loadProducts(forceRefresh: true);
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header con imagen y nombre
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Imagen del producto
+                  _buildProductImage(product, theme),
+                  SizedBox(width: 12),
+
+                  // Información principal
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.nombre,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (product.barCode.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.qr_code_2_rounded,
+                                  size: 14,
+                                  color: theme.colorScheme.outline,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  product.barCode,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Botón de favorito y stock
+                  Column(
+                    children: [
+                      _buildFavoriteButton(product, theme),
+                      SizedBox(height: 8),
+                      _buildStockBadge(product.stock, theme),
+                    ],
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 12),
+
+              // Descripción
+              if (product.descripcion.isNotEmpty)
+                Text(
+                  product.descripcion,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+              Spacer(),
+
+              // Tags y precios
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  // Precios
+                  if (precios.isNotEmpty)
+                    ...precios
+                        .take(2)
+                        .map((precio) => _buildPriceChip(precio, theme))
+                  else
+                    Chip(
+                      label: Text('Sin precios'),
+                      avatar: Icon(Icons.error_outline, size: 16),
+                      backgroundColor: theme.colorScheme.errorContainer,
+                      labelStyle: TextStyle(
+                        color: theme.colorScheme.onErrorContainer,
+                        fontSize: 12,
+                      ),
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+
+                  // Categoría
+                  Chip(
+                    label: Text(
+                      productsState.getCategoryName(product.categoriaID),
+                    ),
+                    avatar: Icon(Icons.category_rounded, size: 16),
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    labelStyle: TextStyle(
+                      color: theme.colorScheme.onSecondaryContainer,
+                      fontSize: 12,
+                    ),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+
+                  // Estado
+                  Chip(
+                    label: Text(product.estado?.toUpperCase() ?? 'N/A'),
+                    avatar: Icon(
+                      product.estado == 'activo'
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      size: 16,
+                    ),
+                    backgroundColor: product.estado == 'activo'
+                        ? theme.colorScheme.tertiaryContainer
+                        : theme.colorScheme.errorContainer,
+                    labelStyle: TextStyle(
+                      color: product.estado == 'activo'
+                          ? theme.colorScheme.onTertiaryContainer
+                          : theme.colorScheme.onErrorContainer,
+                      fontSize: 12,
+                    ),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-      errorWidget: (context, url, error) => Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: lightBlue.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
+    );
+  }
+
+  Widget _buildProductImage(Producto product, ThemeData theme) {
+    if (product.productoImages != null && product.productoImages!.isNotEmpty) {
+      return FutureBuilder<List<String>>(
+        future: GetImageFromBucket.getSignedImageUrls(
+          s3Keys: [product.productoImages!.first],
+          expiresIn: Duration(minutes: 30),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CachedNetworkImage(
+                imageUrl: snapshot.data!.first,
+                width: 70,
+                height: 70,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: theme.colorScheme.surfaceContainerHighest,
+                  highlightColor: theme.colorScheme.surface,
+                  child: Container(width: 70, height: 70, color: Colors.white),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.broken_image_rounded,
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                ),
+              ),
+            );
+          }
+          return _buildPlaceholderImage(theme);
+        },
+      );
+    }
+    return _buildPlaceholderImage(theme);
+  }
+
+  Widget _buildPlaceholderImage(ThemeData theme) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        Icons.image_rounded,
+        color: theme.colorScheme.outline,
+        size: 32,
+      ),
+    );
+  }
+
+  Widget _buildFavoriteButton(Producto product, ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: product.favorito
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainerHighest,
+      ),
+      child: IconButton(
+        icon: Icon(
+          product.favorito ? Icons.star_rounded : Icons.star_border_rounded,
+        ),
+        onPressed: () async {
+          final success = await ref
+              .read(productsProvider.notifier)
+              .toggleFavorite(product.id);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  success ? 'Favorito actualizado' : 'Error al actualizar',
+                ),
+                backgroundColor: success ? Colors.green : Colors.red,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+        color: product.favorito
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline,
+        iconSize: 20,
+        padding: EdgeInsets.all(8),
+        constraints: BoxConstraints(minWidth: 36, minHeight: 36),
+      ),
+    );
+  }
+
+  Widget _buildStockBadge(int stock, ThemeData theme) {
+    final color = _getStockColor(stock);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color, width: 1.5),
+      ),
+      child: Text(
+        '$stock',
+        style: TextStyle(
+          color: color,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriceChip(ProductoPrecios precio, ThemeData theme) {
+    return Chip(
+      label: Text('${precio.nombre}: \$${precio.precio.toStringAsFixed(2)}'),
+      avatar: Icon(Icons.attach_money_rounded, size: 16),
+      backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+      labelStyle: TextStyle(
+        color: theme.colorScheme.onPrimaryContainer,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+      ),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  void _showStockAlertsDialog(BuildContext context, ThemeData theme) {
+    final lowStock = ref.read(lowStockProductsProvider);
+    final outOfStock = ref.read(outOfStockProductsProvider);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
           children: [
-            Icon(Icons.broken_image_rounded, color: primaryBlue, size: 40),
-            SizedBox(height: 8),
-            Text(
-              'Error al cargar',
-              style: TextStyle(color: primaryBlue, fontSize: 12),
-            ),
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Alertas de Stock'),
           ],
         ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (outOfStock.isNotEmpty) ...[
+                Text(
+                  'Sin Stock (${outOfStock.length})',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...outOfStock
+                    .take(5)
+                    .map(
+                      (p) => ListTile(
+                        dense: true,
+                        leading: Icon(Icons.error, color: Colors.red, size: 20),
+                        title: Text(p.nombre),
+                        subtitle: Text('Stock: ${p.stock}'),
+                      ),
+                    ),
+                if (outOfStock.length > 5)
+                  Text('... y ${outOfStock.length - 5} más'),
+                SizedBox(height: 16),
+              ],
+              if (lowStock.isNotEmpty) ...[
+                Text(
+                  'Stock Bajo (${lowStock.length})',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...lowStock
+                    .take(5)
+                    .map(
+                      (p) => ListTile(
+                        dense: true,
+                        leading: Icon(
+                          Icons.warning,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        title: Text(p.nombre),
+                        subtitle: Text('Stock: ${p.stock}'),
+                      ),
+                    ),
+                if (lowStock.length > 5)
+                  Text('... y ${lowStock.length - 5} más'),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cerrar'),
+          ),
+        ],
       ),
     );
   }

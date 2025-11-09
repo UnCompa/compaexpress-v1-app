@@ -1,273 +1,192 @@
-import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
-import 'package:compaexpress/page/admin/proveedor/admin_proveedor_create_page.dart';
-import 'package:compaexpress/services/negocio/negocio_controller.dart';
+import 'package:compaexpress/page/admin/proveedor/admin_proveedor_form_page.dart';
+import 'package:compaexpress/providers/proveedor_provider.dart';
+import 'package:compaexpress/views/pagination.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:toastification/toastification.dart';
 
-class AdminProveedorListPage extends StatefulWidget {
+class AdminProveedorListPage extends ConsumerStatefulWidget {
   const AdminProveedorListPage({super.key});
 
   @override
-  State<AdminProveedorListPage> createState() => _AdminProveedorListPageState();
+  ConsumerState<AdminProveedorListPage> createState() =>
+      _AdminProveedorListPageState();
 }
 
-class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
-  List<Proveedor> proveedores = [];
-  bool isLoading = true;
-  String? errorMessage;
-  String searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
-
-  // Paleta de colores azules
-  static const Color primaryBlue = Color(0xFF1565C0);
-  static const Color lightBlue = Color(0xFF42A5F5);
-  static const Color darkBlue = Color(0xFF0D47A1);
-  static const Color accentBlue = Color(0xFF2196F3);
-  static const Color backgroundBlue = Color(0xFFF3F8FF);
-  static const Color cardBlue = Color(0xFFE3F2FD);
+class _AdminProveedorListPageState
+    extends ConsumerState<AdminProveedorListPage> {
+  final _searchCtrl = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _loadProveedorList();
-  }
-
-  Future<void> _loadProveedorList() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    try {
-      final negocio = await NegocioController.getUserInfo();
-      final request = ModelQueries.list(
-        Proveedor.classType,
-        where:
-            Proveedor.NEGOCIOID.eq(negocio.negocioId) &
-            Proveedor.ISDELETED.eq(false),
-      );
-      final response = await Amplify.API.query(request: request).response;
-      if (response.data != null) {
-        setState(() {
-          proveedores = response.data!.items.whereType<Proveedor>().toList();
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  List<Proveedor> get filteredProveedores {
-    if (searchQuery.isEmpty) return proveedores;
-    return proveedores
-        .where(
-          (proveedor) =>
-              proveedor.nombre.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ??
-              false,
-        )
-        .toList();
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final asyncList = ref.watch(filteredProveedoresProvider);
+    final proveedorState = ref.watch(proveedorProvider);
+
+    // Paginación
+    final page = ref.watch(currentPageProvider);
+    final perPage = ref.watch(itemsPerPageProvider);
+    final paginated = PaginationWidget.paginateList<Proveedor>(
+      asyncList,
+      page,
+      perPage,
+    );
+
+    // Escuchar cambios de estado para mostrar notificaciones
+    ref.listen<ProveedorState>(proveedorProvider, (previous, next) {
+      if (next.successMessage != null) {
+        _showSuccessToast(context, next.successMessage!);
+        ref.read(proveedorProvider.notifier).clearMessages();
+      }
+      if (next.error != null) {
+        _showErrorToast(context, next.error!);
+        ref.read(proveedorProvider.notifier).clearMessages();
+      }
+    });
+
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(theme, proveedorState),
       body: Column(
         children: [
-          _buildSearchHeader(),
-          Expanded(child: _buildBody()),
+          _buildSearchHeader(theme),
+          _buildStatsBanner(theme, asyncList.length),
+          Expanded(child: _buildBody(paginated, theme, proveedorState)),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+      floatingActionButton: _buildFAB(theme),
+      bottomNavigationBar: _buildPagination(page, asyncList.length, perPage),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  /* ---------------- AppBar ---------------- */
+
+  PreferredSizeWidget _buildAppBar(ThemeData theme, ProveedorState state) {
     return AppBar(
       elevation: 0,
       title: Text(
-        "Gestión de Proveedores",
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          fontSize: 18,
-          color: Colors.white,
-          height: 1.2,
+        'Gestión de Proveedores',
+        style: theme.textTheme.titleLarge?.copyWith(
+          color: theme.colorScheme.onPrimary,
+          fontWeight: FontWeight.bold,
         ),
-        textAlign: TextAlign.center,
-        softWrap: true,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
       ),
-      centerTitle: true,
       actions: [
+        if (state.isLoading)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.onPrimary,
+              ),
+            ),
+          )
+        else
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.read(proveedorProvider.notifier).refresh(),
+            tooltip: 'Actualizar',
+          ),
         IconButton(
-          icon: const Icon(Icons.refresh_rounded),
-          onPressed: _loadProveedorList,
-          tooltip: 'Actualizar información',
+          icon: const Icon(Icons.filter_list_rounded),
+          onPressed: () => _showFilterDialog(),
+          tooltip: 'Filtros',
         ),
       ],
     );
   }
 
-  Widget _buildSearchHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
-      child: Column(
-        children: [
-          _buildSearchBar(),
-          const SizedBox(height: 12),
-          _buildStatsRow(),
-        ],
-      ),
-    );
-  }
+  /* ---------------- Search Header ---------------- */
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchHeader(ThemeData theme) {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          setState(() {
-            searchQuery = value;
-          });
+        controller: _searchCtrl,
+        onChanged: (q) {
+          ref.read(searchQueryProvider.notifier).state = q;
+          ref.read(currentPageProvider.notifier).state = 1; // Reset a página 1
         },
+        style: theme.textTheme.bodyLarge,
         decoration: InputDecoration(
-          hintText: 'Buscar proveedores...',
-          hintStyle: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14),
-          prefixIcon: Icon(Icons.search_rounded, color: lightBlue),
-          suffixIcon: searchQuery.isNotEmpty
+          hintText:
+              'Buscar por nombre o ciudad...', // TODO: agregar teléfono o email cuando estén en el modelo
+          hintStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.5),
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: theme.colorScheme.primary,
+          ),
+          suffixIcon: _searchCtrl.text.isNotEmpty
               ? IconButton(
-                  icon: Icon(Icons.clear_rounded, color: Colors.grey[600]),
+                  icon: const Icon(Icons.clear_rounded),
                   onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      searchQuery = '';
-                    });
+                    _searchCtrl.clear();
+                    ref.read(searchQueryProvider.notifier).state = '';
                   },
                 )
               : null,
-          border: InputBorder.none,
+          filled: true,
+          fillColor: theme.colorScheme.surfaceContainerHighest,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+            horizontal: 20,
+            vertical: 16,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatsRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildStatCard(
-          icon: Icons.business_rounded,
-          label: 'Total',
-          value: proveedores.length.toString(),
-        ),
-        _buildStatCard(
-          icon: Icons.search_rounded,
-          label: 'Filtrados',
-          value: filteredProveedores.length.toString(),
-        ),
-        /* _buildStatCard(
-          icon: Icons.verified_rounded,
-          label: 'Activos',
-          value: proveedores.where((p) => p.activo == true).length.toString(),
-        ), */
-      ],
-    );
-  }
+  /* ---------------- Stats Banner ---------------- */
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildStatsBanner(ThemeData theme, int totalCount) {
+    final query = ref.watch(searchQueryProvider);
+    final isFiltered = query.isNotEmpty;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+      child: Row(
         children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Icon(
+            isFiltered ? Icons.filter_alt_rounded : Icons.inventory_2_rounded,
+            size: 20,
+            color: theme.colorScheme.primary,
           ),
+          const SizedBox(width: 8),
           Text(
-            label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 10),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (isLoading) {
-      return _buildLoadingState();
-    }
-
-    if (errorMessage != null) {
-      return _buildErrorState();
-    }
-
-    if (filteredProveedores.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return _buildProveedorList();
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(lightBlue),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Cargando proveedores...',
-            style: GoogleFonts.poppins(
-              color: primaryBlue,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            isFiltered
+                ? '$totalCount resultado${totalCount != 1 ? 's' : ''} encontrado${totalCount != 1 ? 's' : ''}'
+                : '$totalCount proveedor${totalCount != 1 ? 'es' : ''} registrado${totalCount != 1 ? 's' : ''}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -275,429 +194,121 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
     );
   }
 
-  Widget _buildErrorState() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(24),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 64, color: Colors.red[400]),
-            const SizedBox(height: 16),
-            Text(
-              'Error al cargar proveedores',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: darkBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage ?? 'Error desconocido',
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadProveedorList,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryBlue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  /* ---------------- Body ---------------- */
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(24),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.business_center_outlined, size: 64, color: lightBlue),
-            const SizedBox(height: 16),
-            Text(
-              searchQuery.isEmpty
-                  ? 'No hay proveedores registrados'
-                  : 'No se encontraron proveedores',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: darkBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              searchQuery.isEmpty
-                  ? 'Comienza agregando tu primer proveedor'
-                  : 'Intenta con otros términos de búsqueda',
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildBody(
+    List<Proveedor> list,
+    ThemeData theme,
+    ProveedorState state,
+  ) {
+    if (state.isLoading && list.isEmpty) {
+      return _buildLoadingShimmer(theme);
+    }
 
-  Widget _buildProveedorList() {
-    return RefreshIndicator(
-      onRefresh: _loadProveedorList,
+    if (state.error != null && list.isEmpty) {
+      return _buildErrorView(theme, state.error!);
+    }
+
+    if (list.isEmpty) {
+      return _buildEmptyView(theme);
+    }
+
+    return AnimationLimiter(
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: filteredProveedores.length,
+        itemCount: list.length,
         itemBuilder: (context, index) {
-          final proveedor = filteredProveedores[index];
-          return _buildProveedorCard(proveedor);
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: _buildProveedorCard(list[index], theme),
+              ),
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildProveedorCard(Proveedor proveedor) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => _showProveedorDetails(proveedor),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.business_rounded,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            proveedor.nombre ?? 'Sin nombre',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          /*  if (proveedor.email != null)
-                            Text(
-                              proveedor.email!,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ), */
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      /* decoration: BoxDecoration(
-                        color: (proveedor.activo ?? false)
-                            ? Colors.green[100]
-                            : Colors.red[100],
-                        borderRadius: BorderRadius.circular(12),
-                      ), */
-                      /* child: Text(
-                        (proveedor.activo ?? false) ? 'Activo' : 'Inactivo',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: (proveedor.activo ?? false)
-                              ? Colors.green[700]
-                              : Colors.red[700],
-                        ),
-                      ), */
-                    ),
-                  ],
+  /* ---------------- Loading Shimmer ---------------- */
+
+  Widget _buildLoadingShimmer(ThemeData theme) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Shimmer.fromColors(
+            baseColor: theme.colorScheme.surfaceContainerHighest,
+            highlightColor: theme.colorScheme.surface,
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    /* if (proveedor.telefono != null) ...[
-                      Icon(Icons.phone_rounded, size: 16, color: lightBlue),
-                      const SizedBox(width: 4),
-                      Text(
-                        proveedor.telefono!,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                    ], */
-                    Icon(
-                      Icons.calendar_today_rounded,
-                      size: 16,
-                      color: lightBlue,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Registrado: ${_formatDate(proveedor.createdAt)}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _editProveedor(proveedor),
-                      icon: Icon(Icons.edit_rounded, size: 16),
-                      label: Text('Editar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: accentBlue,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () => _deleteProveedor(proveedor),
-                      icon: Icon(Icons.delete_outline_rounded, size: 16),
-                      label: Text('Eliminar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.red[600],
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
+              title: Container(
+                height: 16,
+                width: double.infinity,
+                color: Colors.white,
+              ),
+              subtitle: Container(
+                height: 12,
+                width: 150,
+                color: Colors.white,
+                margin: const EdgeInsets.only(top: 8),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: _addNewProveedor,
-      icon: const Icon(Icons.add_rounded),
-      label: Text(
-        'Nuevo Proveedor',
-        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
+  /* ---------------- Error View ---------------- */
 
-  String _formatDate(TemporalDateTime? dateTime) {
-    if (dateTime == null) return 'N/A';
-    final date = dateTime.getDateTimeInUtc();
-    final hour = date.hour;
-    final minute = date.minute;
-    final formattedDate = '${date.day}/${date.month}/${date.year} $hour:$minute';
-    return formattedDate;
-  }
-
-  void _showProveedorDetails(Proveedor proveedor) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildProveedorDetailsSheet(proveedor),
-    );
-  }
-
-  Widget _buildProveedorDetailsSheet(Proveedor proveedor) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildErrorView(ThemeData theme, String error) {
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: cardBlue,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.business_rounded,
-                    color: primaryBlue,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        proveedor.nombre ?? 'Sin nombre',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: darkBlue,
-                        ),
-                      ),
-                      /* Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: (proveedor.activo ?? false)
-                              ? Colors.green[100]
-                              : Colors.red[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          (proveedor.activo ?? false) ? 'Activo' : 'Inactivo',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: (proveedor.activo ?? false)
-                                ? Colors.green[700]
-                                : Colors.red[700],
-                          ),
-                        ),
-                      ), */
-                    ],
-                  ),
-                ),
-              ],
+            Icon(
+              Icons.error_outline_rounded,
+              size: 80,
+              color: theme.colorScheme.error,
             ),
             const SizedBox(height: 24),
-
-            _buildDetailRow(
-              Icons.location_city,
-              'Ciudad',
-              proveedor.ciudad,
+            Text(
+              'Error al cargar proveedores',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            _buildDetailRow(
-              Icons.location_on_rounded,
-              'Dirección',
-              proveedor.direccion,
-            ),
-            _buildDetailRow(
-              Icons.calendar_today_rounded,
-              'Fecha de registro',
-              _formatDate(proveedor.createdAt),
+            const SizedBox(height: 12),
+            Text(
+              error,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _editProveedor(proveedor);
-                    },
-                    icon: const Icon(Icons.edit_rounded),
-                    label: const Text('Editar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentBlue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _deleteProveedor(proveedor);
-                    },
-                    icon: const Icon(Icons.delete_outline_rounded),
-                    label: const Text('Eliminar'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red[600],
-                      side: BorderSide(color: Colors.red[600]!),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            FilledButton.icon(
+              onPressed: () => ref.read(proveedorProvider.notifier).refresh(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
             ),
           ],
         ),
@@ -705,117 +316,324 @@ class _AdminProveedorListPageState extends State<AdminProveedorListPage> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: lightBlue),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: darkBlue,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+  /* ---------------- Empty View ---------------- */
+
+  Widget _buildEmptyView(ThemeData theme) {
+    final query = ref.watch(searchQueryProvider);
+    final isSearching = query.isNotEmpty;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSearching
+                  ? Icons.search_off_rounded
+                  : Icons.inventory_2_outlined,
+              size: 80,
+              color: theme.colorScheme.primary.withOpacity(0.5),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              isSearching
+                  ? 'No se encontraron resultados'
+                  : 'No hay proveedores registrados',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isSearching
+                  ? 'Intenta con otros términos de búsqueda'
+                  : 'Comienza agregando tu primer proveedor',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (!isSearching) ...[
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => _addProveedor(context),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Agregar Proveedor'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  void _addNewProveedor() async {
+  /* ---------------- Proveedor Card ---------------- */
+
+  Widget _buildProveedorCard(Proveedor proveedor, ThemeData theme) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: () => _editProveedor(proveedor),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.business_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          proveedor.nombre ?? 'Sin nombre',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              proveedor.ciudad ?? 'Sin ciudad',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                        onPressed: () => _editProveedor(proveedor),
+                        tooltip: 'Editar',
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_rounded,
+                          color: theme.colorScheme.error,
+                        ),
+                        onPressed: () => _deleteProveedor(proveedor),
+                        tooltip: 'Eliminar',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // TODO: Descomentar cuando telefono y email estén en el modelo
+              // if (proveedor.telefono != null ||
+              //     proveedor.email != null) ...[
+              //   const SizedBox(height: 12),
+              //   const Divider(),
+              //   const SizedBox(height: 12),
+              //   Row(
+              //     children: [
+              //       if (proveedor.telefono != null) ...[
+              //         Icon(
+              //           Icons.phone_rounded,
+              //           size: 16,
+              //           color: theme.colorScheme.primary,
+              //         ),
+              //         const SizedBox(width: 6),
+              //         Expanded(
+              //           child: Text(
+              //             proveedor.telefono!,
+              //             style: theme.textTheme.bodySmall,
+              //           ),
+              //         ),
+              //       ],
+              //       if (proveedor.email != null) ...[
+              //         if (proveedor.telefono != null)
+              //           const SizedBox(width: 16),
+              //         Icon(
+              //           Icons.email_rounded,
+              //           size: 16,
+              //           color: theme.colorScheme.primary,
+              //         ),
+              //         const SizedBox(width: 6),
+              //         Expanded(
+              //           child: Text(
+              //             proveedor.email!,
+              //             style: theme.textTheme.bodySmall,
+              //             overflow: TextOverflow.ellipsis,
+              //           ),
+              //         ),
+              //       ],
+              //     ],
+              //   ),
+              // ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /* ---------------- FAB ---------------- */
+
+  Widget _buildFAB(ThemeData theme) {
+    return FloatingActionButton.extended(
+      onPressed: () => _addProveedor(context),
+      icon: const Icon(Icons.add_rounded),
+      label: const Text('Nuevo Proveedor'),
+      elevation: 4,
+    );
+  }
+
+  /* ---------------- Pagination ---------------- */
+
+  Widget _buildPagination(int page, int totalItems, int perPage) {
+    if (totalItems == 0) return const SizedBox.shrink();
+
+    return PaginationWidget(
+      currentPage: page,
+      totalItems: totalItems,
+      itemsPerPage: perPage,
+      onPageChanged: (p) => ref.read(currentPageProvider.notifier).state = p,
+    );
+  }
+
+  /* ---------------- Actions ---------------- */
+
+  Future<void> _addProveedor(BuildContext context) async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (context) => const ProveedorFormPage()),
+      MaterialPageRoute(builder: (_) => const ProveedorFormPage()),
     );
 
-    // Si se creó un proveedor, recargar la lista
-    if (result == true) {
-      _loadProveedorList();
+    if (result == true && mounted) {
+      ref.read(proveedorProvider.notifier).refresh();
     }
   }
 
-  void _editProveedor(Proveedor proveedor) async {
-    final result = await Navigator.of(context).push(
+  Future<void> _editProveedor(Proveedor proveedor) async {
+    final result = await Navigator.push<bool>(
+      context,
       MaterialPageRoute(
         builder: (_) => ProveedorFormPage(proveedor: proveedor),
       ),
     );
-    if (result) {
-      _loadProveedorList();
+
+    if (result == true && mounted) {
+      ref.read(proveedorProvider.notifier).refresh();
     }
   }
 
-  void _deleteProveedor(Proveedor proveedor) {
-    showDialog(
+  Future<void> _deleteProveedor(Proveedor proveedor) async {
+    final theme = Theme.of(context);
+
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(
-          'Confirmar eliminación',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: darkBlue,
-          ),
+        icon: Icon(
+          Icons.warning_rounded,
+          color: theme.colorScheme.error,
+          size: 48,
         ),
+        title: const Text('¿Eliminar proveedor?'),
         content: Text(
-          '¿Estás seguro de que deseas eliminar el proveedor "${proveedor.nombre}"?',
-          style: GoogleFonts.poppins(),
+          'Se eliminará "${proveedor.nombre}". Esta acción no se puede deshacer.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancelar',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final model = proveedor.copyWith(isDeleted: true);
-              final request = ModelMutations.update(model);
-              await Amplify.API.mutate(request: request).response;
-              Navigator.pop(context);
-              _loadProveedorList();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Proveedor eliminado: ${proveedor.nombre}'),
-                  backgroundColor: Colors.red[600],
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[600],
-              foregroundColor: Colors.white,
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
             ),
-            child: Text('Eliminar', style: GoogleFonts.poppins()),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await ref.read(proveedorProvider.notifier).softDelete(proveedor);
+    }
+  }
+
+  void _showFilterDialog() {
+    // Implementar diálogo de filtros personalizados
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filtros'),
+        content: const Text('Funcionalidad de filtros en desarrollo'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
           ),
         ],
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  /* ---------------- Toasts ---------------- */
+
+  void _showSuccessToast(BuildContext context, String message) {
+    toastification.show(
+      context: context,
+      type: ToastificationType.success,
+      style: ToastificationStyle.fillColored,
+      title: Text(message),
+      autoCloseDuration: const Duration(seconds: 3),
+      alignment: Alignment.topRight,
+      icon: const Icon(Icons.check_circle_rounded),
+    );
+  }
+
+  void _showErrorToast(BuildContext context, String message) {
+    toastification.show(
+      context: context,
+      type: ToastificationType.error,
+      style: ToastificationStyle.fillColored,
+      title: Text(message),
+      autoCloseDuration: const Duration(seconds: 4),
+      alignment: Alignment.topRight,
+      icon: const Icon(Icons.error_rounded),
+    );
   }
 }

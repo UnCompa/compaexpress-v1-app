@@ -3,7 +3,6 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class InvoiceDetailScreen extends StatefulWidget {
   final Invoice invoice;
@@ -19,8 +18,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   final Map<String, Producto> _productCache = {};
   bool _isLoading = true;
   String _errorMessage = '';
-
   String? imageUrl;
+
   @override
   void initState() {
     super.initState();
@@ -44,10 +43,15 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           .response;
 
       if (itemsResponse.data != null) {
-        final imageUrlFirmada = await GetImageFromBucket.getSignedImageUrls(
-          s3Keys: [widget.invoice.invoiceImages!.first],
-        );
-        imageUrl = imageUrlFirmada.first;
+        // Cargar imagen si existe
+        if (widget.invoice.invoiceImages != null &&
+            widget.invoice.invoiceImages!.isNotEmpty) {
+          final imageUrlFirmada = await GetImageFromBucket.getSignedImageUrls(
+            s3Keys: [widget.invoice.invoiceImages!.first],
+          );
+          imageUrl = imageUrlFirmada.first;
+        }
+
         final items = itemsResponse.data!.items
             .whereType<InvoiceItem>()
             .toList();
@@ -67,12 +71,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
 
               if (productResponse.data != null) {
                 _productCache[item.productoID] = productResponse.data!;
-              } else {
-                print('Producto no encontrado para ID: ${item.productoID}');
               }
             } catch (e) {
-              print('Error al cargar producto ${item.productoID}: $e');
-              // Continuar con el siguiente producto en lugar de fallar completamente
+              debugPrint('Error al cargar producto ${item.productoID}: $e');
             }
           }
         }
@@ -96,50 +97,44 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   }
 
   double get _totalAmount {
-    return _invoiceItems.fold(0.0, (total, item) {
-      final producto = _productCache[item.productoID];
-      if (producto != null) {
-        // Usar item.subtotal si existe, o calcular con producto.precioCompra
-        return total + item.subtotal;
-      }
-      // Si no hay producto, usar solo item.subtotal si existe
-      return total + item.subtotal;
-    });
+    return _invoiceItems.fold(0.0, (total, item) => total + item.subtotal);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FF),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Factura #${widget.invoice.invoiceNumber}',
-          style: GoogleFonts.inter(
+          style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: colorScheme.onPrimary,
           ),
         ),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(
+                  CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF1565C0),
+                      colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Cargando detalles...',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -147,67 +142,52 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             )
           : _errorMessage.isNotEmpty
           ? Center(
-              child: Container(
-                margin: const EdgeInsets.all(24),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: colorScheme.errorContainer,
+                      width: 1,
                     ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 64,
-                      color: Colors.red[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error al cargar',
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red[700],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _errorMessage,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _loadInvoiceDetails,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: Text(
-                        'Reintentar',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1565C0),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 64,
+                          color: colorScheme.error,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error al cargar',
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.error,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorMessage,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: _loadInvoiceDetails,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Reintentar'),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             )
@@ -217,161 +197,240 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header con información principal
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF1565C0).withOpacity(0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.receipt_long_rounded,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Factura',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    '#${widget.invoice.invoiceNumber}',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 24,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primary,
+                            colorScheme.primary.withOpacity(0.8),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.attach_money_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Total',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    '\$${_totalAmount.toStringAsFixed(2)}',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 28,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Comprobante',
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1565C0),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.onPrimary.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.receipt_long_rounded,
+                                  color: colorScheme.onPrimary,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Factura',
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onPrimary
+                                            .withOpacity(0.9),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      '#${widget.invoice.invoiceNumber}',
+                                      style: textTheme.headlineSmall?.copyWith(
+                                        color: colorScheme.onPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: colorScheme.onPrimary.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.attach_money_rounded,
+                                  color: colorScheme.onPrimary,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Total',
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onPrimary
+                                            .withOpacity(0.9),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      '\$${_totalAmount.toStringAsFixed(2)}',
+                                      style: textTheme.headlineMedium?.copyWith(
+                                        color: colorScheme.onPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          if (imageUrl != null)
-                            Image.network(imageUrl!, width: 250, height: 250),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
                   const SizedBox(height: 16),
+
+                  // Comprobante (imagen)
+                  if (imageUrl != null) ...[
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.image_outlined,
+                                  color: colorScheme.primary,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Comprobante',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                imageUrl!,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.errorContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.broken_image_outlined,
+                                            size: 48,
+                                            color: colorScheme.error,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Error al cargar imagen',
+                                            style: textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  color: colorScheme.error,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        height: 200,
+                                        alignment: Alignment.center,
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                        ),
+                                      );
+                                    },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Formas de pago
                   Card(
-                    elevation: 2,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 1,
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Formas de pago',
-                            style: GoogleFonts.inter(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1565C0),
-                            ),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.payment,
+                                color: colorScheme.primary,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Formas de pago',
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           FutureBuilder<List<InvoicePayment>>(
@@ -379,17 +438,43 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
                                 );
                               }
 
                               if (snapshot.hasError) {
-                                return Text(
-                                  'Error al cargar pagos: ${snapshot.error}',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.red,
-                                    fontSize: 14,
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: colorScheme.error,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Error al cargar pagos',
+                                          style: textTheme.bodySmall?.copyWith(
+                                            color: colorScheme.error,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 );
                               }
@@ -397,165 +482,171 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                               final payments = snapshot.data ?? [];
 
                               if (payments.isEmpty) {
-                                return Text(
-                                  'No hay formas de pago registradas',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
-                                  ),
-                                );
-                              }
-
-                              return Column(
-                                children: payments.map((payment) {
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[50],
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Colors.grey[200]!,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                return Container(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Center(
+                                    child: Column(
                                       children: [
-                                        // Icono según tipo de pago
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: _getPaymentColor(
-                                              payment.tipoPago,
-                                            ).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            _getPaymentIcon(payment.tipoPago),
-                                            color: _getPaymentColor(
-                                              payment.tipoPago,
-                                            ),
-                                            size: 20,
-                                          ),
+                                        Icon(
+                                          Icons.payments_outlined,
+                                          size: 48,
+                                          color: colorScheme.outline,
                                         ),
-                                        const SizedBox(width: 12),
-                                        // Información del pago
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                _getPaymentTypeName(
-                                                  payment.tipoPago,
-                                                ),
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: const Color(
-                                                    0xFF1565C0,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '\$${payment.monto.toStringAsFixed(2)}',
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.green[700],
-                                                ),
-                                              ),
-                                              if (payment.detalles != null &&
-                                                  payment
-                                                      .detalles!
-                                                      .isNotEmpty) ...[
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  payment.detalles!,
-                                                  style: GoogleFonts.inter(
-                                                    fontSize: 12,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'No hay formas de pago registradas',
+                                          style: textTheme.bodyMedium?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                            fontStyle: FontStyle.italic,
                                           ),
                                         ),
                                       ],
                                     ),
-                                  );
-                                }).toList(),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          // Total de pagos
-                          FutureBuilder<List<InvoicePayment>>(
-                            future: _fetchInvoicePayments(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData &&
-                                  snapshot.data!.isNotEmpty) {
-                                final total = snapshot.data!.fold<double>(
-                                  0.0,
-                                  (sum, payment) => sum + payment.monto,
-                                );
-
-                                return Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF1565C0,
-                                    ).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Total pagado:',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF1565C0),
-                                        ),
-                                      ),
-                                      Text(
-                                        '\$${total.toStringAsFixed(2)}',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w700,
-                                          color: const Color(0xFF1565C0),
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 );
                               }
-                              return const SizedBox.shrink();
+
+                              final totalPaid = payments.fold<double>(
+                                0.0,
+                                (sum, payment) => sum + payment.monto,
+                              );
+
+                              return Column(
+                                children: [
+                                  ...payments.map((payment) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme
+                                            .surfaceContainerHighest
+                                            .withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: colorScheme.outlineVariant,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: _getPaymentColor(
+                                                payment.tipoPago,
+                                                colorScheme,
+                                              ).withOpacity(0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              _getPaymentIcon(payment.tipoPago),
+                                              color: _getPaymentColor(
+                                                payment.tipoPago,
+                                                colorScheme,
+                                              ),
+                                              size: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  _getPaymentTypeName(
+                                                    payment.tipoPago,
+                                                  ),
+                                                  style: textTheme.bodyLarge
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: colorScheme
+                                                            .onSurface,
+                                                      ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '\$${payment.monto.toStringAsFixed(2)}',
+                                                  style: textTheme.titleMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: colorScheme
+                                                            .tertiary,
+                                                      ),
+                                                ),
+                                                if (payment.detalles != null &&
+                                                    payment
+                                                        .detalles!
+                                                        .isNotEmpty) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    payment.detalles!,
+                                                    style: textTheme.bodySmall
+                                                        ?.copyWith(
+                                                          color: colorScheme
+                                                              .onSurfaceVariant,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Total pagado:',
+                                          style: textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: colorScheme
+                                                    .onPrimaryContainer,
+                                              ),
+                                        ),
+                                        Text(
+                                          '\$${totalPaid.toStringAsFixed(2)}',
+                                          style: textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                colorScheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
                             },
                           ),
                         ],
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+
                   // Lista de productos
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 1,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,27 +655,17 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                           padding: const EdgeInsets.all(20),
                           child: Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF1565C0,
-                                  ).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.inventory_2_rounded,
-                                  color: Color(0xFF1565C0),
-                                  size: 24,
-                                ),
+                              Icon(
+                                Icons.inventory_2_rounded,
+                                color: colorScheme.primary,
+                                size: 24,
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                               Text(
                                 'Productos',
-                                style: GoogleFonts.inter(
-                                  fontSize: 20,
+                                style: textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1565C0),
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                               const Spacer(),
@@ -594,17 +675,14 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF1565C0,
-                                  ).withOpacity(0.1),
+                                  color: colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  '${_invoiceItems.length} items',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
+                                  '${_invoiceItems.length} ${_invoiceItems.length == 1 ? 'item' : 'items'}',
+                                  style: textTheme.labelMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1565C0),
+                                    color: colorScheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -619,16 +697,15 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                 children: [
                                   Icon(
                                     Icons.inventory_2_outlined,
-                                    size: 48,
-                                    color: Colors.grey[400],
+                                    size: 64,
+                                    color: colorScheme.outline,
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
                                     'No hay productos en esta factura',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
+                                    style: textTheme.bodyMedium?.copyWith(
                                       fontStyle: FontStyle.italic,
-                                      color: Colors.grey[600],
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -639,9 +716,10 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                           ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.only(bottom: 8),
                             itemCount: _invoiceItems.length,
                             separatorBuilder: (context, index) => Divider(
-                              color: Colors.grey[200],
+                              color: colorScheme.outlineVariant,
                               height: 1,
                               indent: 20,
                               endIndent: 20,
@@ -651,10 +729,6 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                               final producto = _productCache[item.productoID];
                               final productName =
                                   producto?.nombre ?? 'Producto desconocido';
-                              final subtotal = _calculateItemSubtotal(
-                                item,
-                                producto,
-                              );
 
                               return Container(
                                 padding: const EdgeInsets.all(20),
@@ -665,10 +739,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                       height: 48,
                                       decoration: BoxDecoration(
                                         color: producto == null
-                                            ? Colors.orange.withOpacity(0.1)
-                                            : const Color(
-                                                0xFF1565C0,
-                                              ).withOpacity(0.1),
+                                            ? colorScheme.errorContainer
+                                            : colorScheme.primaryContainer,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
@@ -676,8 +748,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                             ? Icons.warning_rounded
                                             : Icons.shopping_bag_rounded,
                                         color: producto == null
-                                            ? Colors.orange[600]
-                                            : const Color(0xFF1565C0),
+                                            ? colorScheme.error
+                                            : colorScheme.onPrimaryContainer,
                                         size: 24,
                                       ),
                                     ),
@@ -689,37 +761,39 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                         children: [
                                           Text(
                                             productName,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.grey[800],
-                                            ),
+                                            style: textTheme.bodyLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: colorScheme.onSurface,
+                                                ),
                                           ),
                                           const SizedBox(height: 4),
                                           if (producto == null)
                                             Text(
                                               'Producto no disponible',
-                                              style: GoogleFonts.inter(
-                                                fontSize: 14,
-                                                color: Colors.orange[600],
-                                                fontStyle: FontStyle.italic,
-                                              ),
+                                              style: textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: colorScheme.error,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
                                             )
                                           else
                                             Row(
                                               children: [
                                                 Icon(
-                                                  Icons.numbers_rounded,
+                                                  Icons.inventory_outlined,
                                                   size: 16,
-                                                  color: Colors.grey[500],
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   'Cantidad: ${item.quantity}',
-                                                  style: GoogleFonts.inter(
-                                                    fontSize: 14,
-                                                    color: Colors.grey[600],
-                                                  ),
+                                                  style: textTheme.bodySmall
+                                                      ?.copyWith(
+                                                        color: colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -731,20 +805,21 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                           CrossAxisAlignment.end,
                                       children: [
                                         Text(
-                                          '\$${subtotal.toStringAsFixed(2)}',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF1565C0),
-                                          ),
+                                          '\$${item.subtotal.toStringAsFixed(2)}',
+                                          style: textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme.tertiary,
+                                              ),
                                         ),
                                         if (producto != null)
                                           Text(
-                                            '\$${(item.subtotal ?? producto.precioCompra).toStringAsFixed(2)} c/u',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 12,
-                                              color: Colors.grey[500],
-                                            ),
+                                            '\$${(item.subtotal / item.quantity).toStringAsFixed(2)} c/u',
+                                            style: textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
                                           ),
                                       ],
                                     ),
@@ -756,23 +831,11 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
     );
-  }
-
-  // Método helper para calcular el subtotal de un item
-  double _calculateItemSubtotal(InvoiceItem item, Producto? producto) {
-    // Prioridad: usar item.subtotal si existe
-    return item.subtotal;
-  }
-
-  String _getStatusText(String? status) {
-    if (status == null || status.isEmpty) {
-      return 'Sin estado';
-    }
-    return status;
   }
 
   Future<List<InvoicePayment>> _fetchInvoicePayments() async {
@@ -787,7 +850,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   IconData _getPaymentIcon(TiposPago tipoPago) {
     switch (tipoPago) {
       case TiposPago.EFECTIVO:
-        return Icons.money;
+        return Icons.payments;
       case TiposPago.TARJETA_DEBITO:
         return Icons.credit_card;
       case TiposPago.TRANSFERENCIA:
@@ -799,18 +862,19 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
     }
   }
 
-  Color _getPaymentColor(TiposPago tipoPago) {
+  Color _getPaymentColor(TiposPago tipoPago, ColorScheme colorScheme) {
+    // Usar colores del tema en lugar de colores hardcodeados
     switch (tipoPago) {
       case TiposPago.EFECTIVO:
-        return Colors.green;
+        return colorScheme.tertiary;
       case TiposPago.TARJETA_DEBITO:
-        return Colors.blue;
+        return colorScheme.primary;
       case TiposPago.TRANSFERENCIA:
-        return Colors.purple;
+        return colorScheme.secondary;
       case TiposPago.CHEQUE:
-        return Colors.orange;
+        return colorScheme.tertiary.withOpacity(0.7);
       default:
-        return Colors.grey;
+        return colorScheme.outline;
     }
   }
 

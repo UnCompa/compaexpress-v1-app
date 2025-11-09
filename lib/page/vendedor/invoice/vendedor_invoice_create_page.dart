@@ -5,6 +5,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/invoice_item_data.dart';
 import 'package:compaexpress/entities/payment_option.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/providers/products_provider.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/invoice_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
@@ -13,6 +14,7 @@ import 'package:compaexpress/utils/denominaciones.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -45,16 +47,16 @@ class DenominacionData {
   }
 }
 
-class VendedorCreateInvoiceScreen extends StatefulWidget {
+class VendedorCreateInvoiceScreen extends ConsumerStatefulWidget {
   const VendedorCreateInvoiceScreen({super.key});
 
   @override
-  State<VendedorCreateInvoiceScreen> createState() =>
+  ConsumerState<VendedorCreateInvoiceScreen> createState() =>
       _VendedorCreateInvoiceScreenState();
 }
 
 class _VendedorCreateInvoiceScreenState
-    extends State<VendedorCreateInvoiceScreen> {
+    extends ConsumerState<VendedorCreateInvoiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _productKey = GlobalKey<FormState>();
   final _invoiceNumberController = TextEditingController();
@@ -904,11 +906,13 @@ class _VendedorCreateInvoiceScreenState
   }
 
   Widget buildCompleteItemsSection() {
+    final productState = ref.watch(productsProvider);
     return Column(
       children: [
         ProductQuickSelector(
-          productos: _productos,
-          productoPrecios: _productoPrecios,
+          productos: productState.productos,
+          productoPrecios: productState.productoPrecios,
+          preciosLoaded: productState.preciosLoaded,
           onProductSelected: (orderItem, _) {
             _addOrderItemSmart(orderItem.producto, orderItem.precio);
           },
@@ -1562,9 +1566,7 @@ class _VendedorCreateInvoiceScreenState
   Widget _buildTotalSection(dynamic item) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           Text(
@@ -1593,9 +1595,7 @@ class _VendedorCreateInvoiceScreenState
     final quantityTotal = item.quantity * item.precio.quantity;
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           Text(

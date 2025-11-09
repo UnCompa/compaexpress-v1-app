@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:compaexpress/entities/invoice_with_details.dart';
 import 'package:compaexpress/entities/order_with_details.dart';
 import 'package:compaexpress/models/Negocio.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:compaexpress/utils/invoice_design.dart';
 import 'package:flutter_thermal_printer/flutter_thermal_printer.dart';
 import 'package:http/http.dart' as http;
@@ -137,7 +138,8 @@ class PrinterThermal {
     );
     bytes += generator.feed(1);
     bytes += generator.text(
-      'Fecha: ${dateFormat.format(factura.invoiceDate.getDateTimeInUtc())}',
+      'Fecha: ${FechaEcuador.formatearDesdeTemporal(factura.invoiceDate.toString(), conHora: true)}',
+      
     );
     bytes += generator.hr(ch: '=');
 
@@ -258,7 +260,10 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center, bold: true),
     );
     bytes += generator.text(
-      dateFormat.format(factura.invoiceDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(
+        factura.invoiceDate.toString(),
+        conHora: true,
+      ),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr(ch: '-');
@@ -385,7 +390,10 @@ class PrinterThermal {
       styles: const PosStyles(bold: true),
     );
     bytes += generator.text(
-      dateFormat.format(factura.invoiceDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(
+        factura.invoiceDate.toString(),
+        conHora: true,
+      ),
     );
     bytes += generator.hr(ch: '=');
 
@@ -641,7 +649,10 @@ class PrinterThermal {
       ),
     );
     bytes += generator.text(
-      dateFormat.format(factura.invoiceDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(
+        factura.invoiceDate.toString(),
+        conHora: true,
+      ),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr(ch: '=');
@@ -756,7 +767,7 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.text(
-      dateFormat.format(factura.invoiceDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(factura.invoiceDate.toString(), conHora: true),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr();
@@ -1074,7 +1085,7 @@ class PrinterThermal {
     );
     bytes += generator.feed(1);
     bytes += generator.text(
-      'Fecha: ${dateFormat.format(orden.orderDate.getDateTimeInUtc())}',
+      'Fecha: ${FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true)}',
     );
     if (orden.orderStatus != null) {
       bytes += generator.text(
@@ -1201,7 +1212,7 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center, bold: true),
     );
     bytes += generator.text(
-      dateFormat.format(orden.orderDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr(ch: '-');
@@ -1328,7 +1339,7 @@ class PrinterThermal {
       styles: const PosStyles(bold: true),
     );
     bytes += generator.text(
-      dateFormat.format(orden.orderDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
     );
     if (orden.orderStatus != null) {
       bytes += generator.text(
@@ -1590,7 +1601,7 @@ class PrinterThermal {
       ),
     );
     bytes += generator.text(
-      dateFormat.format(orden.orderDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr(ch: '=');
@@ -1705,7 +1716,7 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.text(
-      dateFormat.format(orden.orderDate.getDateTimeInUtc()),
+      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr();

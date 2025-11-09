@@ -6,9 +6,11 @@ import 'package:compaexpress/entities/order_item_data.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 // Singleton para manejar el cache de imágenes
 class ImageCacheManager {
@@ -140,6 +142,7 @@ class ImageCacheManager {
 class ProductQuickSelector extends StatefulWidget {
   final List<Producto> productos;
   final Map<String, List<ProductoPrecios>> productoPrecios;
+  final bool preciosLoaded;
   final Function(InvoiceItemData invoiceItem, OrderItemData orderItem)
   onProductSelected;
 
@@ -147,6 +150,7 @@ class ProductQuickSelector extends StatefulWidget {
     super.key,
     required this.productos,
     required this.productoPrecios,
+    required this.preciosLoaded,
     required this.onProductSelected,
   });
 
@@ -170,7 +174,6 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
     super.initState();
     _filteredProducts = widget.productos;
 
-    // Configurar animación de expansión/colapso
     _expandController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -181,10 +184,30 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
     );
 
     _cacheManager.cleanExpiredCache();
-    _loadProductImages();
+
+    if (widget.preciosLoaded && widget.productos.isNotEmpty) {
+      _loadProductImages();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ProductQuickSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Actualizar productos filtrados cuando cambian
+    if (oldWidget.productos.length != widget.productos.length) {
+      _filterProducts(_searchController.text);
+    }
+
+    // Cargar imágenes cuando los precios terminan de cargar
+    if (!oldWidget.preciosLoaded && widget.preciosLoaded) {
+      _loadProductImages();
+    }
   }
 
   Future<void> _loadProductImages() async {
+    if (!mounted) return;
+
     setState(() {
       _loadingImages = true;
     });
@@ -259,12 +282,16 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
       if (query.isEmpty) {
         _filteredProducts = widget.productos;
       } else {
-        _filteredProducts = widget.productos
-            .where(
-              (producto) =>
-                  producto.nombre.toLowerCase().contains(query.toLowerCase()),
-            )
-            .toList();
+        final queryLower = query.toLowerCase();
+        _filteredProducts = widget.productos.where((producto) {
+          final matchesName = producto.nombre.toLowerCase().contains(
+            queryLower,
+          );
+          final matchesBarcode = producto.barCode.toLowerCase().contains(
+            queryLower,
+          );
+          return matchesName || matchesBarcode;
+        }).toList();
       }
     });
 
@@ -295,39 +322,82 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
   }
 
   void _selectProduct(Producto producto) {
-    final precios = widget.productoPrecios[producto.id] ?? [];
-    final precioSeleccionado = precios.isNotEmpty ? precios.first : null;
+    try {
+      // 🔥 Validación ultra-robusta
+      final precios = widget.productoPrecios[producto.id];
 
-    if (precioSeleccionado == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No hay precios configurados para ${producto.nombre}'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      if (precios == null || precios.isEmpty) {
+        _showErrorSnackBar(
+          'No hay precios configurados para ${producto.nombre}',
+        );
+        return;
+      }
+
+      final precioSeleccionado = precios.first;
+
+      // Validar que el precio tenga valor
+      if (precioSeleccionado.precio <= 0) {
+        _showErrorSnackBar('El precio de ${producto.nombre} no es válido');
+        return;
+      }
+
+      final invoiceItem = InvoiceItemData(
+        producto: producto,
+        precio: precioSeleccionado,
+        quantity: 1,
+        tax: 0,
       );
-      return;
+
+      final orderItem = OrderItemData(
+        producto: producto,
+        precio: precioSeleccionado,
+        quantity: 1,
+        tax: 0,
+      );
+
+      widget.onProductSelected(invoiceItem, orderItem);
+
+      _showSuccessSnackBar('${producto.nombre} agregado correctamente');
+    } catch (e) {
+      print('Error al seleccionar producto: $e');
+      _showErrorSnackBar('Error al agregar el producto');
     }
+  }
 
-    final invoiceItem = InvoiceItemData(
-      producto: producto,
-      precio: precioSeleccionado,
-      quantity: 1,
-      tax: 0,
-    );
-    final orderItem = OrderItemData(
-      producto: producto,
-      precio: precioSeleccionado,
-      quantity: 1,
-      tax: 0,
-    );
-
-    widget.onProductSelected(invoiceItem, orderItem);
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${producto.nombre} agregado correctamente'),
+        content: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -349,6 +419,8 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
     final colorScheme = theme.colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = (screenWidth / 200).floor().clamp(2, 6);
+
+    final isLoadingData = !widget.preciosLoaded || widget.productos.isEmpty;
 
     return Card(
       elevation: 2,
@@ -380,7 +452,7 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Selector Rápido de Productos',
+                        'Productos',
                         style: theme.textTheme.titleLarge?.copyWith(
                           color: colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
@@ -390,17 +462,28 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
                   ),
                   Row(
                     children: [
-                      if (_loadingImages)
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              colorScheme.primary,
-                            ),
+                      if (isLoadingData)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Row(
+                            children: [
+                              SpinKitThreeBounce(
+                                color: colorScheme.primary,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Cargando...',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      if (_loadingImages && !isLoadingData)
+                        SpinKitPulse(color: colorScheme.primary, size: 16),
                       const SizedBox(width: 12),
                       AnimatedRotation(
                         turns: _isExpanded ? 0.5 : 0,
@@ -425,112 +508,170 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Buscador
-                  AnimationConfiguration.synchronized(
-                    duration: const Duration(milliseconds: 400),
-                    child: SlideAnimation(
-                      verticalOffset: 20,
-                      child: FadeInAnimation(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            labelText: 'Buscar producto...',
-                            labelStyle: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: colorScheme.primary,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: colorScheme.outline,
+                  if (isLoadingData)
+                    _buildLoadingState(theme, colorScheme)
+                  else ...[
+                    // Buscador
+                    AnimationConfiguration.synchronized(
+                      duration: const Duration(milliseconds: 400),
+                      child: SlideAnimation(
+                        verticalOffset: 20,
+                        child: FadeInAnimation(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              labelText: 'Buscar producto...',
+                              hintText: 'Nombre o código de barras',
+                              labelStyle: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
                               ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
+                              prefixIcon: Icon(
+                                Icons.search,
                                 color: colorScheme.primary,
-                                width: 2,
                               ),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _filterProducts('');
+                                      },
+                                    )
+                                  : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: colorScheme.outline,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: colorScheme.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: colorScheme.surfaceContainerHighest,
                             ),
-                            filled: true,
-                            fillColor: colorScheme.surfaceContainerHighest,
+                            onChanged: _filterProducts,
                           ),
-                          onChanged: _filterProducts,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Grid de productos
-                  _filteredProducts.isEmpty
-                      ? AnimationConfiguration.synchronized(
-                          duration: const Duration(milliseconds: 400),
-                          child: FadeInAnimation(
-                            child: Container(
-                              padding: const EdgeInsets.all(32),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.search_off,
-                                    size: 64,
-                                    color: colorScheme.outline,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No se encontraron productos',
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
+                    // Grid de productos
+                    _filteredProducts.isEmpty
+                        ? _buildEmptyState(theme, colorScheme)
+                        : SizedBox(
+                            height: 400,
+                            child: AnimationLimiter(
+                              child: MasonryGridView.count(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                itemCount: _filteredProducts.length,
+                                itemBuilder: (context, index) {
+                                  final producto = _filteredProducts[index];
+                                  final imageKey =
+                                      producto.productoImages?.isNotEmpty ==
+                                          true
+                                      ? producto.productoImages!.first
+                                      : null;
+                                  final imageUrl = imageKey != null
+                                      ? _productImages[imageKey]
+                                      : null;
+
+                                  return AnimationConfiguration.staggeredGrid(
+                                    position: index,
+                                    duration: const Duration(milliseconds: 500),
+                                    columnCount: crossAxisCount,
+                                    child: ScaleAnimation(
+                                      child: FadeInAnimation(
+                                        child: _buildProductCard(
+                                          producto,
+                                          imageUrl,
+                                          theme,
+                                          colorScheme,
                                         ),
-                                  ),
-                                ],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
-                        )
-                      : SizedBox(
-                          height: 400,
-                          child: AnimationLimiter(
-                            child: MasonryGridView.count(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              itemCount: _filteredProducts.length,
-                              itemBuilder: (context, index) {
-                                final producto = _filteredProducts[index];
-                                final imageKey = producto.productoImages?.first;
-                                final imageUrl = imageKey != null
-                                    ? _productImages[imageKey]
-                                    : null;
-
-                                return AnimationConfiguration.staggeredGrid(
-                                  position: index,
-                                  duration: const Duration(milliseconds: 500),
-                                  columnCount: crossAxisCount,
-                                  child: ScaleAnimation(
-                                    child: FadeInAnimation(
-                                      child: _buildProductCard(
-                                        producto,
-                                        imageUrl,
-                                        theme,
-                                        colorScheme,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
+                  ],
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(ThemeData theme, ColorScheme colorScheme) {
+    return SizedBox(
+      height: 300,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SpinKitFadingCircle(color: colorScheme.primary, size: 50),
+            const SizedBox(height: 24),
+            Text(
+              'Cargando productos y precios...',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Por favor espera un momento',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme, ColorScheme colorScheme) {
+    return AnimationConfiguration.synchronized(
+      duration: const Duration(milliseconds: 400),
+      child: FadeInAnimation(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              Icon(Icons.search_off, size: 64, color: colorScheme.outline),
+              const SizedBox(height: 16),
+              Text(
+                'No se encontraron productos',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Intenta con otro término de búsqueda',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -541,9 +682,10 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
+    // 🔥 Validación segura al momento de renderizar
     final hasStock = producto.stock > 0;
-    final precios = widget.productoPrecios[producto.id] ?? [];
-    final hasPrice = precios.isNotEmpty;
+    final precios = widget.productoPrecios[producto.id];
+    final hasPrice = precios != null && precios.isNotEmpty;
     final isAvailable = hasStock && hasPrice;
 
     return Material(
@@ -569,50 +711,7 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Imagen del producto
-              Hero(
-                tag: 'product_${producto.id}',
-                child: Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    color: colorScheme.surfaceContainerHighest,
-                  ),
-                  child: imageUrl != null
-                      ? ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                            fadeInDuration: const Duration(milliseconds: 300),
-                            placeholder: (context, url) => Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Icon(
-                              Icons.image_not_supported,
-                              size: 32,
-                              color: colorScheme.outline,
-                            ),
-                          ),
-                        )
-                      : Icon(Icons.image, size: 32, color: colorScheme.outline),
-                ),
-              ),
+              _buildProductImage(producto, imageUrl, colorScheme),
 
               // Información del producto
               Padding(
@@ -634,91 +733,218 @@ class _ProductQuickSelectorState extends State<ProductQuickSelector>
                     const SizedBox(height: 8),
 
                     // Stock
-                    Row(
-                      children: [
-                        Icon(
-                          hasStock ? Icons.check_circle : Icons.cancel,
-                          color: hasStock
-                              ? colorScheme.primary
-                              : colorScheme.error,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Stock: ${producto.stock}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: hasStock
-                                ? colorScheme.primary
-                                : colorScheme.error,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    _buildStockIndicator(
+                      hasStock,
+                      producto.stock,
+                      theme,
+                      colorScheme,
                     ),
                     const SizedBox(height: 4),
 
-                    // Precio
-                    if (hasPrice)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.attach_money,
-                            color: colorScheme.secondary,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '\$${precios.first.precio.toStringAsFixed(2)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.secondary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (!hasPrice)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: colorScheme.error,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Sin precio',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.error,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                    // Precio con validación robusta
+                    _buildPriceIndicator(precios, hasPrice, theme, colorScheme),
                   ],
                 ),
               ),
 
               // Badge de estado
               if (!isAvailable)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  decoration: BoxDecoration(
-                    color: colorScheme.errorContainer,
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(12),
+                _buildUnavailableBadge(hasStock, theme, colorScheme),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductImage(
+    Producto producto,
+    String? imageUrl,
+    ColorScheme colorScheme,
+  ) {
+    return Hero(
+      tag: 'product_${producto.id}',
+      child: Container(
+        height: 120,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          color: colorScheme.surfaceContainerHighest,
+        ),
+        child: imageUrl != null
+            ? ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  fadeInDuration: const Duration(milliseconds: 300),
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: colorScheme.surfaceContainerHighest,
+                    highlightColor: colorScheme.surface,
+                    child: Container(
+                      color: colorScheme.surfaceContainerHighest,
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      !hasStock ? 'Sin stock' : 'Sin precio',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onErrorContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  errorWidget: (context, url, error) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image,
+                          size: 32,
+                          color: colorScheme.error.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Error',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colorScheme.error.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-            ],
+              )
+            : Center(
+                child: Icon(
+                  Icons.image_not_supported,
+                  size: 32,
+                  color: colorScheme.outline,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildStockIndicator(
+    bool hasStock,
+    int stock,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Row(
+      children: [
+        Icon(
+          hasStock ? Icons.check_circle : Icons.cancel,
+          color: hasStock ? colorScheme.primary : colorScheme.error,
+          size: 16,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'Stock: $stock',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: hasStock ? colorScheme.primary : colorScheme.error,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriceIndicator(
+    List<ProductoPrecios>? precios,
+    bool hasPrice,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    // 🔥 Triple validación: null, isEmpty, y primer elemento válido
+    if (precios == null || precios.isEmpty) {
+      return _buildNoPriceWidget(theme, colorScheme);
+    }
+
+    try {
+      final precio = precios.first;
+      if (precio.precio <= 0) {
+        return _buildInvalidPriceWidget(theme, colorScheme);
+      }
+
+      return Row(
+        children: [
+          Icon(Icons.attach_money, color: colorScheme.secondary, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            '\$${precio.precio.toStringAsFixed(2)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.secondary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      );
+    } catch (e) {
+      print('Error mostrando precio: $e');
+      return _buildErrorPriceWidget(theme, colorScheme);
+    }
+  }
+
+  Widget _buildNoPriceWidget(ThemeData theme, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        Icon(Icons.error_outline, color: colorScheme.error, size: 16),
+        const SizedBox(width: 4),
+        Text(
+          'Sin precio',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.error,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInvalidPriceWidget(ThemeData theme, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        Icon(Icons.warning_amber, color: Colors.orange, size: 16),
+        const SizedBox(width: 4),
+        Text(
+          'Precio inválido',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.orange,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorPriceWidget(ThemeData theme, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        Icon(Icons.error, color: colorScheme.error, size: 16),
+        const SizedBox(width: 4),
+        Text(
+          'Error en precio',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.error,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnavailableBadge(
+    bool hasStock,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+      ),
+      child: Center(
+        child: Text(
+          !hasStock ? 'Sin stock' : 'Sin precio',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colorScheme.onErrorContainer,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

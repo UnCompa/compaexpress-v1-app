@@ -106,6 +106,9 @@ final userBusinessProvider = FutureProvider.autoDispose<UserBusinessData>((
       if (attribute.userAttributeKey.key == 'custom:negocioid') {
         negocioId = attribute.value;
       }
+      if (attribute.userAttributeKey.key == 'custom:negocioId') {
+        negocioId = attribute.value;
+      }
       if (attribute.userAttributeKey.key == 'name' ||
           attribute.userAttributeKey.key == 'preferred_username') {
         userDisplayName = attribute.value;

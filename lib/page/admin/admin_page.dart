@@ -10,7 +10,7 @@ import 'package:compaexpress/page/admin/admin_summary_page.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_create_page.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_list_page.dart';
 import 'package:compaexpress/page/admin/inventory/admin_create_inventory_product.dart';
-import 'package:compaexpress/page/admin/proveedor/admin_proveedor_create_page.dart';
+import 'package:compaexpress/page/admin/proveedor/admin_proveedor_form_page.dart';
 import 'package:compaexpress/page/vendedor/caja/vendedor_cierre_caja_page.dart';
 import 'package:compaexpress/page/vendedor/invoice/vendedor_invoice_create_page.dart';
 import 'package:compaexpress/page/vendedor/order/vendedor_order_create_page.dart';
@@ -249,9 +249,10 @@ class _AdminPageState extends State<AdminPage>
         }
       }
     } catch (e) {
+      debugPrint(e.toString());
       if (mounted) {
         setState(() {
-          errorMessage = 'Error al cargar datos: ${e.toString()}';
+          errorMessage = 'Error al cargar datos';
           isLoading = false;
         });
       }
@@ -279,9 +280,10 @@ class _AdminPageState extends State<AdminPage>
     String? negocioId;
 
     for (final attribute in attributes) {
+      print(attribute);
       if (attribute.userAttributeKey.key == 'custom:negocioid') {
         negocioId = attribute.value;
-        break; // Optimización: salir del loop temprano
+        break;
       }
     }
 
@@ -376,7 +378,7 @@ class _AdminPageState extends State<AdminPage>
 
   Future<void> _handleCerrarCaja() async {
     try {
-      final caja = await CajaService.getCurrentCaja();
+      final caja = await CajaService.getCurrentCaja(forceRefresh: true);
       if (mounted) {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => VendedorCierreCajaPage(caja: caja)),
@@ -409,16 +411,15 @@ class _AdminPageState extends State<AdminPage>
         softWrap: true,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600),
       ),
       centerTitle: true,
       bottom: TabBar(
         indicatorColor: theme.colorScheme.onPrimary,
         labelColor: theme.colorScheme.onPrimary,
-        unselectedLabelColor: theme.colorScheme.onPrimary.withValues(alpha: 0.5),
+        unselectedLabelColor: theme.colorScheme.onPrimary.withValues(
+          alpha: 0.5,
+        ),
         tabs: [
           Tab(text: 'General'),
           Tab(text: 'Resumen'),

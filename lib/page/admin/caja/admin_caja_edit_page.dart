@@ -4,6 +4,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/denominaciones.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AdminCajaEditPage extends StatefulWidget {
   final Caja caja;
@@ -59,7 +60,6 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
   }
 
   void _initializeMonedasWithExisting() {
-    // Determinar qué moneda usar (USD por defecto o la primera existente)
     String monedaActual = 'USD';
     if (_monedasExistentes.isNotEmpty) {
       monedaActual = _monedasExistentes.first.moneda;
@@ -69,7 +69,6 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
 
     setState(() {
       _monedas = denominaciones.map((denominacion) {
-        // Buscar si existe una moneda con esta denominación
         final monedaExistente = _monedasExistentes.firstWhere(
           (m) => m.denominacion == denominacion && m.moneda == monedaActual,
           orElse: () => CajaMoneda(
@@ -84,7 +83,6 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
           ),
         );
 
-        // Calcular cantidad basada en el monto existente
         final cantidad = denominacion > 0
             ? (monedaExistente.monto / denominacion).round()
             : 0;
@@ -100,7 +98,6 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
   }
 
   void _initializeMonedasDefecto() {
-    // Inicializar con denominaciones USD por defecto
     final denominacionesUSD = _denominacionesPorMoneda['USD'] ?? [];
     setState(() {
       _monedas = denominacionesUSD.map((denominacion) {
@@ -115,34 +112,50 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Editar Caja'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
-        elevation: 2,
+        title: Text(
+          'Editar Caja',
+          style: GoogleFonts.mulish(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onPrimary,
+          ),
+        ),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        elevation: 0,
         actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: ElevatedButton.icon(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: FilledButton.icon(
               onPressed: _isLoading ? null : _guardarCaja,
               icon: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        color: colorScheme.onSecondary,
                       ),
                     )
-                  : const Icon(Icons.save, size: 18),
-              label: const Text('GUARDAR'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  : const Icon(Icons.save_rounded, size: 18),
+              label: Text(
+                'GUARDAR',
+                style: GoogleFonts.mulish(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.secondary,
+                foregroundColor: colorScheme.onSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
                 ),
               ),
             ),
@@ -159,24 +172,28 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCajaInfoSection(),
-                    const SizedBox(height: 24),
-                    _buildMonedasSection(),
+                    _buildCajaInfoSection(context),
+                    const SizedBox(height: 16),
+                    _buildMonedasSection(context),
                   ],
                 ),
               ),
             ),
-            _buildBottomSummary(),
+            _buildBottomSummary(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCajaInfoSection() {
+  Widget _buildCajaInfoSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      color: colorScheme.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -185,44 +202,66 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.edit,
-                    color: Colors.blue.shade600,
-                    size: 20,
+                    Icons.edit_rounded,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Información de la Caja',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.mulish(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
             TextFormField(
               controller: _saldoInicialController,
+              style: GoogleFonts.mulish(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
               decoration: InputDecoration(
                 labelText: 'Saldo Inicial',
+                labelStyle: GoogleFonts.mulish(),
                 prefixIcon: Icon(
-                  Icons.attach_money,
-                  color: Colors.green.shade600,
+                  Icons.attach_money_rounded,
+                  color: colorScheme.primary,
                 ),
                 prefixText: '\$ ',
+                prefixStyle: GoogleFonts.mulish(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.primary,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.error),
                 ),
                 helperText: 'Ingrese el saldo inicial de la caja',
-                fillColor: Colors.grey[50],
+                helperStyle: GoogleFonts.mulish(fontSize: 12),
                 filled: true,
+                fillColor: colorScheme.surface,
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -241,16 +280,19 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _isActive ? Colors.green.shade50 : Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(8),
+                color: _isActive
+                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                    : colorScheme.errorContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _isActive
-                      ? Colors.green.shade200
-                      : Colors.orange.shade200,
+                      ? colorScheme.primary.withOpacity(0.5)
+                      : colorScheme.error.withOpacity(0.5),
+                  width: 1.5,
                 ),
               ),
               child: Row(
@@ -262,23 +304,23 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
                         _isActive = value ?? true;
                       });
                     },
-                    activeColor: Colors.green.shade600,
+                    activeColor: colorScheme.primary,
                   ),
+                  const SizedBox(width: 8),
                   Icon(
-                    _isActive ? Icons.check_circle : Icons.pause_circle,
-                    color: _isActive
-                        ? Colors.green.shade600
-                        : Colors.orange.shade600,
+                    _isActive
+                        ? Icons.check_circle_rounded
+                        : Icons.cancel_rounded,
+                    color: _isActive ? Colors.green : Colors.orange,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     _isActive ? 'Caja activa' : 'Caja inactiva',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: _isActive
-                          ? Colors.green.shade700
-                          : Colors.orange.shade700,
+                    style: GoogleFonts.mulish(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: _isActive ? Colors.green[700] : Colors.orange[700],
                     ),
                   ),
                 ],
@@ -290,10 +332,14 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
     );
   }
 
-  Widget _buildMonedasSection() {
+  Widget _buildMonedasSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      color: colorScheme.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -305,235 +351,303 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.amber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        Icons.monetization_on,
-                        color: Colors.green.shade600,
-                        size: 20,
+                        Icons.monetization_on_rounded,
+                        color: Colors.amber[700],
+                        size: 24,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
-                      'Denominaciones de Monedas',
-                      style: TextStyle(
+                    Text(
+                      'Denominaciones',
+                      style: GoogleFonts.mulish(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: PopupMenuButton<String>(
-                    icon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.currency_exchange,
-                          color: Colors.blue.shade600,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _monedas.isNotEmpty ? _monedas.first.moneda : 'USD',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.blue.shade600,
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                    tooltip: 'Cambiar moneda',
-                    onSelected: _cambiarMoneda,
-                    itemBuilder: (context) => _denominacionesPorMoneda.keys
-                        .map(
-                          (moneda) => PopupMenuItem(
-                            value: moneda,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.currency_exchange,
-                                  size: 18,
-                                  color: Colors.blue.shade600,
-                                ),
-                                const SizedBox(width: 8),
-                                Text('Cambiar a $moneda'),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
+                _buildMonedaSelector(context),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               'Configure las cantidades de cada denominación disponible en la caja',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: GoogleFonts.mulish(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 20),
-            _buildMonedasList(),
+            _buildMonedasList(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMonedasList() {
+  Widget _buildMonedaSelector(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: PopupMenuButton<String>(
+        tooltip: 'Cambiar moneda',
+        onSelected: _cambiarMoneda,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.currency_exchange_rounded,
+                color: colorScheme.onPrimaryContainer,
+                size: 18,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _monedas.isNotEmpty ? _monedas.first.moneda : 'USD',
+                style: GoogleFonts.mulish(
+                  color: colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_drop_down_rounded,
+                color: colorScheme.onPrimaryContainer,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+        itemBuilder: (context) => _denominacionesPorMoneda.keys
+            .map(
+              (moneda) => PopupMenuItem(
+                value: moneda,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.currency_exchange_rounded,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Cambiar a $moneda',
+                      style: GoogleFonts.mulish(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildMonedasList(BuildContext context) {
     return Column(
       children: _monedas.asMap().entries.map((entry) {
         final index = entry.key;
         final moneda = entry.value;
-        return _buildMonedaItem(moneda, index);
+        return _buildMonedaItem(context, moneda, index);
       }).toList(),
     );
   }
 
-  Widget _buildMonedaItem(CajaMonedaForm moneda, int index) {
+  Widget _buildMonedaItem(
+    BuildContext context,
+    CajaMonedaForm moneda,
+    int index,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final montoCalculado = moneda.cantidad * moneda.denominacion;
+    final tieneValor = moneda.cantidad > 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: tieneValor
+            ? colorScheme.primaryContainer.withOpacity(0.3)
+            : colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: tieneValor
+              ? colorScheme.primary.withOpacity(0.3)
+              : colorScheme.outlineVariant,
+          width: 1.5,
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          // Icono de denominación
+          // Denominación Badge
           Container(
-            width: 70,
-            height: 70,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue.shade400, Colors.blue.shade600],
+                colors: tieneValor
+                    ? [
+                        colorScheme.primary,
+                        colorScheme.primary.withOpacity(0.7),
+                      ]
+                    : [
+                        colorScheme.surfaceContainerHighest,
+                        colorScheme.surfaceContainer,
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: tieneValor
+                  ? [
+                      BoxShadow(
+                        color: colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   moneda.moneda,
-                  style: const TextStyle(
+                  style: GoogleFonts.mulish(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    color: tieneValor
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   _formatDenominacion(moneda.denominacion),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                  style: GoogleFonts.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: tieneValor
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-
-          // Información de la denominación
+          // Información
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   _getDenominacionLabel(moneda.moneda, moneda.denominacion),
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: GoogleFonts.mulish(
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: 10,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Total: \$${montoCalculado.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green.shade700,
+                    color: tieneValor
+                        ? Colors.green.withOpacity(0.15)
+                        : colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: tieneValor
+                          ? Colors.green.withOpacity(0.3)
+                          : colorScheme.outline.withOpacity(0.3),
                     ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.payments_rounded,
+                        size: 14,
+                        color: tieneValor
+                            ? Colors.green[700]
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Total: \$${montoCalculado.toStringAsFixed(2)}',
+                        style: GoogleFonts.mulish(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: tieneValor
+                              ? Colors.green[700]
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
-
-          // Campo de cantidad
-          Container(
-            width: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
+          const SizedBox(width: 12),
+          // Input de cantidad
+          SizedBox(
+            width: 100,
             child: TextFormField(
               initialValue: moneda.cantidad.toString(),
+              style: GoogleFonts.mulish(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
-                labelText: 'Cantidad',
-                labelStyle: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                prefixIcon: Icon(
-                  Icons.numbers,
-                  size: 18,
-                  color: Colors.grey[600],
+                labelText: 'Cant.',
+                labelStyle: GoogleFonts.mulish(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
                 ),
-                border: InputBorder.none,
+                prefixIcon: Icon(
+                  Icons.numbers_rounded,
+                  size: 16,
+                  color: colorScheme.primary,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
-                fillColor: Colors.white,
                 filled: true,
+                fillColor: colorScheme.surface,
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -546,7 +660,7 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
               validator: (value) {
                 final cantidad = int.tryParse(value ?? '0') ?? 0;
                 if (cantidad < 0) {
-                  return 'Cantidad inválida';
+                  return 'Inválido';
                 }
                 return null;
               },
@@ -557,26 +671,28 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
     );
   }
 
-  Widget _buildBottomSummary() {
+  Widget _buildBottomSummary(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final totalMonedas = _monedas.fold<double>(
       0.0,
       (sum, moneda) => sum + (moneda.cantidad * moneda.denominacion),
     );
     final saldoInicial = double.tryParse(_saldoInicialController.text) ?? 0.0;
     final diferencia = saldoInicial - totalMonedas;
+    final hayDiferencia = diferencia.abs() > 0.001;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade100, Colors.white],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+        color: colorScheme.surfaceContainerHighest,
+        border: Border(
+          top: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
-        border: Border(top: BorderSide(color: Colors.grey[300]!, width: 2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: colorScheme.shadow.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -585,141 +701,74 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.monetization_on,
-                          color: Colors.blue.shade600,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Total en Monedas:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '\$${totalMonedas.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ],
+                _buildSummaryRow(
+                  context,
+                  icon: Icons.monetization_on_rounded,
+                  label: 'Total en Monedas',
+                  value: totalMonedas,
+                  color: colorScheme.primary,
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.account_balance,
-                          color: Colors.green.shade600,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Saldo Inicial:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '\$${saldoInicial.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 16),
+                _buildSummaryRow(
+                  context,
+                  icon: Icons.account_balance_rounded,
+                  label: 'Saldo Inicial',
+                  value: saldoInicial,
+                  color: Colors.green,
                 ),
-                const Divider(height: 24, thickness: 1),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          diferencia == 0 ? Icons.balance : Icons.warning,
-                          color: diferencia == 0 ? Colors.green : Colors.orange,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Diferencia:',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '\$${diferencia.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: diferencia == 0 ? Colors.green : Colors.orange,
-                      ),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(
+                    thickness: 1,
+                    color: colorScheme.outlineVariant,
+                  ),
+                ),
+                _buildSummaryRow(
+                  context,
+                  icon: hayDiferencia
+                      ? Icons.warning_rounded
+                      : Icons.balance_rounded,
+                  label: 'Diferencia',
+                  value: diferencia,
+                  color: hayDiferencia ? Colors.orange : Colors.green,
+                  isTotal: true,
                 ),
               ],
             ),
           ),
-
-          if (diferencia != 0) ...[
+          if (hayDiferencia) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
                   Icon(
-                    Icons.info_outline,
-                    color: Colors.orange.shade700,
-                    size: 20,
+                    Icons.info_outline_rounded,
+                    color: Colors.orange[700],
+                    size: 22,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       diferencia > 0
-                          ? 'Hay \$${diferencia.toStringAsFixed(2)} más en saldo inicial que en monedas'
-                          : 'Hay \$${(-diferencia).toStringAsFixed(2)} más en monedas que en saldo inicial',
-                      style: TextStyle(
+                          ? 'Saldo inicial excede el total en monedas por \$${diferencia.toStringAsFixed(2)}'
+                          : 'Total en monedas excede el saldo inicial por \$${(-diferencia).toStringAsFixed(2)}',
+                      style: GoogleFonts.mulish(
                         fontSize: 13,
-                        color: Colors.orange.shade700,
+                        color: Colors.orange[700],
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -730,6 +779,49 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required double value,
+    required Color color,
+    bool isTotal = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: isTotal ? 22 : 20),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '$label:',
+              style: GoogleFonts.mulish(
+                fontSize: isTotal ? 17 : 15,
+                fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          '\$${value.toStringAsFixed(2)}',
+          style: GoogleFonts.mulish(
+            fontSize: isTotal ? 18 : 16,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
@@ -780,18 +872,22 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Caja actualizada exitosamente'),
+                const Icon(Icons.check_circle_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(
+                  'Caja actualizada exitosamente',
+                  style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+                ),
               ],
             ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -801,16 +897,22 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error al actualizar la caja: $e')),
+                const Icon(Icons.error_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Error al actualizar la caja: $e',
+                    style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+                  ),
+                ),
               ],
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }

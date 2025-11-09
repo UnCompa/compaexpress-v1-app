@@ -5,6 +5,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_item_data.dart';
 import 'package:compaexpress/entities/payment_option.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/providers/products_provider.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/order_service.dart';
@@ -14,6 +15,7 @@ import 'package:compaexpress/widget/payment_section_widget.dart';
 import 'package:compaexpress/widget/ui/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
@@ -288,15 +290,16 @@ class PaymentSummaryCard extends StatelessWidget {
 
 // ==================== PÁGINA PRINCIPAL ====================
 
-class VendedorOrderCreatePage extends StatefulWidget {
+class VendedorOrderCreatePage extends ConsumerStatefulWidget {
   const VendedorOrderCreatePage({super.key});
 
   @override
-  State<VendedorOrderCreatePage> createState() =>
+  ConsumerState<VendedorOrderCreatePage> createState() =>
       _VendedorOrderCreatePageState();
 }
 
-class _VendedorOrderCreatePageState extends State<VendedorOrderCreatePage> {
+class _VendedorOrderCreatePageState
+    extends ConsumerState<VendedorOrderCreatePage> {
   final GlobalKey<PaymentSectionWidgetState> _paymentKey = GlobalKey();
   bool _isPaymentKeyboardActive = false;
   final _formKey = GlobalKey<FormState>();
@@ -926,11 +929,13 @@ class _VendedorOrderCreatePageState extends State<VendedorOrderCreatePage> {
   }
 
   Widget _buildCompleteItemsSection() {
+    final productState = ref.watch(productsProvider);
     return Column(
       children: [
         ProductQuickSelector(
-          productos: _productos,
-          productoPrecios: _productoPrecios,
+          productos: productState.productos,
+          productoPrecios: productState.productoPrecios,
+          preciosLoaded: productState.preciosLoaded,
           onProductSelected: (invoiceItem, orderItem) {
             _addOrderItemSmart(invoiceItem.producto, orderItem.precio);
           },

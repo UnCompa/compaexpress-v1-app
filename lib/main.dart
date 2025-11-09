@@ -34,11 +34,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import './routes/routes.dart';
 import 'models/ModelProvider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FechaEcuador.inicializarZonaHoraria();
   await dotenv.load(fileName: ".env");
   await initializeDateFormatting('es_ES', null);
   runApp(const ProviderScope(child: MyApp()));
