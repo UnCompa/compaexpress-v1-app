@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:compaexpress/providers/theme_provider.dart';
 import 'package:compaexpress/widget/color_selector.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class ThemeManager extends ConsumerWidget {
   const ThemeManager({super.key});

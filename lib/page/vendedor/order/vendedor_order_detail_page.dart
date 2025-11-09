@@ -2,6 +2,7 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_with_product.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -137,8 +138,9 @@ class OrderDetailScreen extends StatelessWidget {
                             _buildStatusChip(context, order.orderStatus),
                             const Spacer(),
                             Text(
-                              dateFormat.format(
-                                DateTime.parse(order.orderDate.toString()),
+                              FechaEcuador.formatearDesdeTemporal(
+                                order.orderDate.toString(),
+                                conHora: true,
                               ),
                               style: textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onPrimary.withOpacity(0.9),

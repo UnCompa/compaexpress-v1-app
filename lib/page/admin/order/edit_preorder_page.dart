@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:compaexpress/entities/preorder.dart';
-import 'package:compaexpress/providers/preorders_provider.dart';
 
 class EditPreorderPage extends ConsumerStatefulWidget {
   final Preorder preorder;

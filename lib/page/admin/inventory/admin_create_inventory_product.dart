@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/page/admin/categories/admin_categories_form_page.dart';
+import 'package:compaexpress/page/admin/proveedor/admin_proveedor_form_page.dart';
+import 'package:compaexpress/providers/categories_provider.dart';
+import 'package:compaexpress/providers/proveedor_provider.dart';
 import 'package:compaexpress/services/product/product_controller.dart';
 import 'package:compaexpress/services/product/product_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
@@ -129,11 +133,10 @@ class _AdminCreateInventoryProductState
       final tipo = _tipoCompraController.text.trim();
       final categoria = _categoriaSeleccionada?.nombre ?? '';
 
-      String descripcion = '$nombre';
+      String descripcion = nombre;
       if (tipo.isNotEmpty) descripcion += ' tipo $tipo';
       if (categoria.isNotEmpty) descripcion += ' de categoría $categoria';
-      descripcion +=
-          '. Producto de alta calidad con excelentes características y acabados.';
+      descripcion += '. Producto de alta calidad';
 
       _descripcionController.text = descripcion;
       _mostrarToast(
@@ -474,43 +477,34 @@ class _AdminCreateInventoryProductState
   // ========== NAVEGACIÓN A PANTALLAS DE CREACIÓN ==========
 
   Future<void> _navegarACrearCategoria() async {
-    // Navegar a pantalla de creación de categoría
-    // final result = await Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => CreateCategoryScreen()),
-    // );
-    // if (result == true) {
-    //   ref.refresh(categoriesProvider);
-    // }
-    _mostrarToast(
-      'Funcionalidad de crear categoría próximamente',
-      ToastificationType.info,
+    final categoriesState = ref.read(categoriesProvider);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminCategoriesFormPage(
+          categoria: null,
+          categoriasDisponibles: categoriesState.categorias,
+        ),
+      ),
     );
   }
 
   Future<void> _navegarACrearProveedor() async {
-    // Navegar a pantalla de creación de proveedor
-    // final result = await Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => CreateProveedorScreen()),
-    // );
-    // if (result == true) {
-    //   ref.refresh(proveedorProvider);
-    // }
-    _mostrarToast(
-      'Funcionalidad de crear proveedor próximamente',
-      ToastificationType.info,
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ProveedorFormPage()),
     );
+
+    if (result == true && mounted) {
+      ref.read(proveedorProvider.notifier).refresh();
+    }
   }
 
   // ========== BUILD ==========
 
   @override
   Widget build(BuildContext context) {
-    // Observar los providers (descomenta cuando tengas los providers configurados)
-    // final categoriasState = ref.watch(categoriesProvider);
-    // final proveedoresState = ref.watch(proveedorProvider);
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -936,8 +930,7 @@ class _AdminCreateInventoryProductState
 
   Widget _buildCategoriaSelector(ColorScheme colorScheme) {
     // Simular lista de categorías (reemplazar con el provider real)
-    final categorias =
-        <Categoria>[]; // ref.watch(categoriesProvider).categorias
+    final categorias = ref.watch(categoriesProvider).categorias;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1062,7 +1055,7 @@ class _AdminCreateInventoryProductState
 
   Widget _buildProveedorSelector(ColorScheme colorScheme) {
     // Simular lista de proveedores (reemplazar con el provider real)
-    final proveedores = <Proveedor>[]; // ref.watch(proveedorProvider).items
+    final proveedores = ref.watch(proveedorProvider).items;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1101,14 +1094,6 @@ class _AdminCreateInventoryProductState
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    if (prov.ciudad.isNotEmpty)
-                                      Text(
-                                        prov.ciudad,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: colorScheme.outline,
-                                        ),
-                                      ),
                                   ],
                                 ),
                               ),
