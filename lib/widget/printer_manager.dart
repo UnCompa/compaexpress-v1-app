@@ -2,6 +2,7 @@ import 'package:compaexpress/providers/printer_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class PrinterManagerWidget extends ConsumerStatefulWidget {
   const PrinterManagerWidget({super.key});
@@ -55,7 +56,7 @@ class _PrinterManagerWidgetState extends ConsumerState<PrinterManagerWidget> {
                     const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: AppLoadingIndicator(strokeWidth: 2),
                     ),
                 ],
               ),

@@ -17,6 +17,7 @@ import 'package:compaexpress/views/logout_button.dart';
 import 'package:compaexpress/views/quick_access_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class SellerPage extends StatefulWidget {
   const SellerPage({super.key});
@@ -203,7 +204,7 @@ class _SellerPageState extends State<SellerPage>
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoadingIndicator())
           : RefreshIndicator(
               onRefresh: _loadUserAndBusiness,
               child: Padding(

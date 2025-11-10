@@ -9,7 +9,7 @@ import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/views/pagination.dart';
 import 'package:compaexpress/widget/balance_cards.dart';
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminCajaListPage extends StatefulWidget {
   const AdminCajaListPage({super.key});
 
@@ -92,7 +92,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                       children: [
                         Text("Cargando cajas..."),
                         SizedBox(height: 8),
-                        CircularProgressIndicator(),
+                        AppLoadingIndicator(),
                       ],
                     ),
                   )

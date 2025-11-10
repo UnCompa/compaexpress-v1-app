@@ -5,6 +5,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/providers/printer_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class PrintInvoiceButton extends ConsumerStatefulWidget {
   final Invoice invoice;
@@ -230,7 +231,7 @@ class _PrintInvoiceButtonState extends ConsumerState<PrintInvoiceButton> {
                 key: ValueKey('loading'),
                 width: 16,
                 height: 16,
-                child: CircularProgressIndicator(
+                child: AppLoadingIndicator(
                   strokeWidth: 2,
                   color: Colors.green,
                 ),

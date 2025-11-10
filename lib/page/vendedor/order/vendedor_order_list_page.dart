@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class VendedorOrderListScreen extends StatefulWidget {
   const VendedorOrderListScreen({super.key});
 
@@ -340,7 +340,7 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 16),
             Text('Cargando órdenes...', style: TextStyle(fontSize: 16)),
           ],

@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminViewInventoryDetailsScreen extends StatefulWidget {
   final Producto product;
   final String negocioID;
@@ -931,7 +931,7 @@ class _AdminViewInventoryDetailsScreenState
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
+                    AppLoadingIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
                         colorScheme.primary,
                       ),
@@ -1008,7 +1008,7 @@ class _AdminViewInventoryDetailsScreenState
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Center(
-                                  child: CircularProgressIndicator(
+                                  child: AppLoadingIndicator(
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       colorScheme.primary,
                                     ),
@@ -1970,7 +1970,7 @@ class _AdminViewInventoryDetailsScreenState
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
-          child: CircularProgressIndicator(
+          child: AppLoadingIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
           ),
         ),

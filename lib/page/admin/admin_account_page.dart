@@ -9,6 +9,7 @@ import 'package:compaexpress/widget/theme_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class AdminAccountPage extends ConsumerStatefulWidget {
   const AdminAccountPage({super.key});
@@ -65,7 +66,7 @@ class _AdminAccountPageState extends ConsumerState<AdminAccountPage>
             ),
           ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppLoadingIndicator()),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -354,7 +355,7 @@ class _AdminAccountPageState extends ConsumerState<AdminAccountPage>
             child: SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: AppLoadingIndicator(strokeWidth: 2),
             ),
           ),
         ),

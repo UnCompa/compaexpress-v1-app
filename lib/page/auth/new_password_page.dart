@@ -1,7 +1,7 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/page/auth/login_page.dart';
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class NewPasswordScreen extends StatefulWidget {
   const NewPasswordScreen({super.key});
 
@@ -182,7 +182,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
               const SizedBox(height: 20),
 
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: AppLoadingIndicator())
                   : ElevatedButton(
                       onPressed: _submitNewPassword,
                       child: const Text('Confirmar'),

@@ -20,7 +20,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Clase para manejar denominaciones
 class DenominacionData {
   final String moneda;
@@ -495,11 +495,8 @@ class _VendedorCreateInvoiceScreenState
                       child: SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(
+                        child: AppLoadingIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            colorScheme.onPrimary,
-                          ),
                         ),
                       ),
                     )
@@ -547,7 +544,7 @@ class _VendedorCreateInvoiceScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: colorScheme.primary),
+                AppLoadingIndicator(color: colorScheme.primary),
                 const SizedBox(height: 16),
                 Text(
                   productsState.isLoading

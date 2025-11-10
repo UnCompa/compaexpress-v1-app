@@ -4,7 +4,7 @@ import 'package:compaexpress/models/Negocio.dart';
 import 'package:compaexpress/page/superadmin/negocio/edit_bussines_superadmin_page.dart';
 import 'package:compaexpress/routes/routes.dart';
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class NegociosSuperadminPage extends StatefulWidget {
   const NegociosSuperadminPage({super.key});
 
@@ -106,7 +106,7 @@ class NegociosSuperadminPageState extends State<NegociosSuperadminPage> {
 
   Widget _buildBody(ThemeData theme) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: AppLoadingIndicator());
     }
 
     if (errorMessage != null) {

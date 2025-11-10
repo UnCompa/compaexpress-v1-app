@@ -21,7 +21,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class VendedorInvoiceListScreen extends StatefulWidget {
   const VendedorInvoiceListScreen({super.key});
 
@@ -501,7 +501,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 16),
             Text('Cargando facturas...', style: TextStyle(fontSize: 16)),
           ],

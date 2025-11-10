@@ -3,6 +3,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_with_product.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/fecha_ecuador.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -36,11 +37,7 @@ class OrderDetailScreen extends StatelessWidget {
         future: _fetchOrderItems(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-              ),
-            );
+            return Center(child: AppLoadingIndicator());
           }
 
           if (snapshot.hasError) {

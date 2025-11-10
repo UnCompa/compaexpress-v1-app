@@ -1,7 +1,7 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class PaginationWidget extends StatelessWidget {
   final int currentPage;
   final int totalItems;
@@ -216,9 +216,8 @@ class PaginationWidget extends StatelessWidget {
             child: SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(
+              child: AppLoadingIndicator(
                 strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
               ),
             ),
           ),

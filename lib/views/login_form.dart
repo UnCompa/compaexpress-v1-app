@@ -1,3 +1,4 @@
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -556,11 +557,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
                                                   borderRadius:
                                                       BorderRadius.circular(18),
                                                 ),
-                                                child: CircularProgressIndicator(
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                        Color
-                                                      >(primaryBlue),
+                                                child: AppLoadingIndicator(
                                                   strokeWidth: 3,
                                                 ),
                                               )

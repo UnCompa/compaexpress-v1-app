@@ -2,6 +2,7 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,10 +12,12 @@ class VendedorInvoiceDetailScreen extends StatefulWidget {
   const VendedorInvoiceDetailScreen({super.key, required this.invoice});
 
   @override
-  State<VendedorInvoiceDetailScreen> createState() => _VendedorInvoiceDetailScreenState();
+  State<VendedorInvoiceDetailScreen> createState() =>
+      _VendedorInvoiceDetailScreenState();
 }
 
-class _VendedorInvoiceDetailScreenState extends State<VendedorInvoiceDetailScreen> {
+class _VendedorInvoiceDetailScreenState
+    extends State<VendedorInvoiceDetailScreen> {
   List<InvoiceItem> _invoiceItems = [];
   final Map<String, Producto> _productCache = {};
   bool _isLoading = true;
@@ -116,11 +119,7 @@ class _VendedorInvoiceDetailScreenState extends State<VendedorInvoiceDetailScree
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF1565C0),
-                    ),
-                  ),
+                  const AppLoadingIndicator(),
                   const SizedBox(height: 16),
                   Text(
                     'Cargando detalles...',

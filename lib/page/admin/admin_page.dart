@@ -7,6 +7,7 @@ import 'package:compaexpress/mixin/session_control_mixin.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/page/admin/admin_account_page.dart';
 import 'package:compaexpress/page/admin/admin_summary_page.dart';
+import 'package:compaexpress/page/admin/clientes/admin_clientes_view_page.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_create_page.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_list_page.dart';
 import 'package:compaexpress/page/admin/inventory/admin_create_inventory_product.dart';
@@ -23,7 +24,7 @@ import 'package:compaexpress/views/compact_option_tile.dart';
 import 'package:compaexpress/views/quick_access_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:compaexpress/page/admin/clientes/admin_clientes_view_page.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -443,7 +444,7 @@ class _AdminPageState extends State<AdminPage>
 
   Widget _buildBody() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: AppLoadingIndicator());
     }
 
     if (errorMessage != null) {
@@ -535,7 +536,7 @@ class _AdminPageState extends State<AdminPage>
                 return const SizedBox(
                   width: 50,
                   height: 50,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: AppLoadingIndicator(strokeWidth: 2),
                 );
               },
               errorBuilder: (context, error, stackTrace) =>

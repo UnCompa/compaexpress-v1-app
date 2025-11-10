@@ -17,7 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class CreateOrderScreen extends ConsumerStatefulWidget {
   const CreateOrderScreen({super.key});
 
@@ -565,9 +565,8 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
                 )
@@ -586,7 +585,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         ],
       ),
       body: _isLoadingProducts || _isLoadingCaja
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoadingIndicator())
           : Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -1113,7 +1112,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
               ),
               children: [
                 _isLoadingCaja
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: AppLoadingIndicator())
                     : _pagoMonedas.isEmpty
                     ? const Padding(
                         padding: EdgeInsets.all(8.0),

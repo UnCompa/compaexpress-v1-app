@@ -17,7 +17,7 @@ import 'package:compaexpress/views/pagination.dart';
 import 'package:compaexpress/widget/print_order_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Provider para el rol del usuario
 final userRoleProvider = FutureProvider<String>((ref) async {
   return await UserService.getRolUser();
@@ -293,7 +293,7 @@ class _AdminOrderListScreenState extends ConsumerState<AdminOrderListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 16),
             Text('Cargando órdenes...', style: TextStyle(fontSize: 16)),
           ],

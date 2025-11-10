@@ -5,7 +5,7 @@ import 'package:compaexpress/services/device_session_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class DeviceManagementPage extends StatefulWidget {
   const DeviceManagementPage({super.key});
 
@@ -150,7 +150,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoadingIndicator())
           : Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

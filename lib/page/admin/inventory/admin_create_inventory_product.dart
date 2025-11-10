@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
@@ -672,7 +672,7 @@ class _AdminCreateInventoryProductState
                                         ? SizedBox(
                                             width: 20,
                                             height: 20,
-                                            child: CircularProgressIndicator(
+                                            child: AppLoadingIndicator(
                                               strokeWidth: 2,
                                               color: colorScheme
                                                   .onPrimaryContainer,

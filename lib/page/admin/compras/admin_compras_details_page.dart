@@ -5,7 +5,7 @@ import 'package:compaexpress/utils/format_date.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminCompraDetailPage extends StatefulWidget {
   final String compraID;
 
@@ -238,7 +238,7 @@ class _AdminCompraDetailPageState extends State<AdminCompraDetailPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: Colors.blue[700]),
+            AppLoadingIndicator(color: Colors.blue[700]),
             const SizedBox(height: 16),
             const Text('Eliminando compra...'),
             const Text(
@@ -496,7 +496,7 @@ class _AdminCompraDetailPageState extends State<AdminCompraDetailPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Colors.blue[700]),
+            AppLoadingIndicator(color: Colors.blue[700]),
             const SizedBox(height: 16),
             Text(
               'Cargando detalles...',

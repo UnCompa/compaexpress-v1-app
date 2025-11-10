@@ -3,7 +3,7 @@ import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/device_session_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class LogoutButton extends StatefulWidget {
   const LogoutButton({super.key});
   @override
@@ -44,12 +44,8 @@ class _LogoutButtonState extends State<LogoutButton> {
         _logout(context);
       },
       child: isLoading
-          ? const CircularProgressIndicator(
+          ? const AppLoadingIndicator(
               color: Colors.red,
-              constraints: BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
-              ),
               strokeWidth: 2,
             )
           : Text(

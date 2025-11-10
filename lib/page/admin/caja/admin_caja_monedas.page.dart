@@ -4,7 +4,7 @@ import 'package:compaexpress/models/Caja.dart';
 import 'package:compaexpress/models/CajaMoneda.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class CajaMonedasPage extends StatefulWidget {
   final Caja caja;
 
@@ -141,7 +141,7 @@ class _CajaMonedasPageState extends State<CajaMonedasPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(
+                        AppLoadingIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
                             colorScheme.primary,
                           ),
@@ -1189,7 +1189,7 @@ class _AddMonedaDialogState extends State<AddMonedaDialog> {
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(
+                  child: AppLoadingIndicator(
                     strokeWidth: 2,
                     color: Colors.white,
                   ),

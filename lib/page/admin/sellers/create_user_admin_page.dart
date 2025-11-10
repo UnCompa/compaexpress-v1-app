@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Asegúrate de importar tu modelo Negocio
 // import 'package:tu_app/models/ModelProvider.dart';
 
@@ -438,7 +438,7 @@ class _CreateUserAdminPageState extends State<CreateUserAdminPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          CircularProgressIndicator(),
+                          AppLoadingIndicator(),
                           SizedBox(width: 16),
                           Text('Cargando negocios...'),
                         ],
@@ -616,7 +616,7 @@ class _CreateUserAdminPageState extends State<CreateUserAdminPage> {
                           SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: AppLoadingIndicator(strokeWidth: 2),
                           ),
                           SizedBox(width: 8),
                           Text('Registrando...'),

@@ -1,6 +1,6 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class ResetPasswordPage extends StatefulWidget {
   final String username; // Agregamos el username como parámetro
   const ResetPasswordPage({super.key, required this.username});
@@ -125,7 +125,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
               const SizedBox(height: 20),
               _isLoading
-                  ? const CircularProgressIndicator()
+                  ? const AppLoadingIndicator()
                   : ElevatedButton(
                       onPressed: _submitNewPassword,
                       child: const Text('Confirmar'),

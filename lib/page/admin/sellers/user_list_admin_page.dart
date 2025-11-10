@@ -8,7 +8,7 @@ import 'package:compaexpress/utils/get_token.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Modelo para el usuario
 class User {
   final String id;
@@ -212,7 +212,7 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 16),
             Text('Cargando usuarios...'),
           ],

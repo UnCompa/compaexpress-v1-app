@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Clase para manejar denominaciones
 class DenominacionData {
   final String moneda;
@@ -648,7 +648,7 @@ class _AdminCreateInvoiceScreenState extends State<AdminCreateInvoiceScreen> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
@@ -732,7 +732,7 @@ class _AdminCreateInvoiceScreenState extends State<AdminCreateInvoiceScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
+              AppLoadingIndicator(
                 color: Colors.blue[600], // Color azul para el indicador
               ),
               SizedBox(height: 16),
@@ -1226,7 +1226,7 @@ class _AdminCreateInvoiceScreenState extends State<AdminCreateInvoiceScreen> {
               ),
               children: [
                 _isLoadingCaja
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: AppLoadingIndicator())
                     : _denominacionesPago.isEmpty
                     ? const Padding(
                         padding: EdgeInsets.all(8.0),

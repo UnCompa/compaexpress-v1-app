@@ -5,7 +5,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminComprasCreatePage extends StatefulWidget {
   final String negocioID;
 
@@ -394,7 +394,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
               ? const Padding(
                   padding: EdgeInsets.only(right: 16),
                   child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: AppLoadingIndicator(color: Colors.white),
                   ),
                 )
               : TextButton.icon(
@@ -656,7 +656,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
         Expanded(
           child: _isLoadingProductos
               ? Center(
-                  child: CircularProgressIndicator(
+                  child: AppLoadingIndicator(
                     color: theme.colorScheme.primary,
                   ),
                 )
@@ -1071,7 +1071,7 @@ class _AdminComprasCreatePageState extends State<AdminComprasCreatePage>
                 ? SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         theme.colorScheme.primary,

@@ -4,7 +4,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminCajaDetallePage extends StatefulWidget {
   final String cajaId;
   final String negocioId;
@@ -125,7 +125,7 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
         iconTheme: IconThemeData(color: colorScheme.onPrimary),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
+          ? Center(child: AppLoadingIndicator(color: colorScheme.primary))
           : _error != null
           ? Center(
               child: Text(

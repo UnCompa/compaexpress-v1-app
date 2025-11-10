@@ -1,19 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-/// Indicador que sustituye directamente a CircularProgressIndicator
-/// sin necesidad de pasar color ni tamaño.
+/// Reemplazo directo de CircularProgressIndicator.
+/// Soporta value, valueColor, color y strokeWidth.
 class AppLoadingIndicator extends StatelessWidget {
-  const AppLoadingIndicator({super.key});
+  final double? value;
+  final Animation<Color?>? valueColor;
+  final Color? color;
+  final double strokeWidth;
+
+  const AppLoadingIndicator({
+    super.key,
+    this.value,
+    this.valueColor,
+    this.color,
+    this.strokeWidth = 4.0,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Hereda el color primario del tema actual
-    final color = Theme.of(context).colorScheme.primary;
+    // Si hay valor de progreso usamos el nativo; si no, el animado.
+    if (value != null) {
+      return CircularProgressIndicator(
+        value: value,
+        valueColor: valueColor,
+        backgroundColor: color,
+        strokeWidth: strokeWidth,
+      );
+    }
+
+    final effectiveColor =
+        valueColor?.value ?? color ?? Theme.of(context).colorScheme.primary;
+
     return SpinKitWave(
-      size: 32,
+      size: 24 + strokeWidth * 2,
       itemBuilder: (_, __) => DecoratedBox(
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: effectiveColor,
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }

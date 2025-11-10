@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 /// Botón principal personalizado
 class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -34,9 +34,8 @@ class PrimaryButton extends StatelessWidget {
                 const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(
+                  child: AppLoadingIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
                 const SizedBox(width: 12),

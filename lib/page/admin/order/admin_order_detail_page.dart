@@ -5,7 +5,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class OrderDetailScreen extends StatelessWidget {
   final Order order;
 
@@ -37,7 +37,7 @@ class OrderDetailScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-              child: CircularProgressIndicator(
+              child: AppLoadingIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
               ),
             );

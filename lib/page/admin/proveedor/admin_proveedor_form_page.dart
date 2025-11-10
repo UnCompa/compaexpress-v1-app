@@ -5,7 +5,7 @@ import 'package:compaexpress/services/negocio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class ProveedorFormPage extends ConsumerStatefulWidget {
   final Proveedor? proveedor;
 
@@ -386,7 +386,7 @@ class _ProveedorFormPageState extends ConsumerState<ProveedorFormPage> {
                     ? SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
+                        child: AppLoadingIndicator(
                           strokeWidth: 2,
                           color: theme.colorScheme.onPrimary,
                         ),

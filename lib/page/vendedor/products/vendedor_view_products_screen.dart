@@ -8,6 +8,7 @@ import 'package:compaexpress/models/Producto.dart';
 import 'package:compaexpress/models/ProductoPrecios.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 
 class VendedorViewProductsScreen extends StatefulWidget {
@@ -327,7 +328,7 @@ class _VendedorViewProductsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         title: Text('Productos'),
         elevation: 2,
         actions: [
@@ -360,7 +361,7 @@ class _VendedorViewProductsScreenState
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: AppLoadingIndicator())
           : Column(
               children: [
                 // Filtros y búsqueda
@@ -823,11 +824,7 @@ class _VendedorViewProductsScreenState
           color: lightBlue.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
-          ),
-        ),
+        child: Center(child: AppLoadingIndicator()),
       ),
       errorWidget: (context, url, error) => Container(
         width: 50,

@@ -1,12 +1,11 @@
+// Asumiendo que Client es tu modelo generado
+import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/providers/clients_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:toastification/toastification.dart';
-
-// Asumiendo que Client es tu modelo generado
-import 'package:compaexpress/models/ModelProvider.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 // ==================== PANTALLA PRINCIPAL - LISTA DE CLIENTES ====================
 class AdminClientesViewPage extends ConsumerStatefulWidget {
   final String negocioID;
@@ -137,7 +136,7 @@ class _AdminClientesViewPageState extends ConsumerState<AdminClientesViewPage> {
 
           // Estado de carga o error
           if (clientsState.isLoading && clientsState.clients.isEmpty)
-            const Expanded(child: Center(child: CircularProgressIndicator()))
+            const Expanded(child: Center(child: AppLoadingIndicator()))
           else if (clientsState.error != null)
             Expanded(
               child: Center(
@@ -914,7 +913,7 @@ class _ClientFormPageState extends ConsumerState<ClientFormPage> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: AppLoadingIndicator(strokeWidth: 2),
                     )
                   : Text(
                       _isEditing ? 'Actualizar Cliente' : 'Crear Cliente',

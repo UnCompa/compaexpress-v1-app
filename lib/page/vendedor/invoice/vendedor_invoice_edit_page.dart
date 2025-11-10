@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class VendedorInvoiceEditPage extends StatefulWidget {
   final Invoice invoice;
 
@@ -629,9 +629,8 @@ class _VendedorInvoiceEditPageState extends State<VendedorInvoiceEditPage> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
                 )
@@ -650,7 +649,7 @@ class _VendedorInvoiceEditPageState extends State<VendedorInvoiceEditPage> {
         ],
       ),
       body: _isLoadingProducts || _isLoadingCaja
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoadingIndicator())
           : Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -1159,7 +1158,7 @@ class _VendedorInvoiceEditPageState extends State<VendedorInvoiceEditPage> {
               ),
               children: [
                 _isLoadingCaja
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: AppLoadingIndicator())
                     : _pagoMonedas.isEmpty
                     ? const Padding(
                         padding: EdgeInsets.all(8.0),

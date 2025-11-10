@@ -4,7 +4,7 @@ import 'package:compaexpress/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class PreordersPage extends ConsumerStatefulWidget {
   const PreordersPage({super.key});
 
@@ -246,7 +246,7 @@ class _PreordersPageState extends ConsumerState<PreordersPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: colorScheme.primary),
+                        AppLoadingIndicator(color: colorScheme.primary),
                         const SizedBox(height: 16),
                         Text(
                           'Cargando preórdenes...',
@@ -586,7 +586,7 @@ class _PreorderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
-                      child: CircularProgressIndicator(
+                      child: AppLoadingIndicator(
                         color: colorScheme.primary,
                       ),
                     ),

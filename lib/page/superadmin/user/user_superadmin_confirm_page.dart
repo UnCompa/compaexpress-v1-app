@@ -1,7 +1,7 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class UserSuperadminConfirmPage extends StatefulWidget {
   final String? username;
 
@@ -263,7 +263,7 @@ class _UserConfirmationPageState extends State<UserSuperadminConfirmPage> {
                           SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: AppLoadingIndicator(strokeWidth: 2),
                           ),
                           SizedBox(width: 8),
                           Text('Confirmando...'),
@@ -289,7 +289,7 @@ class _UserConfirmationPageState extends State<UserSuperadminConfirmPage> {
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: AppLoadingIndicator(strokeWidth: 2),
                           ),
                           SizedBox(width: 8),
                           Text('Reenviando...'),

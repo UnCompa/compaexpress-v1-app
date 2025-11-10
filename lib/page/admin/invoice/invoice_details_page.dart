@@ -3,7 +3,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class InvoiceDetailScreen extends StatefulWidget {
   final Invoice invoice;
 
@@ -142,7 +142,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  AppLoadingIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
                       colorScheme.primary,
                     ),
@@ -395,7 +395,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                       return Container(
                                         height: 200,
                                         alignment: Alignment.center,
-                                        child: CircularProgressIndicator(
+                                        child: AppLoadingIndicator(
                                           value:
                                               loadingProgress
                                                       .expectedTotalBytes !=
@@ -529,7 +529,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                 return Center(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: CircularProgressIndicator(
+                                    child: AppLoadingIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                         colorScheme.primary,

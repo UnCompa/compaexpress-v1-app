@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 /// Widget reutilizable para dropdowns personalizados
 class CustomDropdownField<T> extends StatelessWidget {
   final T? value;
@@ -34,10 +34,8 @@ class CustomDropdownField<T> extends StatelessWidget {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: CircularProgressIndicator(
+          child: AppLoadingIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-            constraints: const BoxConstraints(minHeight: 24, minWidth: 24),
           ),
         ),
       );

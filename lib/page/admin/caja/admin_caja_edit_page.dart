@@ -5,7 +5,7 @@ import 'package:compaexpress/utils/denominaciones.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminCajaEditPage extends StatefulWidget {
   final Caja caja;
   const AdminCajaEditPage({super.key, required this.caja});
@@ -137,7 +137,7 @@ class _AdminCajaEditPageState extends State<AdminCajaEditPage> {
                   ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: AppLoadingIndicator(
                         strokeWidth: 2,
                         color: colorScheme.onSecondary,
                       ),

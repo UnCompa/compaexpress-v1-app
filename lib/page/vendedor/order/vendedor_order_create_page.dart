@@ -11,6 +11,7 @@ import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/order_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:compaexpress/widget/payment_section_widget.dart';
 import 'package:compaexpress/widget/ui/custom_text_field.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-
 // ==================== WIDGETS SEPARADOS ====================
 
 // Widget reutilizable para campos de texto decorados
@@ -736,11 +736,9 @@ class _VendedorOrderCreatePageState
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(
+                      child: AppLoadingIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          colorScheme.onPrimary,
-                        ),
+
                       ),
                     ),
                   )
@@ -841,7 +839,7 @@ class _VendedorOrderCreatePageState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: colorScheme.primary),
+              AppLoadingIndicator(color: colorScheme.primary),
               const SizedBox(height: 16),
               Text(
                 _isLoadingProducts

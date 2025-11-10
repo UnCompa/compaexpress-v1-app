@@ -1,7 +1,7 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class VerifyAttributePage extends StatefulWidget {
   final AuthUserAttributeKey attributeKey;
   final String attributeValue;
@@ -299,11 +299,9 @@ class _VerifyAttributePageState extends State<VerifyAttributePage> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(
+                        child: AppLoadingIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
+                          
                         ),
 )
                     : const Text(
@@ -326,7 +324,7 @@ class _VerifyAttributePageState extends State<VerifyAttributePage> {
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: AppLoadingIndicator(strokeWidth: 2),
                           ),
                           SizedBox(width: 8),
                           Text('Reenviando...'),

@@ -1,7 +1,7 @@
+import 'package:compaexpress/entities/preorder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:compaexpress/entities/preorder.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class EditPreorderPage extends ConsumerStatefulWidget {
   final Preorder preorder;
 
@@ -152,7 +152,7 @@ class _EditPreorderPageState extends ConsumerState<EditPreorderPage> {
                   child: SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: AppLoadingIndicator(strokeWidth: 2),
                   ),
                 ),
               )
@@ -465,7 +465,7 @@ class _EditPreorderPageState extends ConsumerState<EditPreorderPage> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(
+                              child: AppLoadingIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   Colors.white,

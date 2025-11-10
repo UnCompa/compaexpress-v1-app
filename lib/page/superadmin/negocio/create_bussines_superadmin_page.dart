@@ -7,7 +7,7 @@ import 'package:compaexpress/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class CrearNegocioScreen extends StatefulWidget {
   const CrearNegocioScreen({super.key});
 
@@ -601,11 +601,8 @@ class _CrearNegocioScreenState extends State<CrearNegocioScreen> {
                                   SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(
+                                    child: AppLoadingIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Theme.of(context).colorScheme.primary,
-                                      ),
                                     ),
                                   ),
                                   SizedBox(width: 12),

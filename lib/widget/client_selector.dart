@@ -1,5 +1,6 @@
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/providers/clients_provider.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:searchfield/searchfield.dart';
@@ -27,7 +28,6 @@ class ClientSelector extends ConsumerStatefulWidget {
 class _ClientSelectorState extends ConsumerState<ClientSelector> {
   final TextEditingController _searchController = TextEditingController();
   Client? _selectedClient;
-  final bool _showCreateForm = false;
 
   @override
   void initState() {
@@ -394,7 +394,7 @@ class _CreateClientDialogState extends ConsumerState<CreateClientDialog> {
                                 ? SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(
+                                    child: AppLoadingIndicator(
                                       strokeWidth: 2,
                                       color: theme.colorScheme.onPrimary,
                                     ),

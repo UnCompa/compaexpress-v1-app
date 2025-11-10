@@ -3,6 +3,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/denominaciones.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -474,12 +475,7 @@ class _VendedorCierreCajaPageState extends State<VendedorCierreCajaPage> {
                   ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          colorScheme.onPrimary,
-                        ),
-                      ),
+                      child: AppLoadingIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.lock_clock, size: 24),
               label: Text(

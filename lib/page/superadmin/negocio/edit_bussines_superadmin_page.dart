@@ -8,7 +8,7 @@ import 'package:compaexpress/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class EditBussinesSuperadminPage extends StatefulWidget {
   final Negocio negocio;
   const EditBussinesSuperadminPage({super.key, required this.negocio});
@@ -638,11 +638,8 @@ class _EditBussinesSuperadminPageState
                                   SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(
+                                    child: AppLoadingIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
                                     ),
                                   ),
                                   SizedBox(width: 12),

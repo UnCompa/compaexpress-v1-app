@@ -7,7 +7,7 @@ import 'package:compaexpress/page/admin/compras/admin_compras_create_page.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminComprasListPage extends StatefulWidget {
   final String negocioID;
 
@@ -239,7 +239,7 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
           Expanded(
             child: _isLoading
                 ? Center(
-                    child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                    child: AppLoadingIndicator(color: theme.colorScheme.primary),
                   )
                 : _purchases.isEmpty
                 ? Center(

@@ -3,7 +3,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import '../../../models/Categoria.dart';
 
 class AdminCategoriesFormPage extends StatefulWidget {
@@ -95,7 +95,7 @@ class _AdminCategoriesFormPageState extends State<AdminCategoriesFormPage>
                 child: SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(
+                  child: AppLoadingIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       colorScheme.onPrimary,
@@ -756,7 +756,7 @@ class _AdminCategoriesFormPageState extends State<AdminCategoriesFormPage>
                 ? SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
                       strokeWidth: 2.5,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         theme.colorScheme.onPrimary,

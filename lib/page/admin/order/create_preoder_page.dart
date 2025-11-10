@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class CreatePreorderPage extends ConsumerStatefulWidget {
   const CreatePreorderPage({super.key});
 
@@ -263,7 +263,7 @@ class _CreatePreorderPageState extends ConsumerState<CreatePreorderPage> {
                 child: SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
+                  child: AppLoadingIndicator(
                     strokeWidth: 2,
                     color: Colors.white,
                   ),
@@ -1059,7 +1059,7 @@ class _CreatePreorderPageState extends ConsumerState<CreatePreorderPage> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),

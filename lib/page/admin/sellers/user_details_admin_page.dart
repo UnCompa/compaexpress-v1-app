@@ -5,7 +5,7 @@ import 'package:compaexpress/page/admin/sellers/user_list_admin_page.dart';
 import 'package:compaexpress/services/negocio/negocio_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class UserDetailsAdminPage extends StatefulWidget {
   final User user;
   const UserDetailsAdminPage({super.key, required this.user});
@@ -179,7 +179,7 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 12),
             Text(
               'Cargando....',
@@ -226,7 +226,7 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 12),
             Text(
               'Cargando....',

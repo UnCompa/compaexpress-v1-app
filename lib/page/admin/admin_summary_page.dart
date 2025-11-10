@@ -2,6 +2,7 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/services/summary/bussines_summary_service.dart';
 import 'package:compaexpress/services/summary/dahboard_summary_service.dart';
 import 'package:compaexpress/services/summary/product_summary_service.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -144,7 +145,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
         height: 120,
         margin: const EdgeInsets.only(bottom: 20),
         child: Center(
-          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+          child: AppLoadingIndicator(color: theme.colorScheme.primary),
         ),
       );
     }
@@ -366,7 +367,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
         height: 200,
         margin: const EdgeInsets.only(bottom: 20),
         child: Center(
-          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+          child: AppLoadingIndicator(color: theme.colorScheme.primary),
         ),
       );
     }
@@ -1184,7 +1185,7 @@ class _AdminSummaryState extends State<AdminSummaryPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(
+                      AppLoadingIndicator(
                         color: theme.colorScheme.primary,
                       ),
                       const SizedBox(height: 16),

@@ -11,6 +11,7 @@ import 'package:compaexpress/services/auditoria_service.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/user_service.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
@@ -22,8 +23,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:compaexpress/utils/fecha_ecuador.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminInvoiceListPage extends StatefulWidget {
   const AdminInvoiceListPage({super.key});
 
@@ -847,7 +847,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            AppLoadingIndicator(),
             SizedBox(height: 16),
             Text('Cargando facturas...', style: TextStyle(fontSize: 16)),
           ],

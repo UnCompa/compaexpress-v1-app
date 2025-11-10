@@ -1,6 +1,7 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/page/vendedor/user/verify_seller_user_page.dart';
 import 'package:flutter/material.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class EditSellerUserPage extends StatefulWidget {
   const EditSellerUserPage({super.key});
@@ -283,10 +284,7 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      colorScheme.primary,
-                    ),
+                  AppLoadingIndicator(
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -556,11 +554,8 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
                                 ? SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(
+                                    child: AppLoadingIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        colorScheme.onPrimary,
-                                      ),
                                     ),
                                   )
                                 : Text(

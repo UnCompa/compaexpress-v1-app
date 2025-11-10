@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
-
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminProveedorListPage extends ConsumerStatefulWidget {
   const AdminProveedorListPage({super.key});
 
@@ -86,7 +86,7 @@ class _AdminProveedorListPageState
             child: SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(
+              child: AppLoadingIndicator(
                 strokeWidth: 2,
                 color: theme.colorScheme.onPrimary,
               ),
