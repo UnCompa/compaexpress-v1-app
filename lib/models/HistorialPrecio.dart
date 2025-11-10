@@ -189,12 +189,12 @@ class HistorialPrecio extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("productoID=" + "$_productoID" + ", ");
     buffer.write("tipo=" + "$_tipo" + ", ");
-    buffer.write("precio=" + (_precio != null ? _precio.toString() : "null") + ", ");
-    buffer.write("fechaInicio=" + (_fechaInicio != null ? _fechaInicio.format() : "null") + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("fechaFin=" + (_fechaFin != null ? _fechaFin.format() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("precio=" + (_precio != null ? _precio!.toString() : "null") + ", ");
+    buffer.write("fechaInicio=" + (_fechaInicio != null ? _fechaInicio!.format() : "null") + ", ");
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("fechaFin=" + (_fechaFin != null ? _fechaFin!.format() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

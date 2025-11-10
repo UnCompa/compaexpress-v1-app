@@ -62,11 +62,22 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final factura = invoiceWithDetails.invoice;
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-
+    if (incluirLogo && logoUrl.isNotEmpty) {
+      print(logoUrl);
+      final imagen = await processImageFromUrl(logoUrl);
+      if (imagen != null) {
+        bytes += generator.feed(1);
+        bytes += generator.image(
+          imagen,
+          align: PosAlign.center,
+          isDoubleDensity: true,
+        );
+        bytes += generator.feed(1);
+      }
+    }
     // Encabezado empresa
     bytes += generator.text(
       negocio.nombre.toUpperCase(),
@@ -139,8 +150,30 @@ class PrinterThermal {
     bytes += generator.feed(1);
     bytes += generator.text(
       'Fecha: ${FechaEcuador.formatearDesdeTemporal(factura.invoiceDate.toString(), conHora: true)}',
-      
     );
+    // --- DATOS DEL CLIENTE ---
+    final cliente = invoiceWithDetails.client;
+    if (cliente != null) {
+      bytes += generator.feed(1);
+      bytes += generator.text(
+        'CLIENTE',
+        styles: const PosStyles(bold: true, underline: true),
+      );
+      bytes += generator.text(
+        '${cliente.nombres} ${cliente.apellidos}',
+      ); // nombre completo
+      if (cliente.identificacion != null &&
+          cliente.identificacion!.isNotEmpty) {
+        bytes += generator.text('CI/RUC: ${cliente.identificacion}');
+      }
+      if (cliente.phone != null && cliente.phone!.isNotEmpty) {
+        bytes += generator.text('Tel: ${cliente.phone}');
+      }
+      if (cliente.email != null && cliente.email!.isNotEmpty) {
+        bytes += generator.text('Email: ${cliente.email}');
+      }
+      bytes += generator.feed(1);
+    }
     bytes += generator.hr(ch: '=');
 
     // Tabla de productos
@@ -240,10 +273,9 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final factura = invoiceWithDetails.invoice;
-    final dateFormat = DateFormat('dd/MM/yy HH:mm');
 
     // Encabezado compacto
     bytes += generator.text(
@@ -266,6 +298,18 @@ class PrinterThermal {
       ),
       styles: const PosStyles(align: PosAlign.center),
     );
+    bytes += generator.hr(ch: '-');
+    // --- CLIENTE ---
+    final cliente = invoiceWithDetails.client;
+    if (cliente != null) {
+      bytes += generator.feed(1);
+      bytes += generator.text(
+        'Cliente: ${cliente.nombres} ${cliente.apellidos}'
+        '${cliente.identificacion != null ? ' (${cliente.identificacion})' : ''}',
+        styles: const PosStyles(bold: true),
+      );
+      bytes += generator.feed(1);
+    }
     bytes += generator.hr(ch: '-');
 
     // Productos en formato compacto
@@ -330,7 +374,7 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final factura = invoiceWithDetails.invoice;
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
@@ -396,6 +440,30 @@ class PrinterThermal {
       ),
     );
     bytes += generator.hr(ch: '=');
+    // --- CLIENTE ---
+    final cliente = invoiceWithDetails.client;
+    if (cliente != null) {
+      bytes += generator.feed(1);
+      bytes += generator.text(
+        'INFORMACION DEL CLIENTE',
+        styles: const PosStyles(bold: true, align: PosAlign.center),
+      );
+      bytes += generator.hr(ch: '-');
+      bytes += generator.text(
+        'Razon Social: ${cliente.nombres} ${cliente.apellidos}',
+      );
+      if (cliente.identificacion != null &&
+          cliente.identificacion!.isNotEmpty) {
+        bytes += generator.text('Identificacion: ${cliente.identificacion}');
+      }
+      if (cliente.phone != null && cliente.phone!.isNotEmpty) {
+        bytes += generator.text('Telefono: ${cliente.phone}');
+      }
+      if (cliente.email != null && cliente.email!.isNotEmpty) {
+        bytes += generator.text('E-mail: ${cliente.email}');
+      }
+      bytes += generator.hr(ch: '=');
+    }
 
     // Detalle completo de productos
     bytes += generator.text(
@@ -604,7 +672,7 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final factura = invoiceWithDetails.invoice;
     final dateFormat = DateFormat('dd MMM yyyy - HH:mm');
@@ -743,7 +811,7 @@ class PrinterThermal {
     Negocio negocio,
   ) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final factura = invoiceWithDetails.invoice;
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
@@ -767,7 +835,10 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.text(
-      FechaEcuador.formatearDesdeTemporal(factura.invoiceDate.toString(), conHora: true),
+      FechaEcuador.formatearDesdeTemporal(
+        factura.invoiceDate.toString(),
+        conHora: true,
+      ),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr();
@@ -1011,10 +1082,9 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final orden = orderWithDetails.order;
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
     if (logoUrl != null) {
       final image = await processImageFromUrl(logoUrl, maxWidth: 384);
       if (image != null) {
@@ -1192,7 +1262,7 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final orden = orderWithDetails.order;
     final dateFormat = DateFormat('dd/MM/yy HH:mm');
@@ -1212,7 +1282,10 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center, bold: true),
     );
     bytes += generator.text(
-      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
+      FechaEcuador.formatearDesdeTemporal(
+        orden.orderDate.toString(),
+        conHora: true,
+      ),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr(ch: '-');
@@ -1279,7 +1352,7 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final orden = orderWithDetails.order;
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
@@ -1339,7 +1412,10 @@ class PrinterThermal {
       styles: const PosStyles(bold: true),
     );
     bytes += generator.text(
-      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
+      FechaEcuador.formatearDesdeTemporal(
+        orden.orderDate.toString(),
+        conHora: true,
+      ),
     );
     if (orden.orderStatus != null) {
       bytes += generator.text(
@@ -1556,7 +1632,7 @@ class PrinterThermal {
     String? mensajePie,
   }) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final orden = orderWithDetails.order;
     final dateFormat = DateFormat('dd MMM yyyy - HH:mm');
@@ -1601,7 +1677,10 @@ class PrinterThermal {
       ),
     );
     bytes += generator.text(
-      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
+      FechaEcuador.formatearDesdeTemporal(
+        orden.orderDate.toString(),
+        conHora: true,
+      ),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr(ch: '=');
@@ -1692,7 +1771,7 @@ class PrinterThermal {
     Negocio negocio,
   ) async {
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm80, profile);
+    final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final orden = orderWithDetails.order;
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
@@ -1716,7 +1795,10 @@ class PrinterThermal {
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.text(
-      FechaEcuador.formatearDesdeTemporal(orden.orderDate.toString(), conHora: true),
+      FechaEcuador.formatearDesdeTemporal(
+        orden.orderDate.toString(),
+        conHora: true,
+      ),
       styles: const PosStyles(align: PosAlign.center),
     );
     bytes += generator.hr();

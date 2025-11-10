@@ -5,6 +5,7 @@ import 'package:compaexpress/entities/order_with_details.dart';
 import 'package:compaexpress/providers/admin_account_provider.dart';
 import 'package:compaexpress/providers/invoice_design_provider.dart';
 import 'package:compaexpress/services/negocio_service.dart';
+import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:compaexpress/utils/printer_termal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -227,10 +228,16 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
       );
       if (negocio == null) throw Exception('Negocio no encontrado');
       final design = ref.watch(invoiceDesignProvider);
+      final url = await GetImageFromBucket.getSingleSignedImageUrl(
+        negocio.logo!,
+        expiresIn: Duration(minutes: 5),
+      );
       final bytes = await PrinterThermal.generarBytesFactura(
         invoiceWithDetails,
         negocio,
         design: design,
+        incluirLogo: false,
+        logoUrl: url,
       );
 
       // Determinar qué tipo de impresora usar
@@ -248,7 +255,6 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
           port: state.wifiPort!,
         );
         await service.connect();
-        //await _printWithFlutterThermalPrinter(wifiPrinter, bytes);
         if (context.mounted) {
           await service.printTicket(bytes);
         }

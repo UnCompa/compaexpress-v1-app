@@ -190,11 +190,11 @@ class CompraProveedor extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("proveedorID=" + "$_proveedorID" + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("fechaCompra=" + (_fechaCompra != null ? _fechaCompra.format() : "null") + ", ");
-    buffer.write("totalCompra=" + (_totalCompra != null ? _totalCompra.toString() : "null") + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("fechaCompra=" + (_fechaCompra != null ? _fechaCompra!.format() : "null") + ", ");
+    buffer.write("totalCompra=" + (_totalCompra != null ? _totalCompra!.toString() : "null") + ", ");
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

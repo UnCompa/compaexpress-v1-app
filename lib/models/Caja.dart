@@ -194,14 +194,14 @@ class Caja extends amplify_core.Model {
     buffer.write("Caja {");
     buffer.write("id=" + "$id" + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("saldoInicial=" + (_saldoInicial != null ? _saldoInicial.toString() : "null") + ", ");
-    buffer.write("saldoTransferencias=" + (_saldoTransferencias != null ? _saldoTransferencias.toString() : "null") + ", ");
-    buffer.write("saldoTarjetas=" + (_saldoTarjetas != null ? _saldoTarjetas.toString() : "null") + ", ");
-    buffer.write("saldoOtros=" + (_saldoOtros != null ? _saldoOtros.toString() : "null") + ", ");
-    buffer.write("isActive=" + (_isActive != null ? _isActive.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("saldoInicial=" + (_saldoInicial != null ? _saldoInicial!.toString() : "null") + ", ");
+    buffer.write("saldoTransferencias=" + (_saldoTransferencias != null ? _saldoTransferencias!.toString() : "null") + ", ");
+    buffer.write("saldoTarjetas=" + (_saldoTarjetas != null ? _saldoTarjetas!.toString() : "null") + ", ");
+    buffer.write("saldoOtros=" + (_saldoOtros != null ? _saldoOtros!.toString() : "null") + ", ");
+    buffer.write("isActive=" + (_isActive != null ? _isActive!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

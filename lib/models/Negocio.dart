@@ -229,18 +229,18 @@ class Negocio extends amplify_core.Model {
     buffer.write("representate=" + "$_representate" + ", ");
     buffer.write("ruc=" + "$_ruc" + ", ");
     buffer.write("telefono=" + "$_telefono" + ", ");
-    buffer.write("duration=" + (_duration != null ? _duration.toString() : "null") + ", ");
+    buffer.write("duration=" + (_duration != null ? _duration!.toString() : "null") + ", ");
     buffer.write("logo=" + "$_logo" + ", ");
     buffer.write("correoElectronico=" + "$_correoElectronico" + ", ");
     buffer.write("pais=" + "$_pais" + ", ");
     buffer.write("provincia=" + "$_provincia" + ", ");
     buffer.write("ciudad=" + "$_ciudad" + ", ");
-    buffer.write("movilAccess=" + (_movilAccess != null ? _movilAccess.toString() : "null") + ", ");
-    buffer.write("pcAccess=" + (_pcAccess != null ? _pcAccess.toString() : "null") + ", ");
+    buffer.write("movilAccess=" + (_movilAccess != null ? _movilAccess!.toString() : "null") + ", ");
+    buffer.write("pcAccess=" + (_pcAccess != null ? _pcAccess!.toString() : "null") + ", ");
     buffer.write("direccion=" + "$_direccion" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

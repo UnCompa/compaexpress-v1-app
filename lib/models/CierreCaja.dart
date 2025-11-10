@@ -189,12 +189,12 @@ class CierreCaja extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("cajaID=" + "$_cajaID" + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("saldoFinal=" + (_saldoFinal != null ? _saldoFinal.toString() : "null") + ", ");
-    buffer.write("diferencia=" + (_diferencia != null ? _diferencia.toString() : "null") + ", ");
+    buffer.write("saldoFinal=" + (_saldoFinal != null ? _saldoFinal!.toString() : "null") + ", ");
+    buffer.write("diferencia=" + (_diferencia != null ? _diferencia!.toString() : "null") + ", ");
     buffer.write("observaciones=" + "$_observaciones" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

@@ -181,12 +181,12 @@ class CierreCajaHistorial extends amplify_core.Model {
     buffer.write("CierreCajaHistorial {");
     buffer.write("id=" + "$id" + ", ");
     buffer.write("cierreCajaID=" + "$_cierreCajaID" + ", ");
-    buffer.write("fechaCierre=" + (_fechaCierre != null ? _fechaCierre.format() : "null") + ", ");
+    buffer.write("fechaCierre=" + (_fechaCierre != null ? _fechaCierre!.format() : "null") + ", ");
     buffer.write("usuarioID=" + "$_usuarioID" + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

@@ -208,10 +208,10 @@ class SesionDispositivo extends amplify_core.Model {
     buffer.write("deviceId=" + "$_deviceId" + ", ");
     buffer.write("deviceType=" + "$_deviceType" + ", ");
     buffer.write("deviceInfo=" + "$_deviceInfo" + ", ");
-    buffer.write("isActive=" + (_isActive != null ? _isActive.toString() : "null") + ", ");
-    buffer.write("lastActivity=" + (_lastActivity != null ? _lastActivity.format() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isActive=" + (_isActive != null ? _isActive!.toString() : "null") + ", ");
+    buffer.write("lastActivity=" + (_lastActivity != null ? _lastActivity!.format() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

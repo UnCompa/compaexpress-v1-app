@@ -314,19 +314,19 @@ class Producto extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("nombre=" + "$_nombre" + ", ");
     buffer.write("descripcion=" + "$_descripcion" + ", ");
-    buffer.write("stock=" + (_stock != null ? _stock.toString() : "null") + ", ");
+    buffer.write("stock=" + (_stock != null ? _stock!.toString() : "null") + ", ");
     buffer.write("barCode=" + "$_barCode" + ", ");
-    buffer.write("productoImages=" + (_productoImages != null ? _productoImages.toString() : "null") + ", ");
+    buffer.write("productoImages=" + (_productoImages != null ? _productoImages!.toString() : "null") + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
     buffer.write("categoriaID=" + "$_categoriaID" + ", ");
     buffer.write("proveedorID=" + "$_proveedorID" + ", ");
-    buffer.write("precioCompra=" + (_precioCompra != null ? _precioCompra.toString() : "null") + ", ");
+    buffer.write("precioCompra=" + (_precioCompra != null ? _precioCompra!.toString() : "null") + ", ");
     buffer.write("tipo=" + "$_tipo" + ", ");
-    buffer.write("favorito=" + (_favorito != null ? _favorito.toString() : "null") + ", ");
+    buffer.write("favorito=" + (_favorito != null ? _favorito!.toString() : "null") + ", ");
     buffer.write("estado=" + "$_estado" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();
@@ -515,23 +515,13 @@ class Producto extends amplify_core.Model {
       amplify_core.AuthRule(
         authStrategy: amplify_core.AuthStrategy.GROUPS,
         groupClaim: "cognito:groups",
-        groups: [ "admin" ],
+        groups: [ "admin", "vendedor" ],
         provider: amplify_core.AuthRuleProvider.USERPOOLS,
         operations: const [
           amplify_core.ModelOperation.CREATE,
           amplify_core.ModelOperation.READ,
           amplify_core.ModelOperation.UPDATE,
           amplify_core.ModelOperation.DELETE
-        ]),
-      amplify_core.AuthRule(
-        authStrategy: amplify_core.AuthStrategy.GROUPS,
-        groupClaim: "cognito:groups",
-        groups: [ "vendedor" ],
-        provider: amplify_core.AuthRuleProvider.USERPOOLS,
-        operations: const [
-          amplify_core.ModelOperation.READ,
-          amplify_core.ModelOperation.UPDATE,
-          amplify_core.ModelOperation.CREATE
         ])
     ];
     

@@ -22,6 +22,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:compaexpress/utils/fecha_ecuador.dart';
 
 class AdminInvoiceListPage extends StatefulWidget {
   const AdminInvoiceListPage({super.key});
@@ -1021,7 +1022,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Fecha: ${dateFormat.format(invoice.invoiceDate.getDateTimeInUtc())}',
+                    'Fecha: ${FechaEcuador.formatearDesdeTemporal(invoice.invoiceDate.toString(), conHora: true)}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   Text(

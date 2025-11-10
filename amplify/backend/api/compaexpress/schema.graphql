@@ -45,9 +45,12 @@ type Proveedor
   id: ID! @primaryKey
   nombre: String!
   direccion: String!
+  identificacion: String
   ciudad: String!
   pais: String!
-  tiempoEntrega: Int!
+  telefono: String
+  email: String
+  tiempoEntrega: Int
   isDeleted: Boolean! @default(value: "false")
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
@@ -136,6 +139,7 @@ type ProductoPrecios
   isDeleted: Boolean! @default(value: "false")
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
+
 }
 
 type HistorialPrecio
@@ -241,6 +245,29 @@ type InvoicePayment
   updatedAt: AWSDateTime!
 }
 
+type Client 
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  negocioID: ID! @index(name: "byNegocio")
+  nombres: String!
+  apellidos: String!
+  identificacion: String @index(name: "byIdentificacion", queryField: "clientByIdentificacion")
+  email: String
+  phone: String
+  isDeleted: Boolean @default(value: "false")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
 type Invoice
   @model
   @auth(
@@ -255,6 +282,7 @@ type Invoice
   id: ID! @primaryKey
   sellerID: String! # sub de cognito de vendedor
   negocioID: ID! @index(name: "byNegocio")
+  clientID: ID @index(name: "byClient")
   invoiceNumber: String!
   invoiceDate: AWSDateTime!
   invoiceReceivedTotal: Float!
@@ -294,6 +322,7 @@ type InvoiceItem
   isDeleted: Boolean @default(value: "false")
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
+
 }
 
 type OrderPayment
@@ -368,6 +397,7 @@ type OrderItem
   isDeleted: Boolean @default(value: "false")
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
+
 }
 
 type SesionDispositivo

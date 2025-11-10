@@ -197,13 +197,13 @@ class ProductoPrecios extends amplify_core.Model {
     buffer.write("ProductoPrecios {");
     buffer.write("id=" + "$id" + ", ");
     buffer.write("nombre=" + "$_nombre" + ", ");
-    buffer.write("precio=" + (_precio != null ? _precio.toString() : "null") + ", ");
-    buffer.write("quantity=" + (_quantity != null ? _quantity.toString() : "null") + ", ");
+    buffer.write("precio=" + (_precio != null ? _precio!.toString() : "null") + ", ");
+    buffer.write("quantity=" + (_quantity != null ? _quantity!.toString() : "null") + ", ");
     buffer.write("productoID=" + "$_productoID" + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

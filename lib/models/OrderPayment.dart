@@ -173,11 +173,11 @@ class OrderPayment extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("orderID=" + "$_orderID" + ", ");
     buffer.write("tipoPago=" + (_tipoPago != null ? amplify_core.enumToString(_tipoPago)! : "null") + ", ");
-    buffer.write("monto=" + (_monto != null ? _monto.toString() : "null") + ", ");
+    buffer.write("monto=" + (_monto != null ? _monto!.toString() : "null") + ", ");
     buffer.write("detalles=" + "$_detalles" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

@@ -39,6 +39,17 @@ class _PrintInvoiceButtonState extends ConsumerState<PrintInvoiceButton> {
               .toList() ??
           [];
 
+      final clientResponse = await Amplify.API
+          .query(
+            request: ModelQueries.get(
+              Client.classType,
+              ClientModelIdentifier(id: invoice.clientID ?? ""),
+            ),
+          )
+          .response;
+
+      final client = clientResponse.data;
+
       if (invoiceItems.isEmpty) {
         debugPrint('No se encontraron items para la factura ${invoice.id}');
         return null;
@@ -111,7 +122,7 @@ class _PrintInvoiceButtonState extends ConsumerState<PrintInvoiceButton> {
       );
 
       // 5. Retornar todos los detalles juntos
-      return InvoiceWithDetails(invoice: invoice, invoiceDetails: validDetails);
+      return InvoiceWithDetails(invoice: invoice, invoiceDetails: validDetails, client: client);
     } catch (e, stackTrace) {
       debugPrint('Error en getInvoiceDetails: $e\n$stackTrace');
       rethrow;

@@ -30,8 +30,11 @@ class Proveedor extends amplify_core.Model {
   final String id;
   final String? _nombre;
   final String? _direccion;
+  final String? _identificacion;
   final String? _ciudad;
   final String? _pais;
+  final String? _telefono;
+  final String? _email;
   final int? _tiempoEntrega;
   final bool? _isDeleted;
   final amplify_core.TemporalDateTime? _createdAt;
@@ -78,6 +81,10 @@ class Proveedor extends amplify_core.Model {
     }
   }
   
+  String? get identificacion {
+    return _identificacion;
+  }
+  
   String get ciudad {
     try {
       return _ciudad!;
@@ -104,17 +111,16 @@ class Proveedor extends amplify_core.Model {
     }
   }
   
-  int get tiempoEntrega {
-    try {
-      return _tiempoEntrega!;
-    } catch(e) {
-      throw amplify_core.AmplifyCodeGenModelException(
-          amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
+  String? get telefono {
+    return _telefono;
+  }
+  
+  String? get email {
+    return _email;
+  }
+  
+  int? get tiempoEntrega {
+    return _tiempoEntrega;
   }
   
   bool get isDeleted {
@@ -173,15 +179,18 @@ class Proveedor extends amplify_core.Model {
     return _productos;
   }
   
-  const Proveedor._internal({required this.id, required nombre, required direccion, required ciudad, required pais, required tiempoEntrega, required isDeleted, required createdAt, required updatedAt, required negocioID, productos}): _nombre = nombre, _direccion = direccion, _ciudad = ciudad, _pais = pais, _tiempoEntrega = tiempoEntrega, _isDeleted = isDeleted, _createdAt = createdAt, _updatedAt = updatedAt, _negocioID = negocioID, _productos = productos;
+  const Proveedor._internal({required this.id, required nombre, required direccion, identificacion, required ciudad, required pais, telefono, email, tiempoEntrega, required isDeleted, required createdAt, required updatedAt, required negocioID, productos}): _nombre = nombre, _direccion = direccion, _identificacion = identificacion, _ciudad = ciudad, _pais = pais, _telefono = telefono, _email = email, _tiempoEntrega = tiempoEntrega, _isDeleted = isDeleted, _createdAt = createdAt, _updatedAt = updatedAt, _negocioID = negocioID, _productos = productos;
   
-  factory Proveedor({String? id, required String nombre, required String direccion, required String ciudad, required String pais, required int tiempoEntrega, required bool isDeleted, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, required String negocioID, List<Producto>? productos}) {
+  factory Proveedor({String? id, required String nombre, required String direccion, String? identificacion, required String ciudad, required String pais, String? telefono, String? email, int? tiempoEntrega, required bool isDeleted, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, required String negocioID, List<Producto>? productos}) {
     return Proveedor._internal(
       id: id == null ? amplify_core.UUID.getUUID() : id,
       nombre: nombre,
       direccion: direccion,
+      identificacion: identificacion,
       ciudad: ciudad,
       pais: pais,
+      telefono: telefono,
+      email: email,
       tiempoEntrega: tiempoEntrega,
       isDeleted: isDeleted,
       createdAt: createdAt,
@@ -201,8 +210,11 @@ class Proveedor extends amplify_core.Model {
       id == other.id &&
       _nombre == other._nombre &&
       _direccion == other._direccion &&
+      _identificacion == other._identificacion &&
       _ciudad == other._ciudad &&
       _pais == other._pais &&
+      _telefono == other._telefono &&
+      _email == other._email &&
       _tiempoEntrega == other._tiempoEntrega &&
       _isDeleted == other._isDeleted &&
       _createdAt == other._createdAt &&
@@ -222,25 +234,31 @@ class Proveedor extends amplify_core.Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("nombre=" + "$_nombre" + ", ");
     buffer.write("direccion=" + "$_direccion" + ", ");
+    buffer.write("identificacion=" + "$_identificacion" + ", ");
     buffer.write("ciudad=" + "$_ciudad" + ", ");
     buffer.write("pais=" + "$_pais" + ", ");
-    buffer.write("tiempoEntrega=" + (_tiempoEntrega != null ? _tiempoEntrega.toString() : "null") + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null") + ", ");
+    buffer.write("telefono=" + "$_telefono" + ", ");
+    buffer.write("email=" + "$_email" + ", ");
+    buffer.write("tiempoEntrega=" + (_tiempoEntrega != null ? _tiempoEntrega!.toString() : "null") + ", ");
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null") + ", ");
     buffer.write("negocioID=" + "$_negocioID");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  Proveedor copyWith({String? nombre, String? direccion, String? ciudad, String? pais, int? tiempoEntrega, bool? isDeleted, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? negocioID, List<Producto>? productos}) {
+  Proveedor copyWith({String? nombre, String? direccion, String? identificacion, String? ciudad, String? pais, String? telefono, String? email, int? tiempoEntrega, bool? isDeleted, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? negocioID, List<Producto>? productos}) {
     return Proveedor._internal(
       id: id,
       nombre: nombre ?? this.nombre,
       direccion: direccion ?? this.direccion,
+      identificacion: identificacion ?? this.identificacion,
       ciudad: ciudad ?? this.ciudad,
       pais: pais ?? this.pais,
+      telefono: telefono ?? this.telefono,
+      email: email ?? this.email,
       tiempoEntrega: tiempoEntrega ?? this.tiempoEntrega,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
@@ -252,9 +270,12 @@ class Proveedor extends amplify_core.Model {
   Proveedor copyWithModelFieldValues({
     ModelFieldValue<String>? nombre,
     ModelFieldValue<String>? direccion,
+    ModelFieldValue<String?>? identificacion,
     ModelFieldValue<String>? ciudad,
     ModelFieldValue<String>? pais,
-    ModelFieldValue<int>? tiempoEntrega,
+    ModelFieldValue<String?>? telefono,
+    ModelFieldValue<String?>? email,
+    ModelFieldValue<int?>? tiempoEntrega,
     ModelFieldValue<bool>? isDeleted,
     ModelFieldValue<amplify_core.TemporalDateTime>? createdAt,
     ModelFieldValue<amplify_core.TemporalDateTime>? updatedAt,
@@ -265,8 +286,11 @@ class Proveedor extends amplify_core.Model {
       id: id,
       nombre: nombre == null ? this.nombre : nombre.value,
       direccion: direccion == null ? this.direccion : direccion.value,
+      identificacion: identificacion == null ? this.identificacion : identificacion.value,
       ciudad: ciudad == null ? this.ciudad : ciudad.value,
       pais: pais == null ? this.pais : pais.value,
+      telefono: telefono == null ? this.telefono : telefono.value,
+      email: email == null ? this.email : email.value,
       tiempoEntrega: tiempoEntrega == null ? this.tiempoEntrega : tiempoEntrega.value,
       isDeleted: isDeleted == null ? this.isDeleted : isDeleted.value,
       createdAt: createdAt == null ? this.createdAt : createdAt.value,
@@ -280,8 +304,11 @@ class Proveedor extends amplify_core.Model {
     : id = json['id'],
       _nombre = json['nombre'],
       _direccion = json['direccion'],
+      _identificacion = json['identificacion'],
       _ciudad = json['ciudad'],
       _pais = json['pais'],
+      _telefono = json['telefono'],
+      _email = json['email'],
       _tiempoEntrega = (json['tiempoEntrega'] as num?)?.toInt(),
       _isDeleted = json['isDeleted'],
       _createdAt = json['createdAt'] != null ? amplify_core.TemporalDateTime.fromString(json['createdAt']) : null,
@@ -302,15 +329,18 @@ class Proveedor extends amplify_core.Model {
           : null);
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'nombre': _nombre, 'direccion': _direccion, 'ciudad': _ciudad, 'pais': _pais, 'tiempoEntrega': _tiempoEntrega, 'isDeleted': _isDeleted, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'negocioID': _negocioID, 'productos': _productos?.map((Producto? e) => e?.toJson()).toList()
+    'id': id, 'nombre': _nombre, 'direccion': _direccion, 'identificacion': _identificacion, 'ciudad': _ciudad, 'pais': _pais, 'telefono': _telefono, 'email': _email, 'tiempoEntrega': _tiempoEntrega, 'isDeleted': _isDeleted, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'negocioID': _negocioID, 'productos': _productos?.map((Producto? e) => e?.toJson()).toList()
   };
   
   Map<String, Object?> toMap() => {
     'id': id,
     'nombre': _nombre,
     'direccion': _direccion,
+    'identificacion': _identificacion,
     'ciudad': _ciudad,
     'pais': _pais,
+    'telefono': _telefono,
+    'email': _email,
     'tiempoEntrega': _tiempoEntrega,
     'isDeleted': _isDeleted,
     'createdAt': _createdAt,
@@ -323,8 +353,11 @@ class Proveedor extends amplify_core.Model {
   static final ID = amplify_core.QueryField(fieldName: "id");
   static final NOMBRE = amplify_core.QueryField(fieldName: "nombre");
   static final DIRECCION = amplify_core.QueryField(fieldName: "direccion");
+  static final IDENTIFICACION = amplify_core.QueryField(fieldName: "identificacion");
   static final CIUDAD = amplify_core.QueryField(fieldName: "ciudad");
   static final PAIS = amplify_core.QueryField(fieldName: "pais");
+  static final TELEFONO = amplify_core.QueryField(fieldName: "telefono");
+  static final EMAIL = amplify_core.QueryField(fieldName: "email");
   static final TIEMPOENTREGA = amplify_core.QueryField(fieldName: "tiempoEntrega");
   static final ISDELETED = amplify_core.QueryField(fieldName: "isDeleted");
   static final CREATEDAT = amplify_core.QueryField(fieldName: "createdAt");
@@ -381,6 +414,12 @@ class Proveedor extends amplify_core.Model {
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Proveedor.IDENTIFICACION,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
       key: Proveedor.CIUDAD,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
@@ -393,8 +432,20 @@ class Proveedor extends amplify_core.Model {
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Proveedor.TELEFONO,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Proveedor.EMAIL,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
       key: Proveedor.TIEMPOENTREGA,
-      isRequired: true,
+      isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.int)
     ));
     

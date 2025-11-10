@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => isLoading = false);
       }
     } on AuthException catch (e) {
-      _showErrorDialog(context, 'Error al iniciar sesión: ${e.message}');
+      _showErrorDialog(context, 'Crendeciales incorrectas');
       setState(() => isLoading = false);
     }
   }

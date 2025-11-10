@@ -29,6 +29,7 @@ import 'package:compaexpress/page/vendedor/order/vendedor_order_list_page.dart';
 import 'package:compaexpress/page/vendedor/products/vendedor_view_products_screen.dart';
 import 'package:compaexpress/page/vendedor/seller_page.dart';
 import 'package:compaexpress/providers/theme_provider.dart';
+import 'package:compaexpress/widget/loading_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,18 +93,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       themeMode: themePrefs.themeMode,
       home: _isAmplifyConfigured
           ? const AuthCheckScreen()
-          : const Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 12),
-                    Text("Iniciando aplicación"),
-                  ],
-                ),
-              ),
-            ),
+          : const LoadingOverlay(caption: 'Iniciando aplicación'),
       routes: {
         Routes.loginPage: (context) => const LoginScreen(),
         Routes.loginPageWithNewPassoword: (context) =>

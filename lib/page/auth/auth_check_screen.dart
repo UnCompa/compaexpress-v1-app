@@ -2,6 +2,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/page/admin/admin_page.dart';
 import 'package:compaexpress/services/network_service.dart';
 import 'package:compaexpress/services/user_service.dart';
+import 'package:compaexpress/widget/loading_overlay.dart';
 import 'package:flutter/material.dart';
 
 class AuthCheckScreen extends StatefulWidget {
@@ -12,6 +13,8 @@ class AuthCheckScreen extends StatefulWidget {
 }
 
 class _AuthCheckScreenState extends State<AuthCheckScreen> {
+  String _status = 'Verificando sesión…';
+
   @override
   void initState() {
     super.initState();
@@ -19,18 +22,15 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
   }
 
   Future<void> _checkUserAuth() async {
-    // Verifica si hay conexión a internet
+    _updateStatus('Comprobando conexión…');
     final isOnline = await NetworkService.isConnected();
-    debugPrint("Estado de conexión: ${isOnline ? 'Online' : 'Offline'}");
 
     if (isOnline) {
-      // Flujo online
+      _updateStatus('Validando credenciales…');
       try {
         final session = await Amplify.Auth.fetchAuthSession();
-        debugPrint("Validando sesión: ${session.isSignedIn}");
-
         if (session.isSignedIn) {
-          // Obtén los atributos del usuario
+          _updateStatus('Obteniendo datos del usuario…');
           final userAttributes = await Amplify.Auth.fetchUserAttributes();
           final roleAttr = userAttributes.firstWhere(
             (attr) => attr.userAttributeKey.key == 'custom:role',
@@ -39,42 +39,36 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
               value: 'unknown',
             ),
           );
-
           final role = roleAttr.value.toLowerCase();
-          // Guarda el rol localmente para uso offline
           await UserService.saveUserRoleLocally(role);
-
-          // Navega según el rol
           _navigateToRoleScreen(role);
         } else {
           _goToLogin();
         }
-      } on AuthException catch (e) {
-        debugPrint("Error verificando sesión: ${e.message}");
+      } on AuthException catch (_) {
         await _handleOfflineFlow();
       }
     } else {
-      // Flujo offline
       await _handleOfflineFlow();
     }
   }
 
   Future<void> _handleOfflineFlow() async {
+    _updateStatus('Modo sin conexión…');
     try {
       final currentUser = await Amplify.Auth.getCurrentUser();
-      debugPrint("Usuario local encontrado: ${currentUser.userId}");
-      // Intenta obtener el rol localmente
       final role = await UserService.getUserRoleLocally() ?? 'unknown';
-      // Navega según el rol local
       _navigateToRoleScreen(role);
-    } catch (offlineError) {
-      debugPrint("No se pudo verificar usuario localmente: $offlineError");
+    } catch (_) {
       _goToLogin();
     }
   }
 
+  void _updateStatus(String text) {
+    if (mounted) setState(() => _status = text);
+  }
+
   void _navigateToRoleScreen(String role) {
-    debugPrint("Navegando con rol $role");
     switch (role) {
       case 'superadmin':
         Navigator.of(context).pushReplacementNamed('/superadmin');
@@ -84,10 +78,11 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
           context,
         ).pushReplacement(MaterialPageRoute(builder: (_) => const AdminPage()));
         break;
-      case "vendedor":
+      case 'vendedor':
         Navigator.of(context).pushReplacementNamed('/vendedor');
+        break;
       default:
-        _goToLogin(); // Rol inválido o no encontrado
+        _goToLogin();
     }
   }
 
@@ -97,13 +92,6 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [CircularProgressIndicator(), Text("Verificando sesión")],
-        ),
-      ),
-    );
+    return LoadingOverlay(caption: _status);
   }
 }

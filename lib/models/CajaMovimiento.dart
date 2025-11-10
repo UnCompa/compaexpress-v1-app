@@ -206,12 +206,12 @@ class CajaMovimiento extends amplify_core.Model {
     buffer.write("cajaID=" + "$_cajaID" + ", ");
     buffer.write("tipo=" + "$_tipo" + ", ");
     buffer.write("origen=" + "$_origen" + ", ");
-    buffer.write("monto=" + (_monto != null ? _monto.toString() : "null") + ", ");
+    buffer.write("monto=" + (_monto != null ? _monto!.toString() : "null") + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
     buffer.write("descripcion=" + "$_descripcion" + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

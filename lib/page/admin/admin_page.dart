@@ -23,6 +23,7 @@ import 'package:compaexpress/views/compact_option_tile.dart';
 import 'package:compaexpress/views/quick_access_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:compaexpress/page/admin/clientes/admin_clientes_view_page.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -134,6 +135,17 @@ class _AdminPageState extends State<AdminPage>
         'Gestionar proveedores',
         Routes.adminViewProveedores,
         null,
+      ),
+      _MenuItem(
+        Icons.people,
+        'Clientes',
+        'Gestionar clientes',
+        null,
+        () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AdminClientesViewPage(negocioID: negocio!.id),
+          ),
+        ),
       ),
       _MenuItem(
         Icons.person,

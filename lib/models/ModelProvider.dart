@@ -27,6 +27,7 @@ import 'CajaMovimiento.dart';
 import 'Categoria.dart';
 import 'CierreCaja.dart';
 import 'CierreCajaHistorial.dart';
+import 'Client.dart';
 import 'CompraItem.dart';
 import 'CompraProveedor.dart';
 import 'HistorialPrecio.dart';
@@ -49,6 +50,7 @@ export 'CajaMovimiento.dart';
 export 'Categoria.dart';
 export 'CierreCaja.dart';
 export 'CierreCajaHistorial.dart';
+export 'Client.dart';
 export 'CompraItem.dart';
 export 'CompraProveedor.dart';
 export 'HistorialPrecio.dart';
@@ -67,9 +69,9 @@ export 'TiposPago.dart';
 
 class ModelProvider implements amplify_core.ModelProviderInterface {
   @override
-  String version = "576a6ade6e70ce5b456eac3337ad7af9";
+  String version = "1b39915187041bb22c860e537067016c";
   @override
-  List<amplify_core.ModelSchema> modelSchemas = [Auditoria.schema, Caja.schema, CajaMoneda.schema, CajaMovimiento.schema, Categoria.schema, CierreCaja.schema, CierreCajaHistorial.schema, CompraItem.schema, CompraProveedor.schema, HistorialPrecio.schema, Invoice.schema, InvoiceItem.schema, InvoicePayment.schema, Negocio.schema, Order.schema, OrderItem.schema, OrderPayment.schema, Producto.schema, ProductoPrecios.schema, Proveedor.schema, SesionDispositivo.schema];
+  List<amplify_core.ModelSchema> modelSchemas = [Auditoria.schema, Caja.schema, CajaMoneda.schema, CajaMovimiento.schema, Categoria.schema, CierreCaja.schema, CierreCajaHistorial.schema, Client.schema, CompraItem.schema, CompraProveedor.schema, HistorialPrecio.schema, Invoice.schema, InvoiceItem.schema, InvoicePayment.schema, Negocio.schema, Order.schema, OrderItem.schema, OrderPayment.schema, Producto.schema, ProductoPrecios.schema, Proveedor.schema, SesionDispositivo.schema];
   @override
   List<amplify_core.ModelSchema> customTypeSchemas = [];
   static final ModelProvider _instance = ModelProvider();
@@ -92,6 +94,8 @@ class ModelProvider implements amplify_core.ModelProviderInterface {
         return CierreCaja.classType;
       case "CierreCajaHistorial":
         return CierreCajaHistorial.classType;
+      case "Client":
+        return Client.classType;
       case "CompraItem":
         return CompraItem.classType;
       case "CompraProveedor":

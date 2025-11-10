@@ -204,13 +204,13 @@ class InvoiceItem extends amplify_core.Model {
     buffer.write("invoiceID=" + "$_invoiceID" + ", ");
     buffer.write("productoID=" + "$_productoID" + ", ");
     buffer.write("precioID=" + "$_precioID" + ", ");
-    buffer.write("quantity=" + (_quantity != null ? _quantity.toString() : "null") + ", ");
-    buffer.write("tax=" + (_tax != null ? _tax.toString() : "null") + ", ");
-    buffer.write("subtotal=" + (_subtotal != null ? _subtotal.toString() : "null") + ", ");
-    buffer.write("total=" + (_total != null ? _total.toString() : "null") + ", ");
-    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted.toString() : "null") + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("quantity=" + (_quantity != null ? _quantity!.toString() : "null") + ", ");
+    buffer.write("tax=" + (_tax != null ? _tax!.toString() : "null") + ", ");
+    buffer.write("subtotal=" + (_subtotal != null ? _subtotal!.toString() : "null") + ", ");
+    buffer.write("total=" + (_total != null ? _total!.toString() : "null") + ", ");
+    buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();

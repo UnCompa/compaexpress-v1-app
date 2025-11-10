@@ -26,6 +26,7 @@ class InvoiceService {
     DateTime selectDate,
     List<PaymentOption> paymentOptions,
     XFile? comprobanteFile,
+    Client? client,
   ) async {
     debugPrint('Iniciando _saveInvoice');
 
@@ -54,6 +55,13 @@ class InvoiceService {
             'El pago (\$${totalPago.toStringAsFixed(2)}) debe ser mayor al total (\$${totalFactura.toStringAsFixed(2)})',
           ),
         ),
+      );
+      return null;
+    }
+
+    if (client == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debe seleccionar un cliente')),
       );
       return null;
     }
@@ -94,6 +102,7 @@ class InvoiceService {
         logoKey,
         userData,
         caja,
+        client,
       );
 
       final invoiceResponse = await _createInvoiceInDB(invoice);
@@ -215,15 +224,15 @@ class InvoiceService {
     )) {
       switch (payment.tipo) {
         case TiposPago.EFECTIVO:
-          saldoEfectivo += payment.monto;
+          saldoEfectivo += payment.monto - createdInvoice.invoiceReturnedTotal;
           break;
         case TiposPago.TRANSFERENCIA:
         case TiposPago.DEPOSITO_BANCARIO:
-          saldoTransferencias += payment.monto;
+          saldoTransferencias += payment.monto - createdInvoice.invoiceReturnedTotal;
           break;
         case TiposPago.TARJETA_DEBITO:
         case TiposPago.TARJETA_CREDITO:
-          saldoTarjetas += payment.monto;
+          saldoTarjetas += payment.monto - createdInvoice.invoiceReturnedTotal;
           break;
         case TiposPago.CHEQUE:
         case TiposPago.PAYPHONE:
@@ -233,13 +242,13 @@ class InvoiceService {
         case TiposPago.CRIPTOMONEDA:
         case TiposPago.VALE:
         case TiposPago.OTRO:
-          saldoOtros += payment.monto;
+          saldoOtros += payment.monto - createdInvoice.invoiceReturnedTotal;
           break;
       }
     }
 
     final cajaActualizada = caja.copyWith(
-      saldoInicial: (caja.saldoInicial ?? 0.0) + saldoEfectivo,
+      saldoInicial: (caja.saldoInicial) + saldoEfectivo,
       saldoTransferencias:
           (caja.saldoTransferencias ?? 0.0) + saldoTransferencias,
       saldoTarjetas: (caja.saldoTarjetas ?? 0.0) + saldoTarjetas,
@@ -386,6 +395,7 @@ class InvoiceService {
     String logoKey,
     userData,
     caja,
+    client,
   ) {
     return Invoice(
       invoiceNumber: invoiceNumber,
@@ -400,6 +410,7 @@ class InvoiceService {
       isDeleted: false,
       createdAt: TemporalDateTime.now(),
       updatedAt: TemporalDateTime.now(),
+      clientID: client?.id,
     );
   }
 

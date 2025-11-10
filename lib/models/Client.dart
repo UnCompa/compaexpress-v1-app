@@ -23,15 +23,16 @@ import 'ModelProvider.dart';
 import 'package:amplify_core/amplify_core.dart' as amplify_core;
 
 
-/** This is an auto generated class representing the CajaMoneda type in your schema. */
-class CajaMoneda extends amplify_core.Model {
-  static const classType = const _CajaMonedaModelType();
+/** This is an auto generated class representing the Client type in your schema. */
+class Client extends amplify_core.Model {
+  static const classType = const _ClientModelType();
   final String id;
-  final String? _cajaID;
   final String? _negocioID;
-  final String? _moneda;
-  final double? _denominacion;
-  final double? _monto;
+  final String? _nombres;
+  final String? _apellidos;
+  final String? _identificacion;
+  final String? _email;
+  final String? _phone;
   final bool? _isDeleted;
   final amplify_core.TemporalDateTime? _createdAt;
   final amplify_core.TemporalDateTime? _updatedAt;
@@ -43,23 +44,10 @@ class CajaMoneda extends amplify_core.Model {
   @override
   String getId() => id;
   
-  CajaMonedaModelIdentifier get modelIdentifier {
-      return CajaMonedaModelIdentifier(
+  ClientModelIdentifier get modelIdentifier {
+      return ClientModelIdentifier(
         id: id
       );
-  }
-  
-  String get cajaID {
-    try {
-      return _cajaID!;
-    } catch(e) {
-      throw amplify_core.AmplifyCodeGenModelException(
-          amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
   }
   
   String get negocioID {
@@ -75,9 +63,9 @@ class CajaMoneda extends amplify_core.Model {
     }
   }
   
-  String get moneda {
+  String get nombres {
     try {
-      return _moneda!;
+      return _nombres!;
     } catch(e) {
       throw amplify_core.AmplifyCodeGenModelException(
           amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -88,9 +76,9 @@ class CajaMoneda extends amplify_core.Model {
     }
   }
   
-  double get denominacion {
+  String get apellidos {
     try {
-      return _denominacion!;
+      return _apellidos!;
     } catch(e) {
       throw amplify_core.AmplifyCodeGenModelException(
           amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -101,30 +89,20 @@ class CajaMoneda extends amplify_core.Model {
     }
   }
   
-  double get monto {
-    try {
-      return _monto!;
-    } catch(e) {
-      throw amplify_core.AmplifyCodeGenModelException(
-          amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
+  String? get identificacion {
+    return _identificacion;
   }
   
-  bool get isDeleted {
-    try {
-      return _isDeleted!;
-    } catch(e) {
-      throw amplify_core.AmplifyCodeGenModelException(
-          amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            amplify_core.AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
+  String? get email {
+    return _email;
+  }
+  
+  String? get phone {
+    return _phone;
+  }
+  
+  bool? get isDeleted {
+    return _isDeleted;
   }
   
   amplify_core.TemporalDateTime get createdAt {
@@ -153,16 +131,17 @@ class CajaMoneda extends amplify_core.Model {
     }
   }
   
-  const CajaMoneda._internal({required this.id, required cajaID, required negocioID, required moneda, required denominacion, required monto, required isDeleted, required createdAt, required updatedAt}): _cajaID = cajaID, _negocioID = negocioID, _moneda = moneda, _denominacion = denominacion, _monto = monto, _isDeleted = isDeleted, _createdAt = createdAt, _updatedAt = updatedAt;
+  const Client._internal({required this.id, required negocioID, required nombres, required apellidos, identificacion, email, phone, isDeleted, required createdAt, required updatedAt}): _negocioID = negocioID, _nombres = nombres, _apellidos = apellidos, _identificacion = identificacion, _email = email, _phone = phone, _isDeleted = isDeleted, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory CajaMoneda({String? id, required String cajaID, required String negocioID, required String moneda, required double denominacion, required double monto, required bool isDeleted, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt}) {
-    return CajaMoneda._internal(
+  factory Client({String? id, required String negocioID, required String nombres, required String apellidos, String? identificacion, String? email, String? phone, bool? isDeleted, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt}) {
+    return Client._internal(
       id: id == null ? amplify_core.UUID.getUUID() : id,
-      cajaID: cajaID,
       negocioID: negocioID,
-      moneda: moneda,
-      denominacion: denominacion,
-      monto: monto,
+      nombres: nombres,
+      apellidos: apellidos,
+      identificacion: identificacion,
+      email: email,
+      phone: phone,
       isDeleted: isDeleted,
       createdAt: createdAt,
       updatedAt: updatedAt);
@@ -175,13 +154,14 @@ class CajaMoneda extends amplify_core.Model {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is CajaMoneda &&
+    return other is Client &&
       id == other.id &&
-      _cajaID == other._cajaID &&
       _negocioID == other._negocioID &&
-      _moneda == other._moneda &&
-      _denominacion == other._denominacion &&
-      _monto == other._monto &&
+      _nombres == other._nombres &&
+      _apellidos == other._apellidos &&
+      _identificacion == other._identificacion &&
+      _email == other._email &&
+      _phone == other._phone &&
       _isDeleted == other._isDeleted &&
       _createdAt == other._createdAt &&
       _updatedAt == other._updatedAt;
@@ -194,13 +174,14 @@ class CajaMoneda extends amplify_core.Model {
   String toString() {
     var buffer = new StringBuffer();
     
-    buffer.write("CajaMoneda {");
+    buffer.write("Client {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("cajaID=" + "$_cajaID" + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("moneda=" + "$_moneda" + ", ");
-    buffer.write("denominacion=" + (_denominacion != null ? _denominacion!.toString() : "null") + ", ");
-    buffer.write("monto=" + (_monto != null ? _monto!.toString() : "null") + ", ");
+    buffer.write("nombres=" + "$_nombres" + ", ");
+    buffer.write("apellidos=" + "$_apellidos" + ", ");
+    buffer.write("identificacion=" + "$_identificacion" + ", ");
+    buffer.write("email=" + "$_email" + ", ");
+    buffer.write("phone=" + "$_phone" + ", ");
     buffer.write("isDeleted=" + (_isDeleted != null ? _isDeleted!.toString() : "null") + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
@@ -209,82 +190,88 @@ class CajaMoneda extends amplify_core.Model {
     return buffer.toString();
   }
   
-  CajaMoneda copyWith({String? cajaID, String? negocioID, String? moneda, double? denominacion, double? monto, bool? isDeleted, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt}) {
-    return CajaMoneda._internal(
+  Client copyWith({String? negocioID, String? nombres, String? apellidos, String? identificacion, String? email, String? phone, bool? isDeleted, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt}) {
+    return Client._internal(
       id: id,
-      cajaID: cajaID ?? this.cajaID,
       negocioID: negocioID ?? this.negocioID,
-      moneda: moneda ?? this.moneda,
-      denominacion: denominacion ?? this.denominacion,
-      monto: monto ?? this.monto,
+      nombres: nombres ?? this.nombres,
+      apellidos: apellidos ?? this.apellidos,
+      identificacion: identificacion ?? this.identificacion,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt);
   }
   
-  CajaMoneda copyWithModelFieldValues({
-    ModelFieldValue<String>? cajaID,
+  Client copyWithModelFieldValues({
     ModelFieldValue<String>? negocioID,
-    ModelFieldValue<String>? moneda,
-    ModelFieldValue<double>? denominacion,
-    ModelFieldValue<double>? monto,
-    ModelFieldValue<bool>? isDeleted,
+    ModelFieldValue<String>? nombres,
+    ModelFieldValue<String>? apellidos,
+    ModelFieldValue<String?>? identificacion,
+    ModelFieldValue<String?>? email,
+    ModelFieldValue<String?>? phone,
+    ModelFieldValue<bool?>? isDeleted,
     ModelFieldValue<amplify_core.TemporalDateTime>? createdAt,
     ModelFieldValue<amplify_core.TemporalDateTime>? updatedAt
   }) {
-    return CajaMoneda._internal(
+    return Client._internal(
       id: id,
-      cajaID: cajaID == null ? this.cajaID : cajaID.value,
       negocioID: negocioID == null ? this.negocioID : negocioID.value,
-      moneda: moneda == null ? this.moneda : moneda.value,
-      denominacion: denominacion == null ? this.denominacion : denominacion.value,
-      monto: monto == null ? this.monto : monto.value,
+      nombres: nombres == null ? this.nombres : nombres.value,
+      apellidos: apellidos == null ? this.apellidos : apellidos.value,
+      identificacion: identificacion == null ? this.identificacion : identificacion.value,
+      email: email == null ? this.email : email.value,
+      phone: phone == null ? this.phone : phone.value,
       isDeleted: isDeleted == null ? this.isDeleted : isDeleted.value,
       createdAt: createdAt == null ? this.createdAt : createdAt.value,
       updatedAt: updatedAt == null ? this.updatedAt : updatedAt.value
     );
   }
   
-  CajaMoneda.fromJson(Map<String, dynamic> json)  
+  Client.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _cajaID = json['cajaID'],
       _negocioID = json['negocioID'],
-      _moneda = json['moneda'],
-      _denominacion = (json['denominacion'] as num?)?.toDouble(),
-      _monto = (json['monto'] as num?)?.toDouble(),
+      _nombres = json['nombres'],
+      _apellidos = json['apellidos'],
+      _identificacion = json['identificacion'],
+      _email = json['email'],
+      _phone = json['phone'],
       _isDeleted = json['isDeleted'],
       _createdAt = json['createdAt'] != null ? amplify_core.TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? amplify_core.TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'cajaID': _cajaID, 'negocioID': _negocioID, 'moneda': _moneda, 'denominacion': _denominacion, 'monto': _monto, 'isDeleted': _isDeleted, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'negocioID': _negocioID, 'nombres': _nombres, 'apellidos': _apellidos, 'identificacion': _identificacion, 'email': _email, 'phone': _phone, 'isDeleted': _isDeleted, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
     'id': id,
-    'cajaID': _cajaID,
     'negocioID': _negocioID,
-    'moneda': _moneda,
-    'denominacion': _denominacion,
-    'monto': _monto,
+    'nombres': _nombres,
+    'apellidos': _apellidos,
+    'identificacion': _identificacion,
+    'email': _email,
+    'phone': _phone,
     'isDeleted': _isDeleted,
     'createdAt': _createdAt,
     'updatedAt': _updatedAt
   };
 
-  static final amplify_core.QueryModelIdentifier<CajaMonedaModelIdentifier> MODEL_IDENTIFIER = amplify_core.QueryModelIdentifier<CajaMonedaModelIdentifier>();
+  static final amplify_core.QueryModelIdentifier<ClientModelIdentifier> MODEL_IDENTIFIER = amplify_core.QueryModelIdentifier<ClientModelIdentifier>();
   static final ID = amplify_core.QueryField(fieldName: "id");
-  static final CAJAID = amplify_core.QueryField(fieldName: "cajaID");
   static final NEGOCIOID = amplify_core.QueryField(fieldName: "negocioID");
-  static final MONEDA = amplify_core.QueryField(fieldName: "moneda");
-  static final DENOMINACION = amplify_core.QueryField(fieldName: "denominacion");
-  static final MONTO = amplify_core.QueryField(fieldName: "monto");
+  static final NOMBRES = amplify_core.QueryField(fieldName: "nombres");
+  static final APELLIDOS = amplify_core.QueryField(fieldName: "apellidos");
+  static final IDENTIFICACION = amplify_core.QueryField(fieldName: "identificacion");
+  static final EMAIL = amplify_core.QueryField(fieldName: "email");
+  static final PHONE = amplify_core.QueryField(fieldName: "phone");
   static final ISDELETED = amplify_core.QueryField(fieldName: "isDeleted");
   static final CREATEDAT = amplify_core.QueryField(fieldName: "createdAt");
   static final UPDATEDAT = amplify_core.QueryField(fieldName: "updatedAt");
   static var schema = amplify_core.Model.defineSchema(define: (amplify_core.ModelSchemaDefinition modelSchemaDefinition) {
-    modelSchemaDefinition.name = "CajaMoneda";
-    modelSchemaDefinition.pluralName = "CajaMonedas";
+    modelSchemaDefinition.name = "Client";
+    modelSchemaDefinition.pluralName = "Clients";
     
     modelSchemaDefinition.authRules = [
       amplify_core.AuthRule(
@@ -302,85 +289,91 @@ class CajaMoneda extends amplify_core.Model {
     
     modelSchemaDefinition.indexes = [
       amplify_core.ModelIndex(fields: const ["id"], name: null),
-      amplify_core.ModelIndex(fields: const ["cajaID"], name: "byCaja"),
-      amplify_core.ModelIndex(fields: const ["negocioID"], name: "byNegocio")
+      amplify_core.ModelIndex(fields: const ["negocioID"], name: "byNegocio"),
+      amplify_core.ModelIndex(fields: const ["identificacion"], name: "byIdentificacion")
     ];
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.CAJAID,
+      key: Client.NEGOCIOID,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.NEGOCIOID,
+      key: Client.NOMBRES,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.MONEDA,
+      key: Client.APELLIDOS,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.DENOMINACION,
-      isRequired: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.double)
+      key: Client.IDENTIFICACION,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.MONTO,
-      isRequired: true,
-      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.double)
+      key: Client.EMAIL,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.ISDELETED,
-      isRequired: true,
+      key: Client.PHONE,
+      isRequired: false,
+      ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
+      key: Client.ISDELETED,
+      isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.bool)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.CREATEDAT,
+      key: Client.CREATEDAT,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.dateTime)
     ));
     
     modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.field(
-      key: CajaMoneda.UPDATEDAT,
+      key: Client.UPDATEDAT,
       isRequired: true,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.dateTime)
     ));
   });
 }
 
-class _CajaMonedaModelType extends amplify_core.ModelType<CajaMoneda> {
-  const _CajaMonedaModelType();
+class _ClientModelType extends amplify_core.ModelType<Client> {
+  const _ClientModelType();
   
   @override
-  CajaMoneda fromJson(Map<String, dynamic> jsonData) {
-    return CajaMoneda.fromJson(jsonData);
+  Client fromJson(Map<String, dynamic> jsonData) {
+    return Client.fromJson(jsonData);
   }
   
   @override
   String modelName() {
-    return 'CajaMoneda';
+    return 'Client';
   }
 }
 
 /**
  * This is an auto generated class representing the model identifier
- * of [CajaMoneda] in your schema.
+ * of [Client] in your schema.
  */
-class CajaMonedaModelIdentifier implements amplify_core.ModelIdentifier<CajaMoneda> {
+class ClientModelIdentifier implements amplify_core.ModelIdentifier<Client> {
   final String id;
 
-  /** Create an instance of CajaMonedaModelIdentifier using [id] the primary key. */
-  const CajaMonedaModelIdentifier({
+  /** Create an instance of ClientModelIdentifier using [id] the primary key. */
+  const ClientModelIdentifier({
     required this.id});
   
   @override
@@ -398,7 +391,7 @@ class CajaMonedaModelIdentifier implements amplify_core.ModelIdentifier<CajaMone
   String serializeAsString() => serializeAsMap().values.join('#');
   
   @override
-  String toString() => 'CajaMonedaModelIdentifier(id: $id)';
+  String toString() => 'ClientModelIdentifier(id: $id)';
   
   @override
   bool operator ==(Object other) {
@@ -406,7 +399,7 @@ class CajaMonedaModelIdentifier implements amplify_core.ModelIdentifier<CajaMone
       return true;
     }
     
-    return other is CajaMonedaModelIdentifier &&
+    return other is ClientModelIdentifier &&
       id == other.id;
   }
   

@@ -19,6 +19,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
   String? imageUrl;
+  Client? _client;
 
   @override
   void initState() {
@@ -78,9 +79,25 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           }
         }
 
+        // Cargar cliente
+        Client? clientData;
+        if (widget.invoice.clientID != null) {
+          final clientRequest = ModelQueries.get(
+            Client.classType,
+            ClientModelIdentifier(id: widget.invoice.clientID!),
+          );
+          final clientResponse = await Amplify.API
+              .query(request: clientRequest)
+              .response;
+          if (clientResponse.data != null) {
+            clientData = clientResponse.data!;
+          }
+        }
+
         setState(() {
           _invoiceItems = items;
           _isLoading = false;
+          _client = clientData;
         });
       } else {
         setState(() {
@@ -392,6 +409,77 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                       );
                                     },
                               ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (_client != null) ...[
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.people_alt,
+                                  color: colorScheme.primary,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Cliente',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Nombres: ${_client!.nombres} ${_client!.apellidos}",
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              "Identificacion: ${_client!.identificacion ?? "Sin identificacion"}",
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              "Telefono: ${_client!.phone ?? "Sin telefono"}",
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              "Correo: ${_client!.email ?? "Sin correo"}",
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),

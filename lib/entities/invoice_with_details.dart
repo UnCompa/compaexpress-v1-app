@@ -2,10 +2,12 @@ import 'package:compaexpress/models/ModelProvider.dart';
 
 class InvoiceWithDetails {
   final Invoice invoice;
+  final Client? client;
   final List<InvoiceDetailsWithProductsAndPrice> invoiceDetails;
 
   InvoiceWithDetails({
     required this.invoice,
+    required this.client,
     required this.invoiceDetails,
   });
 }

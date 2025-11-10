@@ -194,10 +194,10 @@ class Auditoria extends amplify_core.Model {
     buffer.write("entidad=" + "$_entidad" + ", ");
     buffer.write("entidadId=" + "$_entidadId" + ", ");
     buffer.write("descripcion=" + "$_descripcion" + ", ");
-    buffer.write("fecha=" + (_fecha != null ? _fecha.format() : "null") + ", ");
+    buffer.write("fecha=" + (_fecha != null ? _fecha!.format() : "null") + ", ");
     buffer.write("negocioID=" + "$_negocioID" + ", ");
-    buffer.write("createdAt=" + (_createdAt != null ? _createdAt.format() : "null") + ", ");
-    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt.format() : "null"));
+    buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
+    buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
     
     return buffer.toString();
