@@ -6,10 +6,12 @@ import 'package:compaexpress/page/admin/caja/admin_caja_detalle_page.dart';
 import 'package:compaexpress/page/admin/caja/admin_caja_edit_page.dart';
 import 'package:compaexpress/page/admin/caja/admin_caja_monedas.page.dart';
 import 'package:compaexpress/services/negocio_service.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:compaexpress/widget/balance_cards.dart';
 import 'package:flutter/material.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 class AdminCajaListPage extends StatefulWidget {
   const AdminCajaListPage({super.key});
 
@@ -63,7 +65,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Administrar Cajas'),
-        
+
         elevation: 2,
         actions: [
           IconButton(
@@ -115,7 +117,10 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.8)],
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.8),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -152,7 +157,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                     Text(
                       'Total General',
                       style: TextStyle(
-                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                        color: theme.colorScheme.onPrimary.withValues(
+                          alpha: 0.9,
+                        ),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -272,7 +279,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -290,7 +299,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.8,
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -299,7 +310,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                   ),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -317,7 +330,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: caja.isActive ? theme.colorScheme.primary : Colors.orange,
+                          color: caja.isActive
+                              ? theme.colorScheme.primary
+                              : Colors.orange,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -345,7 +360,12 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                       const SizedBox(width: 8),
                       PopupMenuButton<String>(
                         onSelected: (value) => _handleMenuAction(value, caja),
-                        icon: Icon(Icons.more_vert, color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
                         itemBuilder: (context) => [
                           const PopupMenuItem(
                             value: 'editar',
@@ -382,7 +402,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                               ],
                             ),
                           ),
-                         PopupMenuItem(
+                          PopupMenuItem(
                             value: 'cierre',
                             child: Row(
                               children: [
@@ -394,7 +414,8 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                 SizedBox(width: 8),
                                 Text(
                                   'Cerrar caja',
-                                  style: TextStyle(color: theme.colorScheme.primary,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
                               ],
@@ -433,7 +454,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
               const SizedBox(height: 16),
 
               // Información adicional
-             Row(
+              Row(
                 children: [
                   Expanded(
                     child: Container(
@@ -486,7 +507,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           width: 1,
                         ),
                       ),
@@ -499,14 +522,18 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                                 Icons
                                     .account_balance_wallet, // Ícono más relevante para balance
                                 size: 16,
-                                color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 'Balance total',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   fontWeight: FontWeight
                                       .w600, // Mayor peso para el título
                                 ),
@@ -519,7 +546,9 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
                             style: TextStyle(
                               fontSize:
                                   16, // Tamaño de fuente ligeramente mayor
-                              color: theme.colorScheme.primary.withValues(alpha: 0.6), // Color más oscuro para contraste
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.6,
+                              ), // Color más oscuro para contraste
                               fontWeight:
                                   FontWeight.w700, // Mayor peso para destacar
                             ),
@@ -538,9 +567,10 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
   }
 
   void _createCaja() async {
-    final result = await Navigator.push(
+    final result = await pushWrapped(
       context,
-      MaterialPageRoute(builder: (context) => AdminCajaCreatePage()),
+      const AdminCajaCreatePage(),
+      title: 'Crear caja',
     );
     if (result) {
       _loadCajas();
@@ -558,14 +588,10 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
 
   void _showCajaDetails(Caja caja) async {
     final negocioData = await NegocioService.getCurrentUserInfo();
-    Navigator.push(
+    if (!mounted) return;
+    await pushWrapped(
       context,
-      MaterialPageRoute(
-        builder: (context) => AdminCajaDetallePage(
-          cajaId: caja.id,
-          negocioId: negocioData.negocioId,
-        ),
-      ),
+      AdminCajaDetallePage(cajaId: caja.id, negocioId: negocioData.negocioId),
     ).then((_) => _loadCajas());
   }
 
@@ -778,13 +804,10 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
   }
 
   void _viewCajaMonedas(Caja caja) async {
-    final result = await Navigator.push(
+    await pushWrapped(
       context,
-      MaterialPageRoute(builder: (context) => CajaMonedasPage(caja: caja)),
-    );
-    if (result) {
-      _loadCajas();
-    }
+      CajaMonedasPage(caja: caja),
+    ).then((_) => _loadCajas());
   }
 
   Future<void> _toggleCajaStatus(Caja caja) async {
@@ -951,8 +974,10 @@ class EditCajaDialog extends StatelessWidget {
             ),
           ),
           onPressed: () async {
-            final result = await Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => AdminCajaEditPage(caja: caja)),
+            final result = await pushWrapped(
+              context,
+              AdminCajaEditPage(caja: caja),
+              title: 'Editar caja',
             );
             if (result) {
               onCajaUpdated();

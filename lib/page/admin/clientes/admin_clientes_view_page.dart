@@ -1,11 +1,13 @@
 // Asumiendo que Client es tu modelo generado
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/providers/clients_provider.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:toastification/toastification.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 // ==================== PANTALLA PRINCIPAL - LISTA DE CLIENTES ====================
 class AdminClientesViewPage extends ConsumerStatefulWidget {
   final String negocioID;
@@ -63,24 +65,19 @@ class _AdminClientesViewPageState extends ConsumerState<AdminClientesViewPage> {
     );
   }
 
-  void _navigateToCreateClient() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ClientFormPage(negocioID: widget.negocioID),
-      ),
-    );
+  void _navigateToCreateClient() async {
+    await pushWrapped(context, ClientFormPage(negocioID: widget.negocioID));
   }
 
-  void _navigateToEditClient(Client client) {
+  /* void _navigateToEditClient(Client client) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      CustomWrapperPage(
         builder: (context) =>
             ClientFormPage(negocioID: widget.negocioID, client: client),
       ),
     );
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
@@ -419,15 +416,9 @@ class ClientDetailBottomSheet extends ConsumerWidget {
     );
   }
 
-  void _navigateToEdit(BuildContext context) {
+  void _navigateToEdit(BuildContext context) async {
     Navigator.pop(context); // Cerrar bottom sheet
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            ClientFormPage(negocioID: negocioID, client: client),
-      ),
-    );
+    await pushWrapped(context, ClientFormPage(negocioID: negocioID, client: client));
   }
 
   @override

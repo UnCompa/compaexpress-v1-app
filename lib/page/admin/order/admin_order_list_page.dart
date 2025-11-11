@@ -14,10 +14,11 @@ import 'package:compaexpress/services/user_service.dart';
 import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:compaexpress/widget/print_order_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Provider para el rol del usuario
 final userRoleProvider = FutureProvider<String>((ref) async {
   return await UserService.getRolUser();
@@ -267,7 +268,7 @@ class _AdminOrderListScreenState extends ConsumerState<AdminOrderListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => const VendedorOrderCreatePage(),
             ),
           );
@@ -457,7 +458,7 @@ class _AdminOrderListScreenState extends ConsumerState<AdminOrderListScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => OrderDetailScreen(order: order),
             ),
           );
@@ -518,7 +519,7 @@ class _AdminOrderListScreenState extends ConsumerState<AdminOrderListScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          CustomWrapperPage(
                             builder: (context) =>
                                 OrderDetailScreen(order: order),
                           ),

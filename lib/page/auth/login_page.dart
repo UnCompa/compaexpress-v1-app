@@ -5,6 +5,7 @@ import 'package:compaexpress/page/auth/reset_password_page.dart';
 import 'package:compaexpress/page/vendedor/seller_page.dart';
 import 'package:compaexpress/services/user_service.dart';
 import 'package:compaexpress/views/login_form.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
@@ -67,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       case AuthSignInStep.confirmSignUp:
       case AuthSignInStep.resetPassword:
         Navigator.of(context).push(
-          MaterialPageRoute(
+          CustomWrapperPage(
             builder: (_) => ResetPasswordPage(username: username),
           ),
         );
@@ -105,12 +106,12 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
         case 'admin':
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const AdminPage()),
+            CustomWrapperPage(builder: (_) => const AdminPage()),
           );
           break;
         case 'vendedor':
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SellerPage()),
+            CustomWrapperPage(builder: (_) => const SellerPage()),
           );
           break;
         default:

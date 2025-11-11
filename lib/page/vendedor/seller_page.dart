@@ -15,9 +15,10 @@ import 'package:compaexpress/services/device_session_service.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:compaexpress/views/logout_button.dart';
 import 'package:compaexpress/views/quick_access_carousel.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class SellerPage extends StatefulWidget {
   const SellerPage({super.key});
@@ -223,7 +224,7 @@ class _SellerPageState extends State<SellerPage>
                           title: 'Facturar',
                           subtitle: 'Crea una factura',
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomWrapperPage(
                               builder: (_) => VendedorCreateInvoiceScreen(),
                             ),
                           ),
@@ -235,7 +236,7 @@ class _SellerPageState extends State<SellerPage>
                           subtitle: 'Crea una compra',
                           variant: QuickAccessVariant.primary,
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomWrapperPage(
                               builder: (_) => VendedorOrderCreatePage(),
                             ),
                           ),
@@ -256,7 +257,7 @@ class _SellerPageState extends State<SellerPage>
                           subtitle: 'Configura tu experiencia',
                           variant: QuickAccessVariant.primary,
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomWrapperPage(
                               builder: (_) => SellerSettingsPage(),
                             ),
                           ),
@@ -304,7 +305,7 @@ class _SellerPageState extends State<SellerPage>
                             subtitle: 'Datos personales',
                             onTap: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(
+                                CustomWrapperPage(
                                   builder: (_) => EditSellerUserPage(),
                                 ),
                               );
@@ -317,7 +318,7 @@ class _SellerPageState extends State<SellerPage>
                             onTap: () async {
                               final caja = await CajaService.getCurrentCaja();
                               Navigator.of(context).push(
-                                MaterialPageRoute(
+                                CustomWrapperPage(
                                   builder: (_) =>
                                       VendedorCierreCajaPage(caja: caja),
                                 ),

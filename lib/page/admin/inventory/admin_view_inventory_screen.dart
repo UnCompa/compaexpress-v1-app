@@ -3,14 +3,15 @@ import 'package:compaexpress/models/Producto.dart';
 import 'package:compaexpress/models/ProductoPrecios.dart';
 import 'package:compaexpress/page/admin/inventory/admin__view_inventory_details_screen.dart';
 import 'package:compaexpress/page/admin/inventory/admin_create_inventory_product.dart';
+import 'package:compaexpress/providers/products_provider.dart';
 import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
-import 'package:compaexpress/providers/products_provider.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AdminViewInventoryScreen extends ConsumerStatefulWidget {
   const AdminViewInventoryScreen({super.key});
@@ -204,7 +205,7 @@ class _AdminViewInventoryScreenState
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (_) =>
                   AdminCreateInventoryProduct(negocioID: _negocioID),
             ),
@@ -551,7 +552,7 @@ class _AdminViewInventoryScreenState
       child: InkWell(
         onTap: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (_) => AdminViewInventoryDetailsScreen(
                 product: product,
                 negocioID: _negocioID,

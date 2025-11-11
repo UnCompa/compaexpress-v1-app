@@ -27,6 +27,7 @@ class ClientSelector extends ConsumerStatefulWidget {
 
 class _ClientSelectorState extends ConsumerState<ClientSelector> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
   Client? _selectedClient;
 
   @override
@@ -81,6 +82,7 @@ class _ClientSelectorState extends ConsumerState<ClientSelector> {
             Expanded(
               child: SearchField<Client>(
                 controller: _searchController,
+                focusNode: _searchFocus,
                 enabled: widget.enabled,
                 hint: widget.hintText ?? 'Buscar cliente...',
                 searchStyle: theme.textTheme.bodyMedium,
@@ -97,12 +99,13 @@ class _ClientSelectorState extends ConsumerState<ClientSelector> {
                   ),
                 ),
                 maxSuggestionsInViewPort: 6,
-                itemHeight: 72,
+                itemHeight: 86,
                 onSuggestionTap: (suggestion) {
                   setState(() {
                     _selectedClient = suggestion.item;
                   });
                   widget.onClientSelected(suggestion.item);
+                  FocusScope.of(context).unfocus(); 
                 },
                 suggestions: clients
                     .map(
@@ -110,7 +113,7 @@ class _ClientSelectorState extends ConsumerState<ClientSelector> {
                         '${client.nombres} ${client.apellidos}',
                         item: client,
                         child: Container(
-                          height: 72,
+                          height: 86,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 8,

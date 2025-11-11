@@ -141,7 +141,7 @@ class ProductsProvider extends StateNotifier<ProductsState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final userData = await NegocioService.getCurrentUserInfo();
+      final userData = await NegocioService.getCurrentUserInfo(forceRefresh: forceRefresh);
       _negocioId = userData.negocioId;
 
       final request = ModelQueries.list(
@@ -185,7 +185,7 @@ class ProductsProvider extends StateNotifier<ProductsState> {
     if (state.categoriasLoaded && !forceRefresh) return;
 
     try {
-      final userData = await NegocioService.getCurrentUserInfo();
+      final userData = await NegocioService.getCurrentUserInfo(forceRefresh: forceRefresh);
 
       final request = ModelQueries.list(
         Categoria.classType,

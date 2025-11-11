@@ -11,6 +11,7 @@ import 'package:compaexpress/services/user_service.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:compaexpress/widget/print_order_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -319,7 +320,7 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => const VendedorOrderCreatePage(),
             ),
           );
@@ -470,7 +471,7 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => OrderDetailScreen(order: order),
             ),
           );
@@ -529,7 +530,7 @@ class _VendedorOrderListScreenState extends State<VendedorOrderListScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          CustomWrapperPage(
                             builder: (context) =>
                                 OrderDetailScreen(order: order),
                           ),

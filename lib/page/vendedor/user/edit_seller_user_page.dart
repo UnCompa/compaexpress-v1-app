@@ -1,5 +1,6 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/page/vendedor/user/verify_seller_user_page.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
 
@@ -163,7 +164,7 @@ class _EditSellerUserPageState extends State<EditSellerUserPage> {
 
       final result = await Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        CustomWrapperPage(
           builder: (context) => VerifyAttributePage(
             attributeKey: attributeKey,
             attributeValue: attributeValue,

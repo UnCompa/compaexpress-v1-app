@@ -5,10 +5,11 @@ import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/user_service.dart';
 import 'package:compaexpress/utils/get_token.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:compaexpress/widget/app_loading_indicator.dart';
 // Modelo para el usuario
 class User {
   final String id;
@@ -366,7 +367,7 @@ class _UserListAdminPageState extends State<UserListAdminPage> {
               onTap: () {
                 // Aquí puedes agregar navegación a detalle del usuario
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  CustomWrapperPage(
                     builder: (_) => UserDetailsAdminPage(user: user),
                   ),
                 );

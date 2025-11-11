@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
@@ -10,6 +10,9 @@ import 'package:compaexpress/providers/proveedor_provider.dart';
 import 'package:compaexpress/services/product/product_controller.dart';
 import 'package:compaexpress/services/product/product_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:compaexpress/widget/ui/barcode_field.dart';
 import 'package:compaexpress/widget/ui/custom_buttons.dart';
 import 'package:compaexpress/widget/ui/custom_text_field.dart';
@@ -21,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:searchfield/searchfield.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:toastification/toastification.dart';
 import 'package:uuid/uuid.dart';
@@ -459,6 +463,7 @@ class _AdminCreateInventoryProductState
 
   void _handleError(String message, dynamic error) {
     safePrint('Error: $error');
+    Sentry.captureMessage('Error: $error');
     _mostrarToast(message, ToastificationType.error);
   }
 
@@ -478,14 +483,11 @@ class _AdminCreateInventoryProductState
 
   Future<void> _navegarACrearCategoria() async {
     final categoriesState = ref.read(categoriesProvider);
-
-    Navigator.push(
+    await pushWrapped(
       context,
-      MaterialPageRoute(
-        builder: (context) => AdminCategoriesFormPage(
-          categoria: null,
-          categoriasDisponibles: categoriesState.categorias,
-        ),
+      AdminCategoriesFormPage(
+        categoria: null,
+        categoriasDisponibles: categoriesState.categorias,
       ),
     );
   }
@@ -493,7 +495,7 @@ class _AdminCreateInventoryProductState
   Future<void> _navegarACrearProveedor() async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => const ProveedorFormPage()),
+      CustomWrapperPage(builder: (_) => const ProveedorFormPage()),
     );
 
     if (result == true && mounted) {

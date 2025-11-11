@@ -45,11 +45,11 @@ class NegocioService {
   /// Obtiene la información del usuario actual incluyendo sus grupos
   ///
   /// Returns [UserInfo] con la información del usuario
-  static Future<UserInfo> getCurrentUserInfo() async {
+  static Future<UserInfo> getCurrentUserInfo({bool forceRefresh = false}) async {
     // Verificar si hay caché válido
     if (_cachedUserInfo != null &&
         _cacheTimestamp != null &&
-        DateTime.now().difference(_cacheTimestamp!) < _cacheDuration) {
+        DateTime.now().difference(_cacheTimestamp!) < _cacheDuration && !forceRefresh) {
       return _cachedUserInfo!;
     }
 
@@ -296,4 +296,5 @@ class NegocioService {
       rethrow;
     }
   }
+
 }

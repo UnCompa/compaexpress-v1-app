@@ -6,6 +6,9 @@ import 'package:compaexpress/services/negocio/negocio_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+
 class UserDetailsAdminPage extends StatefulWidget {
   final User user;
   const UserDetailsAdminPage({super.key, required this.user});
@@ -20,6 +23,7 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
   List<Map<String, dynamic>> invoices = [];
   List<Map<String, dynamic>> orders = [];
   bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -33,17 +37,15 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
     super.dispose();
   }
 
-  // Simulación de obtención de datos (reemplaza con tu lógica de Amplify o API)
   void _fetchData() async {
     try {
       setState(() {
         _isLoading = true;
       });
-      // Obtener información del negocio
+      
       final negocio = await NegocioController.getUserInfo();
       final negocioId = negocio.negocioId;
 
-      // Consultar facturas filtradas por negocioID, sellerID y isDeleted: false
       final invoiceRequest = ModelQueries.list(
         Invoice.classType,
         where: Invoice.NEGOCIOID
@@ -55,7 +57,6 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
           .query(request: invoiceRequest)
           .response;
 
-      // Consultar órdenes filtradas por negocioID, sellerID y isDeleted: false
       final orderRequest = ModelQueries.list(
         Order.classType,
         where: Order.NEGOCIOID
@@ -67,7 +68,6 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
           .query(request: orderRequest)
           .response;
 
-      // Obtener ítems de facturas
       final List<Map<String, dynamic>> fetchedInvoices = [];
       for (final invoice in invoiceResponse.data!.items) {
         final request = ModelQueries.list(
@@ -82,7 +82,6 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
           'invoiceDate': invoice.invoiceDate.toString(),
           'invoiceReceivedTotal': invoice.invoiceReceivedTotal,
           'invoiceReturnedTotal': invoice.invoiceReturnedTotal,
-          //'invoiceType': invoice.invoiceType,
           'invoiceStatus': invoice.invoiceStatus,
           'invoiceItems': invoiceItems.data!.items
               .map(
@@ -98,7 +97,6 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
         });
       }
 
-      // Obtener ítems de órdenes
       final List<Map<String, dynamic>> fetchedOrders = [];
       for (final order in orderResponse.data!.items) {
         final request = ModelQueries.list(
@@ -113,7 +111,6 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
           'orderDate': order.orderDate.toString(),
           'orderReceivedTotal': order.orderReceivedTotal,
           'orderReturnedTotal': order.orderReturnedTotal,
-          //'orderType': order.orderType,
           'orderStatus': order.orderStatus,
           'orderItems': orderItems.data!.items
               .map(
@@ -129,7 +126,6 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
         });
       }
 
-      // Actualizar el estado con los datos obtenidos
       setState(() {
         invoices = fetchedInvoices;
         orders = fetchedOrders;
@@ -139,134 +135,181 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
       setState(() {
         _isLoading = false;
       });
-      // Manejo de errores
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Error al cargar datos: $e'),
+                ),
+              ],
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text('Detalles del usuario: ${widget.user.email}'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        bottom: TabBar(
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Facturas'),
-            Tab(text: 'Órdenes'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Detalles del usuario ${widget.user.email}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
+        ),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: colorScheme.primary,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: colorScheme.onPrimary,
+              indicatorWeight: 3,
+              labelColor: colorScheme.onPrimary,
+              unselectedLabelColor: colorScheme.onPrimary.withOpacity(0.7),
+              labelStyle: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: theme.textTheme.titleSmall,
+              tabs: const [
+                Tab(
+                  icon: Icon(Icons.receipt_long, size: 20),
+                  text: 'Facturas',
+                ),
+                Tab(
+                  icon: Icon(Icons.shopping_bag, size: 20),
+                  text: 'Órdenes',
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [_buildInvoiceList(), _buildOrderList()],
+        children: [
+          _buildInvoiceList(),
+          _buildOrderList(),
+        ],
       ),
     );
   }
 
   Widget _buildInvoiceList() {
     if (_isLoading) {
-      return const Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppLoadingIndicator(),
-            SizedBox(height: 12),
-            Text(
-              'Cargando....',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return _buildShimmerLoading();
     }
+    
     if (invoices.isEmpty) {
-      return const Center(
-        child: Text(
-          'No hay facturas para este usuario.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
+      return _buildEmptyState(
+        icon: Icons.receipt_long_outlined,
+        title: 'No hay facturas',
+        subtitle: 'Este usuario aún no tiene facturas registradas.',
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: invoices.length,
-      itemBuilder: (context, index) {
-        final invoice = invoices[index];
-        return _buildItemCard(
-          context,
-          item: invoice,
-          type: 'Factura',
-          number: invoice['invoiceNumber'],
-          date: invoice['invoiceDate'],
-          total: invoice['invoiceReceivedTotal'],
-          status: invoice['invoiceStatus'],
-          items: invoice['invoiceItems'],
-          color: Colors.blue[50]!,
-          icon: Icons.receipt,
-        );
-      },
+    return AnimationLimiter(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: invoices.length,
+        itemBuilder: (context, index) {
+          final invoice = invoices[index];
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: _buildItemCard(
+                  context,
+                  item: invoice,
+                  type: 'Factura',
+                  number: invoice['invoiceNumber'],
+                  date: invoice['invoiceDate'],
+                  total: invoice['invoiceReceivedTotal'],
+                  status: invoice['invoiceStatus'],
+                  items: invoice['invoiceItems'],
+                  icon: Icons.receipt_long,
+                  isPrimary: true,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildOrderList() {
     if (_isLoading) {
-      return const Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppLoadingIndicator(),
-            SizedBox(height: 12),
-            Text(
-              'Cargando....',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return _buildShimmerLoading();
     }
+    
     if (orders.isEmpty) {
-      return const Center(
-        child: Text(
-          'No hay órdenes para este usuario.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
+      return _buildEmptyState(
+        icon: Icons.shopping_bag_outlined,
+        title: 'No hay órdenes',
+        subtitle: 'Este usuario aún no tiene órdenes registradas.',
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: orders.length,
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return _buildItemCard(
-          context,
-          item: order,
-          type: 'Orden',
-          number: order['orderNumber'],
-          date: order['orderDate'],
-          total: order['orderReceivedTotal'],
-          status: order['orderStatus'],
-          items: order['orderItems'],
-          color: Colors.green[50]!,
-          icon: Icons.shopping_cart,
-        );
-      },
+    return AnimationLimiter(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: _buildItemCard(
+                  context,
+                  item: order,
+                  type: 'Orden',
+                  number: order['orderNumber'],
+                  date: order['orderDate'],
+                  total: order['orderReceivedTotal'],
+                  status: order['orderStatus'],
+                  items: order['orderItems'],
+                  icon: Icons.shopping_bag,
+                  isPrimary: false,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  // Método común para construir tarjetas de facturas y órdenes
   Widget _buildItemCard(
     BuildContext context, {
     required Map<String, dynamic> item,
@@ -276,93 +319,314 @@ class _UserDetailScreenState extends State<UserDetailsAdminPage>
     required num total,
     required String status,
     required List<dynamic> items,
-    required Color color,
     required IconData icon,
+    required bool isPrimary,
   }) {
-    // Formatear la fecha
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final DateTime parsedDate = DateTime.parse(date);
-    final String formattedDate = DateFormat('dd/MM/yyyy').format(parsedDate);
+    final String formattedDate = DateFormat('dd MMM yyyy', 'es').format(parsedDate);
 
-    // Mapear estados a colores
-    final Map<String, Color> statusColors = {
-      'PENDIENTE': Colors.orange,
-      'COMPLETADA': Colors.green,
-      'CANCELADA': Colors.red,
-      // Agrega más estados según sea necesario
-    };
+    final statusInfo = _getStatusInfo(status, colorScheme);
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: color,
-      child: ExpansionTile(
-        leading: Icon(icon, color: Colors.blue[800], size: 30),
-        title: Text(
-          '$type #$number',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      margin: const EdgeInsets.only(bottom: 12.0),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outline.withOpacity(0.2),
+          width: 1,
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text('Fecha: $formattedDate'),
-            Text(
-              'Total: \$${total.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            Row(
-              children: [
-                Text('Estado: $status'),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColors[status] ?? Colors.grey,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    status,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ],
+      ),
+      child: Theme(
+        data: theme.copyWith(
+          dividerColor: Colors.transparent,
         ),
-        children: [
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.all(16),
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: (isPrimary ? colorScheme.primary : colorScheme.secondary)
+                  .withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(
+              icon,
+              color: isPrimary ? colorScheme.primary : colorScheme.secondary,
+              size: 24,
+            ),
+          ),
+          title: Text(
+            '$type #$number',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Detalles de los ítems:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                ...items.map<Widget>(
-                  (item) => ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    title: Text('Producto ID: ${item['productoID']}'),
-                    subtitle: Text(
-                      'Cantidad: ${item['quantity']} - Total: \$${item['total'].toStringAsFixed(2)}',
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
+                    const SizedBox(width: 6),
+                    Text(
+                      formattedDate,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.attach_money,
+                      size: 16,
+                      color: colorScheme.primary,
+                    ),
+                    Text(
+                      '\$${total.toStringAsFixed(2)}',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusInfo['color'],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            statusInfo['icon'],
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            status,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ],
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 18,
+                        color: colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Productos (${items.length})',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...items.map<Widget>(
+                    (item) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: colorScheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.shopping_basket,
+                              size: 20,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ID: ${item['productoID']}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Cantidad: ${item['quantity']}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '\$${item['total'].toStringAsFixed(2)}',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Map<String, dynamic> _getStatusInfo(String status, ColorScheme colorScheme) {
+    switch (status.toUpperCase()) {
+      case 'PENDIENTE':
+        return {
+          'color': Colors.orange.shade600,
+          'icon': Icons.pending,
+        };
+      case 'COMPLETADA':
+      case 'COMPLETADO':
+        return {
+          'color': Colors.green.shade600,
+          'icon': Icons.check_circle,
+        };
+      case 'CANCELADA':
+      case 'CANCELADO':
+        return {
+          'color': Colors.red.shade600,
+          'icon': Icons.cancel,
+        };
+      default:
+        return {
+          'color': Colors.grey.shade600,
+          'icon': Icons.info,
+        };
+    }
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 64,
+                color: colorScheme.primary.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          highlightColor: colorScheme.surface,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        );
+      },
     );
   }
 }

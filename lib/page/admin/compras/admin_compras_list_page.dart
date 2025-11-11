@@ -5,9 +5,11 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_create_page.dart';
 import 'package:compaexpress/page/admin/compras/admin_compras_details_page.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 class AdminComprasListPage extends StatefulWidget {
   final String negocioID;
 
@@ -155,17 +157,12 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Listado de Compras'),
-        elevation: 2,
-      ),
+      appBar: AppBar(title: const Text('Listado de Compras'), elevation: 2),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) =>
-                  AdminComprasCreatePage(negocioID: widget.negocioID),
-            ),
+          final result = await pushWrapped(
+            context,
+            AdminComprasCreatePage(negocioID: widget.negocioID),
           );
           if (result) {
             _fetchPurchases();
@@ -177,7 +174,9 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
       body: Column(
         children: [
           Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1), // Fondo azul claro
+            color: theme.colorScheme.primary.withValues(
+              alpha: 0.1,
+            ), // Fondo azul claro
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
@@ -186,8 +185,9 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                     hint: const Text('Seleccionar Proveedor'),
                     value: _selectedProveedorId,
                     isExpanded: true,
-                    dropdownColor:
-                        theme.colorScheme.surface, // Fondo blanco para el dropdown
+                    dropdownColor: theme
+                        .colorScheme
+                        .surface, // Fondo blanco para el dropdown
                     style: TextStyle(
                       color: theme.colorScheme.onSurface,
                     ), // Texto oscuro
@@ -211,13 +211,18 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                     },
                     underline: Container(
                       height: 2,
-                      color: theme.colorScheme.surface.withValues(alpha: 0.6), // Línea azul clara
+                      color: theme.colorScheme.surface.withValues(
+                        alpha: 0.6,
+                      ), // Línea azul clara
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.calendar_today, color: theme.colorScheme.primary),
+                  icon: Icon(
+                    Icons.calendar_today,
+                    color: theme.colorScheme.primary,
+                  ),
                   onPressed: () => _selectDate(context),
                   tooltip: _selectedDate == null
                       ? 'Filtrar por fecha'
@@ -239,13 +244,18 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
           Expanded(
             child: _isLoading
                 ? Center(
-                    child: AppLoadingIndicator(color: theme.colorScheme.primary),
+                    child: AppLoadingIndicator(
+                      color: theme.colorScheme.primary,
+                    ),
                   )
                 : _purchases.isEmpty
                 ? Center(
                     child: Text(
                       'No hay compras registradas',
-                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 16,
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -278,10 +288,14 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                           ), // Borde azul claro
                         ),
-                        color: theme.colorScheme.surface, // Fondo blanco para contraste
+                        color: theme
+                            .colorScheme
+                            .surface, // Fondo blanco para contraste
                         child: ListTile(
                           title: Text(
                             proveedor.nombre,
@@ -293,19 +307,20 @@ class _AdminComprasListPageState extends State<AdminComprasListPage> {
                           subtitle: Text(
                             'Fecha: ${DateFormat('dd/MM/yyyy').format(purchase.fechaCompra.getDateTimeInUtc())} '
                             'Total: \$${purchase.totalCompra.toStringAsFixed(2)}',
-                            style: TextStyle(color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+                            style: TextStyle(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
                           ),
                           trailing: Icon(
                             Icons.arrow_forward,
                             color: theme.colorScheme.primary,
                           ),
                           onTap: () async {
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => AdminCompraDetailPage(
-                                  compraID: purchase.id,
-                                ),
-                              ),
+                            final result = await pushWrapped(
+                              context,
+                              AdminCompraDetailPage(compraID: purchase.id),
                             );
                             if (result) {
                               _fetchPurchases();

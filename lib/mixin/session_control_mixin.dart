@@ -4,6 +4,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/page/auth/login_page.dart';
 import 'package:compaexpress/services/device/device_session_controller.dart';
 import 'package:compaexpress/services/negocio/negocio_controller.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 
 /// Mixin optimizado que proporciona control automático de sesiones y vigencia
@@ -323,24 +324,16 @@ mixin SessionControlMixin<T extends StatefulWidget>
       ];
 
       // Esperar máximo 5 segundos para el logout
-      await Future.wait(futures).timeout(
-        const Duration(seconds: 5),
-      );
+      await Future.wait(futures).timeout(const Duration(seconds: 5));
 
       if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+        await pushWrapped(context, const LoginScreen());
       }
     } catch (e) {
       debugPrint('Error durante logout: $e');
       if (mounted) {
-        // Navegar de todos modos para evitar quedarse atascado
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+
+        await pushWrapped(context, const LoginScreen());
       }
     }
   }

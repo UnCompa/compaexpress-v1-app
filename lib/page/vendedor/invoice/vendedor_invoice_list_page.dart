@@ -14,6 +14,7 @@ import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:compaexpress/widget/print_invoice_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -481,7 +482,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => const VendedorCreateInvoiceScreen(),
             ),
           );
@@ -631,7 +632,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) =>
                   VendedorInvoiceDetailScreen(invoice: invoice),
             ),
@@ -693,7 +694,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          CustomWrapperPage(
                             builder: (context) =>
                                 VendedorInvoiceEditPage(invoice: invoice),
                           ),

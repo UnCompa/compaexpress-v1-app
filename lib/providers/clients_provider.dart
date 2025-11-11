@@ -31,9 +31,7 @@ class ClientsState {
 
 // Notifier para manejar el estado y operaciones CRUD
 class ClientsNotifier extends StateNotifier<ClientsState> {
-  ClientsNotifier() : super(const ClientsState()) {
-    loadClients();
-  }
+  ClientsNotifier() : super(const ClientsState());
 
   // CREATE - Crear un nuevo cliente
   Future<Client?> createClient({

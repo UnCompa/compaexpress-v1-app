@@ -20,11 +20,12 @@ import 'package:compaexpress/routes/routes.dart';
 import 'package:compaexpress/services/caja_service.dart';
 import 'package:compaexpress/services/device/device_session_controller.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
 import 'package:compaexpress/views/compact_option_tile.dart';
 import 'package:compaexpress/views/quick_access_carousel.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -103,11 +104,12 @@ class _AdminPageState extends State<AdminPage>
         'Compras',
         'Gestiona la compra de productos',
         null,
-        () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AdminComprasListPage(negocioID: negocio!.id),
-          ),
-        ),
+        () async {
+          await pushWrapped(
+            context,
+            AdminComprasListPage(negocioID: negocio!.id),
+          );
+        },
       ),
       _MenuItem(
         Icons.description,
@@ -137,26 +139,15 @@ class _AdminPageState extends State<AdminPage>
         Routes.adminViewProveedores,
         null,
       ),
-      _MenuItem(
-        Icons.people,
-        'Clientes',
-        'Gestionar clientes',
-        null,
-        () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AdminClientesViewPage(negocioID: negocio!.id),
-          ),
-        ),
-      ),
-      _MenuItem(
-        Icons.person,
-        'Perfil',
-        'Datos del usuario',
-        null,
-        () => Navigator.of(
+      _MenuItem(Icons.people, 'Clientes', 'Gestionar clientes', null, () async {
+        await pushWrapped(
           context,
-        ).push(MaterialPageRoute(builder: (_) => const EditSellerUserPage())),
-      ),
+          AdminClientesViewPage(negocioID: negocio!.id),
+        );
+      }),
+      _MenuItem(Icons.person, 'Perfil', 'Datos del usuario', null, () async {
+        await pushWrapped(context, const EditSellerUserPage());
+      }),
     ];
   }
 
@@ -166,11 +157,9 @@ class _AdminPageState extends State<AdminPage>
         icon: Icons.document_scanner,
         title: 'Facturar',
         subtitle: 'Crea una factura',
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const VendedorCreateInvoiceScreen(),
-          ),
-        ),
+        onTap: () async {
+          await pushWrapped(context, const VendedorCreateInvoiceScreen());
+        },
         isEnabled: negocio != null && vigenciaValida,
       ),
       QuickAccessItem(
@@ -178,9 +167,9 @@ class _AdminPageState extends State<AdminPage>
         title: 'Compra',
         subtitle: 'Crea una compra',
         variant: QuickAccessVariant.primary,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const VendedorOrderCreatePage()),
-        ),
+        onTap: () async {
+          await pushWrapped(context, const VendedorOrderCreatePage());
+        },
         isEnabled: negocio != null && vigenciaValida,
       ),
       QuickAccessItem(
@@ -196,11 +185,12 @@ class _AdminPageState extends State<AdminPage>
         title: 'Añadir producto',
         subtitle: 'Crea un producto',
         variant: QuickAccessVariant.primary,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AdminCreateInventoryProduct(negocioID: negocio!.id),
-          ),
-        ),
+        onTap: () async {
+          await pushWrapped(
+            context,
+            AdminCreateInventoryProduct(negocioID: negocio!.id),
+          );
+        },
         isEnabled: negocio != null && vigenciaValida,
       ),
       QuickAccessItem(
@@ -208,9 +198,9 @@ class _AdminPageState extends State<AdminPage>
         title: 'Añadir proveedor',
         subtitle: 'Crea un proveedor',
         variant: QuickAccessVariant.primary,
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const ProveedorFormPage())),
+        onTap: () async {
+          await pushWrapped(context, const ProveedorFormPage());
+        },
         isEnabled: negocio != null && vigenciaValida,
       ),
       QuickAccessItem(
@@ -218,11 +208,12 @@ class _AdminPageState extends State<AdminPage>
         title: 'Realizar compra',
         subtitle: 'Compra mas productos!',
         variant: QuickAccessVariant.primary,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AdminComprasCreatePage(negocioID: negocio!.id),
-          ),
-        ),
+        onTap: () async {
+          await pushWrapped(
+            context,
+            AdminComprasCreatePage(negocioID: negocio!.id),
+          );
+        },
         isEnabled: negocio != null && vigenciaValida,
       ),
     ];
@@ -393,9 +384,7 @@ class _AdminPageState extends State<AdminPage>
     try {
       final caja = await CajaService.getCurrentCaja(forceRefresh: true);
       if (mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => VendedorCierreCajaPage(caja: caja)),
-        );
+        await pushWrapped(context, VendedorCierreCajaPage(caja: caja));
       }
     } catch (e) {
       // Manejar error

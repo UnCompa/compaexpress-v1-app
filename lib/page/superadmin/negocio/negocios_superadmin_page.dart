@@ -3,6 +3,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/Negocio.dart';
 import 'package:compaexpress/page/superadmin/negocio/edit_bussines_superadmin_page.dart';
 import 'package:compaexpress/routes/routes.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
 class NegociosSuperadminPage extends StatefulWidget {
@@ -438,7 +439,7 @@ class NegociosSuperadminPageState extends State<NegociosSuperadminPage> {
 
   void _editNegocio(Negocio negocio) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
+      CustomWrapperPage(
         builder: (_) => EditBussinesSuperadminPage(negocio: negocio),
       ),
     );

@@ -2,12 +2,13 @@ import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/page/admin/proveedor/admin_proveedor_form_page.dart';
 import 'package:compaexpress/providers/proveedor_provider.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminProveedorListPage extends ConsumerStatefulWidget {
   const AdminProveedorListPage({super.key});
 
@@ -537,7 +538,7 @@ class _AdminProveedorListPageState
   Future<void> _addProveedor(BuildContext context) async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => const ProveedorFormPage()),
+      CustomWrapperPage(builder: (_) => const ProveedorFormPage()),
     );
 
     if (result == true && mounted) {
@@ -548,7 +549,7 @@ class _AdminProveedorListPageState
   Future<void> _editProveedor(Proveedor proveedor) async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      CustomWrapperPage(
         builder: (_) => ProveedorFormPage(proveedor: proveedor),
       ),
     );

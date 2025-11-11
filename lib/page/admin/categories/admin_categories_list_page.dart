@@ -1,11 +1,12 @@
 import 'package:compaexpress/page/admin/categories/admin_categories_form_page.dart';
 import 'package:compaexpress/providers/categories_provider.dart';
+import 'package:compaexpress/utils/navigation_utils.dart';
 import 'package:compaexpress/views/pagination.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../../models/Categoria.dart';
@@ -645,16 +646,13 @@ class _AdminCategoriesListPageState
     );
   }
 
-  void _navigateToForm({Categoria? categoria}) {
+  void _navigateToForm({Categoria? categoria}) async {
     final categoriesState = ref.read(categoriesProvider);
-
-    Navigator.push(
+    await pushWrapped(
       context,
-      MaterialPageRoute(
-        builder: (context) => AdminCategoriesFormPage(
-          categoria: categoria,
-          categoriasDisponibles: categoriesState.categorias,
-        ),
+      AdminCategoriesFormPage(
+        categoria: categoria,
+        categoriasDisponibles: categoriesState.categorias,
       ),
     );
   }

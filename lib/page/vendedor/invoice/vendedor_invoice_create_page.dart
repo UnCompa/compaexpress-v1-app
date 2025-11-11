@@ -136,7 +136,7 @@ class _VendedorCreateInvoiceScreenState
 
   bool _validatePagoVsFactura() {
     final isValid = _getTotalPagos() >= _calculateTotal();
-    return isValid && _comprobanteFile != null;
+    return isValid;
   }
 
   List<PaymentOption> _getSelectedPayments() => _paymentOptions

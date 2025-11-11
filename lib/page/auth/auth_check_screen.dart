@@ -2,6 +2,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/page/admin/admin_page.dart';
 import 'package:compaexpress/services/network_service.dart';
 import 'package:compaexpress/services/user_service.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:compaexpress/widget/loading_overlay.dart';
 import 'package:flutter/material.dart';
 
@@ -76,7 +77,7 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
       case 'admin':
         Navigator.of(
           context,
-        ).pushReplacement(MaterialPageRoute(builder: (_) => const AdminPage()));
+        ).pushReplacement(CustomWrapperPage(builder: (_) => const AdminPage()));
         break;
       case 'vendedor':
         Navigator.of(context).pushReplacementNamed('/vendedor');

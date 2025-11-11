@@ -16,6 +16,8 @@ import 'package:compaexpress/utils/get_image_for_bucker.dart';
 import 'package:compaexpress/utils/get_token.dart';
 import 'package:compaexpress/views/filter_data.dart';
 import 'package:compaexpress/views/pagination.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/custom_wrapper_page.dart';
 import 'package:compaexpress/widget/print_invoice_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +25,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 class AdminInvoiceListPage extends StatefulWidget {
   const AdminInvoiceListPage({super.key});
 
@@ -274,15 +276,18 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         final jsonData = json.decode(response.body);
         final usersResponse = UsersResponse.fromJson(jsonData);
         debugPrint(usersResponse.users.toString());
+        if (!mounted) return;
         setState(() {
           vendedores = usersResponse.users;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           _errorMessage = 'Error al cargar usuarios: ${response.statusCode}';
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error al cargar usuarios: $e';
       });
@@ -295,6 +300,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
     bool filterByDate = registrationDate.isNotEmpty;
     // Si no hay ningún filtro, restaurar la lista original y salir
     if (!filterBySeller && !filterByDate) {
+      if (!mounted) return;
       setState(() {
         paginatedInvoices = List.from(
           _invoices,
@@ -320,6 +326,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         );
         // Si el vendedor no existe, y solo se filtra por vendedor, la lista debe estar vacía
         if (!filterByDate) {
+          if (!mounted) return;
           setState(() {
             paginatedInvoices = [];
             _updatePageItems();
@@ -399,7 +406,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
       _isLoading =
           true; // Opcional: para indicar que está "cargando" la nueva página
     });
-
+    if (!mounted) return;
     setState(() {
       currentPage = newPage;
       _updatePageItems();
@@ -425,7 +432,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
       final invoiceResponse = response.data!.items
           .whereType<Invoice>()
           .toList();
-
+      if (!mounted) return;
       setState(() {
         _invoices = invoiceResponse;
         _invoices.sort((a, b) => b.invoiceDate.compareTo(a.invoiceDate));
@@ -433,6 +440,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error inesperado: $e';
         _isLoading = false;
@@ -442,6 +450,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
 
   Future<void> _getRoleUser() async {
     final roleUser = await UserService.getRolUser();
+    if (!mounted) return;
     setState(() {
       _roleUser = roleUser;
     });
@@ -592,6 +601,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
           'Error al crear movimiento de caja: ${movementResponse.errors}',
         );
       }
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Factura eliminada correctamente')),
@@ -605,6 +615,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error al eliminar factura: $e')));
@@ -751,6 +762,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
       final pdfUri = Uri.parse(urlFirmada.first);
       if (await canLaunchUrl(pdfUri)) {
         await launchUrl(pdfUri, mode: LaunchMode.platformDefault);
+        if (!mounted) return "";
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('PDF generado y abierto exitosamente')),
         );
@@ -760,6 +772,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
 
       return urlFirmada.first;
     } catch (e) {
+      if (!mounted) return "";
       setState(() {
         isGeneratePdf = false;
       });
@@ -767,32 +780,6 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         SnackBar(content: Text('Error al generar o abrir PDF: $e')),
       );
       return null;
-    }
-  }
-
-  Future<void> _printPDF(String? pdfUrl) async {
-    print("IMPRIMIENDO PDF");
-    print(pdfUrl);
-    if (pdfUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay PDF disponible para imprimir')),
-      );
-      return;
-    }
-
-    try {
-      final uri = Uri.parse(pdfUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir el PDF')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al imprimir: $e')));
     }
   }
 
@@ -827,7 +814,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => const VendedorCreateInvoiceScreen(),
             ),
           );
@@ -983,7 +970,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            CustomWrapperPage(
               builder: (context) => InvoiceDetailScreen(invoice: invoice),
             ),
           );
@@ -1044,7 +1031,7 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          CustomWrapperPage(
                             builder: (context) =>
                                 InvoiceEditScreen(invoice: invoice),
                           ),
@@ -1108,6 +1095,4 @@ class _AdminInvoiceListPageState extends State<AdminInvoiceListPage> {
       ),
     );
   }
-
-  
 }
