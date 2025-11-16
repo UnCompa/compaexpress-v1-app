@@ -21,6 +21,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/config/app_logger.dart';
 // Clase para manejar denominaciones
 class DenominacionData {
   final String moneda;
@@ -391,6 +392,7 @@ class _VendedorCreateInvoiceScreenState
 
   Future<void> _scanBarcode() async {
     try {
+      AppLogger.i('Escaneando código de barras...');
       final result = await SimpleBarcodeScanner.scanBarcode(
         context,
         barcodeAppBar: const BarcodeAppBar(
@@ -401,7 +403,7 @@ class _VendedorCreateInvoiceScreenState
         ),
         isShowFlashIcon: true,
         delayMillis: 2000,
-        cameraFace: CameraFace.front,
+        cameraFace: CameraFace.back,
       );
 
       if (result != null && result != '-1') {
@@ -414,17 +416,27 @@ class _VendedorCreateInvoiceScreenState
 
   Future<void> _getProductByBarCode(String barCode) async {
     try {
-      final productsState = ref.watch(productsProvider);
-      final preciosProductos = productsState.productoPrecios;
-      final request = ModelQueries.list(
-        Producto.classType,
-        where: Producto.BARCODE.eq(barCode),
+      AppLogger.i(
+        'Buscando producto por código de barras en el estado: $barCode',
       );
-      final response = await Amplify.API.query(request: request).response;
-      final productos = response.data?.items.whereType<Producto>().toList();
 
-      if (productos != null && productos.isNotEmpty) {
-        final producto = productos.first;
+      final productsState = ref.watch(productsProvider);
+      final productos =
+          productsState.productos; // Lista de productos del estado
+      final preciosProductos = productsState.productoPrecios;
+
+      // Filtramos los productos cuyo barcode contiene el código ingresado
+      final productosFiltrados = productos
+          .where((p) => p.barCode.contains(barCode))
+          .toList();
+
+      AppLogger.i(
+        'Productos encontrados en estado: ${productosFiltrados.length}',
+      );
+
+      if (productosFiltrados.isNotEmpty) {
+        final producto = productosFiltrados.first;
+        AppLogger.i('Producto obtenido: ${producto.nombre}');
 
         if (_invoiceItems.any((item) => item.producto.id == producto.id)) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -460,6 +472,7 @@ class _VendedorCreateInvoiceScreenState
           SnackBar(content: Text('Producto ${producto.nombre} agregado')),
         );
       } else {
+        AppLogger.i('Producto no encontrado en estado');
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Producto no encontrado')));
@@ -470,6 +483,7 @@ class _VendedorCreateInvoiceScreenState
       ).showSnackBar(SnackBar(content: Text('Error al obtener producto: $e')));
     }
   }
+
 
   // ============= BUILD METHODS =============
 

@@ -327,17 +327,6 @@ class PaymentSectionWidgetState extends State<PaymentSectionWidget> {
                   : colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
-            Text(
-              _isQuickKeyboardActive ? 'Pago Rápido ON' : 'Pago Rápido OFF',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: _isQuickKeyboardActive
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(

@@ -18,7 +18,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-
+import 'package:sentry_logging/sentry_logging.dart';
 import './routes/routes.dart';
 import 'models/ModelProvider.dart';
 
@@ -36,8 +36,10 @@ Future<void> main() async {
   await SentryFlutter.init(
     (options) {
       options.dsn = dotenv.env['SENTRY_DNS'];
-      options.tracesSampleRate = 1.0; // Ajusta según necesites
-      options.environment = 'production'; // o 'development'
+      options.tracesSampleRate = 1.0;
+      options.environment = 'production';
+      options.enableLogs = true;
+      options.addIntegration(LoggingIntegration());
     },
     appRunner: () {
       runApp(const ProviderScope(child: MyApp()));

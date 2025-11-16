@@ -1,13 +1,10 @@
 import 'dart:developer';
 
-import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_item_data.dart';
 import 'package:compaexpress/entities/payment_option.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/providers/products_provider.dart';
 import 'package:compaexpress/services/caja_service.dart';
-import 'package:compaexpress/services/negocio_service.dart';
 import 'package:compaexpress/services/order_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
@@ -19,9 +16,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-// ==================== WIDGETS SEPARADOS ====================
 
-// Widget reutilizable para campos de texto decorados
+// ==================== WIDGETS REUTILIZABLES ====================
+
 class ThemedTextField extends StatelessWidget {
   final String? initialValue;
   final String labelText;
@@ -50,8 +47,7 @@ class ThemedTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return TextFormField(
       controller: controller,
@@ -60,23 +56,7 @@ class ThemedTextField extends StatelessWidget {
       readOnly: readOnly,
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.error),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 16,
@@ -89,12 +69,10 @@ class ThemedTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       validator: validator,
       onChanged: onChanged,
-      style: TextStyle(color: colorScheme.onSurface),
     );
   }
 }
 
-// Widget para campo de cantidad con botones +/-
 class QuantityFieldWithButtons extends StatelessWidget {
   final int quantity;
   final VoidCallback onDecrement;
@@ -113,16 +91,15 @@ class QuantityFieldWithButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
       children: [
         _buildIconButton(
           context,
-          icon: Icons.remove_circle_outline,
-          onPressed: onDecrement,
-          colorScheme: colorScheme,
+          Icons.remove_circle_outline,
+          onDecrement,
+          colorScheme,
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -140,20 +117,20 @@ class QuantityFieldWithButtons extends StatelessWidget {
         const SizedBox(width: 8),
         _buildIconButton(
           context,
-          icon: Icons.add_circle_outline,
-          onPressed: onIncrement,
-          colorScheme: colorScheme,
+          Icons.add_circle_outline,
+          onIncrement,
+          colorScheme,
         ),
       ],
     );
   }
 
   Widget _buildIconButton(
-    BuildContext context, {
-    required IconData icon,
-    required VoidCallback onPressed,
-    required ColorScheme colorScheme,
-  }) {
+    BuildContext context,
+    IconData icon,
+    VoidCallback onPressed,
+    ColorScheme colorScheme,
+  ) {
     return IconButton(
       onPressed: onPressed,
       icon: Icon(icon),
@@ -168,7 +145,6 @@ class QuantityFieldWithButtons extends StatelessWidget {
   }
 }
 
-// Widget para dropdown temático
 class ThemedDropdown<T> extends StatelessWidget {
   final T? value;
   final String labelText;
@@ -187,27 +163,14 @@ class ThemedDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return DropdownButtonFormField<T>(
       value: value,
       dropdownColor: colorScheme.surface,
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 16,
@@ -222,7 +185,6 @@ class ThemedDropdown<T> extends StatelessWidget {
   }
 }
 
-// Widget para mostrar resumen de pago
 class PaymentSummaryCard extends StatelessWidget {
   final String title;
   final String amount;
@@ -301,34 +263,32 @@ class VendedorOrderCreatePage extends ConsumerStatefulWidget {
 class _VendedorOrderCreatePageState
     extends ConsumerState<VendedorOrderCreatePage> {
   final GlobalKey<PaymentSectionWidgetState> _paymentKey = GlobalKey();
-  bool _isPaymentKeyboardActive = false;
   final _formKey = GlobalKey<FormState>();
   final _orderNumberController = TextEditingController();
   final _scrollController = ScrollController();
 
+  bool _isPaymentKeyboardActive = false;
   DateTime _selectedDate = DateTime.now();
   String _selectedStatus = 'Pagada';
   List<PaymentOption> _paymentOptions = TiposPago.values
       .map((tipo) => PaymentOption(tipo: tipo))
       .toList();
-  List<Producto> _productos = [];
-  final Map<String, List<ProductoPrecios>> _productoPrecios = {};
   final List<OrderItemData> _orderItems = [];
   bool _isLoading = false;
-  bool _isLoadingProducts = false;
   bool _isLoadingCaja = false;
   Caja? _caja;
 
-  final List<String> _statusOptions = ['Pendiente', 'Pagada', 'Cancelada'];
-
-  bool _productosLoaded = false;
-  bool _cajaLoaded = false;
+  static const List<String> _statusOptions = [
+    'Pendiente',
+    'Pagada',
+    'Cancelada',
+  ];
 
   @override
   void initState() {
     super.initState();
     _generateOrderNumber();
-    _loadInitialData();
+    _loadCajaData();
   }
 
   @override
@@ -338,30 +298,27 @@ class _VendedorOrderCreatePageState
     super.dispose();
   }
 
-  Future<void> _loadInitialData() async {
-    await Future.wait([_loadProducts(), _loadCajaData()]);
+  // ============= MÉTODOS DE DATOS =============
+
+  void _generateOrderNumber() {
+    final timestamp = DateFormat('yyyyMMddHHmm').format(DateTime.now());
+    _orderNumberController.text = 'ORD-$timestamp';
   }
 
   Future<void> _loadCajaData() async {
-    if (_cajaLoaded) return;
-
     setState(() => _isLoadingCaja = true);
     try {
-      final caja = await CajaService.getCurrentCaja();
-      setState(() {
-        _caja = caja;
-        _cajaLoaded = true;
-      });
+      _caja = await CajaService.getCurrentCaja(forceRefresh: true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar datos de caja: $e')),
-        );
+        _showSnackBar('Error al cargar datos de caja: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoadingCaja = false);
     }
   }
+
+  // ============= MÉTODOS DE ITEMS =============
 
   void _addOrderItemSmart(Producto producto, ProductoPrecios? precio) {
     final existingIndex = _orderItems.indexWhere(
@@ -372,14 +329,13 @@ class _VendedorOrderCreatePageState
     if (existingIndex != -1) {
       final existingItem = _orderItems[existingIndex];
       final newQuantity = existingItem.quantity + 1;
-
       final quantityWithPrice = precio != null
           ? newQuantity * precio.quantity
           : newQuantity;
 
       if (quantityWithPrice > producto.stock) {
         _showSnackBar(
-          'Stock insuficiente. Solo hay ${producto.stock} unidades disponibles',
+          'Stock insuficiente. Solo hay ${producto.stock} unidades',
           isError: true,
         );
         return;
@@ -390,7 +346,6 @@ class _VendedorOrderCreatePageState
           quantity: newQuantity,
         );
       });
-
       _showSnackBar('Cantidad actualizada para ${producto.nombre}');
     } else {
       setState(() {
@@ -403,95 +358,10 @@ class _VendedorOrderCreatePageState
           ),
         );
       });
-
       _showSnackBar('${producto.nombre} agregado a la orden');
     }
 
     _validatePagoVsOrden();
-  }
-
-  void _generateOrderNumber() {
-    final now = DateTime.now();
-    final timestamp = DateFormat('yyyyMMddHHmm').format(now);
-    _orderNumberController.text = 'ORD-$timestamp';
-  }
-
-  Future<void> _loadProducts() async {
-    if (_productosLoaded) return;
-
-    setState(() => _isLoadingProducts = true);
-    try {
-      final userData = await NegocioService.getCurrentUserInfo();
-
-      final request = ModelQueries.list(
-        Producto.classType,
-        where: Producto.NEGOCIOID
-            .eq(userData.negocioId)
-            .and(Producto.STOCK.gt(0)),
-        limit: 50,
-      );
-
-      final response = await Amplify.API.query(request: request).response;
-
-      if (response.data != null) {
-        final productos = response.data!.items.whereType<Producto>().toList();
-
-        if (mounted) {
-          setState(() {
-            _productos = productos;
-            _productosLoaded = true;
-          });
-        }
-
-        _loadPreciosAsync(productos);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar('Error al cargar productos: $e', isError: true);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoadingProducts = false);
-    }
-  }
-
-  Future<void> _loadPreciosAsync(List<Producto> productos) async {
-    final preciosMap = <String, List<ProductoPrecios>>{};
-
-    for (int i = 0; i < productos.length; i += 5) {
-      final batch = productos.skip(i).take(5);
-
-      await Future.wait(
-        batch.map((producto) async {
-          try {
-            final precioRequest = ModelQueries.list(
-              ProductoPrecios.classType,
-              where: ProductoPrecios.PRODUCTOID
-                  .eq(producto.id)
-                  .and(ProductoPrecios.ISDELETED.eq(false)),
-            );
-            final precioResponse = await Amplify.API
-                .query(request: precioRequest)
-                .response;
-
-            preciosMap[producto.id] =
-                precioResponse.data?.items
-                    .whereType<ProductoPrecios>()
-                    .toList() ??
-                [];
-          } catch (e) {
-            debugPrint('Error cargando precios para ${producto.id}: $e');
-          }
-        }),
-      );
-
-      if (mounted) {
-        setState(() {
-          _productoPrecios.addAll(preciosMap);
-        });
-      }
-
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
   }
 
   void _updateItemQuantity(int index, int change) {
@@ -509,7 +379,7 @@ class _VendedorOrderCreatePageState
 
     if (quantityWithPrice > item.producto.stock) {
       _showSnackBar(
-        'Stock insuficiente. Solo hay ${item.producto.stock} unidades disponibles',
+        'Stock insuficiente. Solo hay ${item.producto.stock} unidades',
         isError: true,
       );
       return;
@@ -521,28 +391,28 @@ class _VendedorOrderCreatePageState
     _validatePagoVsOrden();
   }
 
-  double _calculateTotal() {
-    return _orderItems.fold(0.0, (sum, item) => sum + item.total);
-  }
-
-  double _getCambio() {
-    final total = _calculateTotal();
-    final totalPagado = _getTotalPagos();
-    return totalPagado - total;
-  }
-
-  bool _validatePagoVsOrden() {
-    final total = _calculateTotal();
-    final totalPagado = _getTotalPagos();
-    return totalPagado >= total;
-  }
-
   void _removeOrderItem(int index) {
-    setState(() {
-      _orderItems.removeAt(index);
-    });
+    setState(() => _orderItems.removeAt(index));
     _validatePagoVsOrden();
   }
+
+  // ============= MÉTODOS DE CÁLCULO =============
+
+  double _calculateTotal() =>
+      _orderItems.fold(0.0, (sum, item) => sum + item.total);
+
+  double _getTotalPagos() => _paymentOptions
+      .where((option) => option.seleccionado)
+      .fold(0, (total, option) => total + option.monto);
+
+  double _getCambio() => _getTotalPagos() - _calculateTotal();
+
+  bool _validatePagoVsOrden() {
+    final isValid = _getTotalPagos() >= _calculateTotal();
+    return isValid;
+  }
+
+  // ============= MÉTODOS DE UI ACTIONS =============
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -551,26 +421,20 @@ class _VendedorOrderCreatePageState
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
-
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  Future<String?> _saveOrder() async {
+  Future<void> _saveOrder() async {
     try {
       log("GUARDANDO ORDEN");
       setState(() => _isLoading = true);
-      final totalOrden = _calculateTotal();
-      final totalPago = _getTotalPagos();
-      final cambio = _getCambio();
       await OrderService.saveOrder(
         context,
         _formKey,
         _orderItems,
-        totalOrden,
-        totalPago,
-        cambio,
+        _calculateTotal(),
+        _getTotalPagos(),
+        _getCambio(),
         _orderNumberController.text,
         _selectedStatus,
         _selectedDate,
@@ -581,7 +445,6 @@ class _VendedorOrderCreatePageState
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-    return null;
   }
 
   Future<void> _scanBarcode() async {
@@ -601,33 +464,30 @@ class _VendedorOrderCreatePageState
       if (result != null && result != '-1') {
         await _getProductByBarCode(result);
       }
-    } catch (e) {
+      } catch (e) {
       debugPrint('Error al escanear: $e');
     }
   }
 
   Future<void> _getProductByBarCode(String barCode) async {
     try {
-      final request = ModelQueries.list(
-        Producto.classType,
-        where: Producto.BARCODE.eq(barCode),
-      );
-      final response = await Amplify.API.query(request: request).response;
-      final productos = response.data?.items.whereType<Producto>().toList();
+      final productsState = ref.watch(productsProvider);
+      final productos = productsState.productos;
+      final preciosProductos = productsState.productoPrecios;
 
-      if (productos != null && productos.isNotEmpty) {
-        final producto = productos.first;
+      final productosFiltrados = productos
+          .where((p) => p.barCode == barCode)
+          .toList();
+
+      if (productosFiltrados.isNotEmpty) {
+        final producto = productosFiltrados.first;
 
         if (producto.stock <= 0) {
           _showSnackBar('Producto ${producto.nombre} sin stock', isError: true);
           return;
         }
 
-        if (!_productoPrecios.containsKey(producto.id)) {
-          await _loadPreciosForProduct(producto.id);
-        }
-
-        final precios = _productoPrecios[producto.id] ?? [];
+        final precios = preciosProductos[producto.id] ?? [];
         final precioSeleccionado = precios.isNotEmpty ? precios.first : null;
 
         _addOrderItemSmart(producto, precioSeleccionado);
@@ -639,32 +499,6 @@ class _VendedorOrderCreatePageState
     }
   }
 
-  Future<void> _loadPreciosForProduct(String productoId) async {
-    try {
-      final precioRequest = ModelQueries.list(
-        ProductoPrecios.classType,
-        where: ProductoPrecios.PRODUCTOID
-            .eq(productoId)
-            .and(ProductoPrecios.ISDELETED.eq(false)),
-      );
-      final precioResponse = await Amplify.API
-          .query(request: precioRequest)
-          .response;
-
-      if (mounted) {
-        setState(() {
-          _productoPrecios[productoId] =
-              precioResponse.data?.items
-                  .whereType<ProductoPrecios>()
-                  .toList() ??
-              [];
-        });
-      }
-    } catch (e) {
-      debugPrint('Error cargando precios para producto $productoId: $e');
-    }
-  }
-
   void _onBarcodeScannedFromUSB(String barcode) async {
     await _getProductByBarCode(barcode);
     log('Obteniendo producto por código: $barcode');
@@ -673,12 +507,9 @@ class _VendedorOrderCreatePageState
 
   void _togglePaymentMode() {
     log('Toggle payment mode - Current state: $_isPaymentKeyboardActive');
-
     if (_isPaymentKeyboardActive) {
-      // Si está activo, desactivarlo
       _paymentKey.currentState?.handleEscape();
     } else {
-      // Si está inactivo, activarlo
       _paymentKey.currentState?.activateQuickKeyboard();
     }
   }
@@ -695,40 +526,27 @@ class _VendedorOrderCreatePageState
     );
   }
 
-  double _getTotalPagos() {
-    return _paymentOptions
-        .where((option) => option.seleccionado)
-        .fold(0, (total, option) => total + option.monto);
-  }
+  // ============= BUILD METHODS =============
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final productsState = ref.watch(productsProvider);
 
     return BarcodeListenerWrapper(
       contextName: 'create_order',
       allowKeyboardInput: _isPaymentKeyboardActive,
       onBarcodeScanned: _onBarcodeScannedFromUSB,
-      onKeyPress: (key) {
-        _paymentKey.currentState?.handleKeyPress(key);
-      },
-      onEnterPressed: () {
-        _paymentKey.currentState?.handleEnter();
-      },
-      onEscapePressed: () {
-        _paymentKey.currentState?.handleEscape();
-      },
-      onBackspacePressed: () {
-        _paymentKey.currentState?.handleBackspace();
-      },
+      onKeyPress: (key) => _paymentKey.currentState?.handleKeyPress(key),
+      onEnterPressed: () => _paymentKey.currentState?.handleEnter(),
+      onEscapePressed: () => _paymentKey.currentState?.handleEscape(),
+      onBackspacePressed: () => _paymentKey.currentState?.handleBackspace(),
       enabled: !_isLoading,
       onF2Pressed: _togglePaymentMode,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Crear Orden'),
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
           actions: [
             _isLoading
                 ? Padding(
@@ -736,33 +554,21 @@ class _VendedorOrderCreatePageState
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child: AppLoadingIndicator(
-                        strokeWidth: 2,
-
-                      ),
+                      child: AppLoadingIndicator(strokeWidth: 2),
                     ),
                   )
                 : Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: _validatePagoVsOrden() ? _saveOrder : null,
                       icon: const Icon(Icons.save, size: 18),
                       label: const Text('Guardar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.secondary,
-                        foregroundColor: colorScheme.onSecondary,
-                        disabledBackgroundColor:
-                            colorScheme.surfaceContainerHighest,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
                     ),
                   ),
           ],
         ),
-        body: _isLoadingProducts || _isLoadingCaja
-            ? _buildLoadingSection(colorScheme)
+        body: productsState.isLoading || _isLoadingCaja
+            ? _buildLoadingSection(colorScheme, productsState.isLoading)
             : Form(
                 key: _formKey,
                 child: SingleChildScrollView(
@@ -780,28 +586,20 @@ class _VendedorOrderCreatePageState
                         totalAmount: _calculateTotal(),
                         initialBalance: _caja?.saldoInicial,
                         paymentOptions: _paymentOptions,
-                        onPaymentChanged: (updatedOptions) {
-                          setState(() {
-                            _paymentOptions = updatedOptions;
-                          });
-                        },
+                        onPaymentChanged: (updatedOptions) =>
+                            setState(() => _paymentOptions = updatedOptions),
                         onPaymentComplete: () {
-                          if (_validatePagoVsOrden()) {
-                            _saveOrder();
-                          }
+                          if (_validatePagoVsOrden()) _saveOrder();
                         },
-                        // Opcionales:
                         title: 'Resumen y Pago',
                         balanceLabel: 'Saldo en caja:',
                         totalLabel: 'Total Orden:',
                         showBalance: true,
-                        enableQuickKeyboard: true, // ¡Nueva funcionalidad!
-                        onRequestFocus: () {
-                          setState(() => _isPaymentKeyboardActive = true);
-                        },
-                        onReleaseFocus: () {
-                          setState(() => _isPaymentKeyboardActive = false);
-                        },
+                        enableQuickKeyboard: true,
+                        onRequestFocus: () =>
+                            setState(() => _isPaymentKeyboardActive = true),
+                        onReleaseFocus: () =>
+                            setState(() => _isPaymentKeyboardActive = false),
                       ),
                       const SizedBox(height: 80),
                     ],
@@ -810,8 +608,6 @@ class _VendedorOrderCreatePageState
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: _scanBarcode,
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
           tooltip: 'Escanear código',
           child: const Icon(Icons.qr_code_scanner),
         ),
@@ -819,39 +615,28 @@ class _VendedorOrderCreatePageState
     );
   }
 
-  Widget _buildLoadingSection(ColorScheme colorScheme) {
+  Widget _buildLoadingSection(ColorScheme colorScheme, bool isLoadingProducts) {
     return Container(
-      color: colorScheme.scrim.withOpacity(0.3),
+      color: Colors.black.withOpacity(0.3),
       child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppLoadingIndicator(color: colorScheme.primary),
-              const SizedBox(height: 16),
-              Text(
-                _isLoadingProducts
-                    ? 'Cargando productos...'
-                    : 'Cargando caja...',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppLoadingIndicator(color: colorScheme.primary),
+                const SizedBox(height: 16),
+                Text(
+                  isLoadingProducts
+                      ? 'Cargando productos...'
+                      : 'Cargando caja...',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: colorScheme.primary),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -859,8 +644,6 @@ class _VendedorOrderCreatePageState
   }
 
   Widget _buildBasicInfoSection(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -872,7 +655,6 @@ class _VendedorOrderCreatePageState
             Text(
               'Información Básica',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -891,21 +673,14 @@ class _VendedorOrderCreatePageState
               child: InputDecorator(
                 decoration: InputDecoration(
                   labelText: 'Fecha',
-                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  suffixIcon: Icon(
-                    Icons.calendar_today,
-                    color: colorScheme.primary,
-                  ),
+                  suffixIcon: const Icon(Icons.calendar_today),
                   filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest,
+                  fillColor: theme.colorScheme.surfaceContainerHighest,
                 ),
-                child: Text(
-                  DateFormat('dd/MM/yyyy').format(_selectedDate),
-                  style: TextStyle(color: colorScheme.onSurface),
-                ),
+                child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
               ),
             ),
             const SizedBox(height: 12),
@@ -1044,7 +819,8 @@ class _VendedorOrderCreatePageState
     ColorScheme colorScheme,
   ) {
     final item = _orderItems[index];
-    final precios = _productoPrecios[item.producto.id] ?? [];
+    final productsState = ref.watch(productsProvider);
+    final precios = productsState.productoPrecios[item.producto.id] ?? [];
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1055,8 +831,7 @@ class _VendedorOrderCreatePageState
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 768;
-          return isDesktop
+          return constraints.maxWidth > 768
               ? _buildDesktopLayout(item, precios, index, theme, colorScheme)
               : _buildMobileLayout(item, precios, index, theme, colorScheme);
         },
@@ -1078,19 +853,9 @@ class _VendedorOrderCreatePageState
           flex: 4,
           child: Row(
             children: [
-              Expanded(
-                child: _buildProductoDropdown(item, index, theme, colorScheme),
-              ),
+              Expanded(child: _buildProductoDropdown(item, index)),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildPrecioDropdown(
-                  item,
-                  precios,
-                  index,
-                  theme,
-                  colorScheme,
-                ),
-              ),
+              Expanded(child: _buildPrecioDropdown(item, precios, index)),
             ],
           ),
         ),
@@ -1099,31 +864,7 @@ class _VendedorOrderCreatePageState
           flex: 2,
           child: Row(
             children: [
-              Expanded(
-                flex: 2,
-                child: QuantityFieldWithButtons(
-                  quantity: item.quantity,
-                  onDecrement: () => _updateItemQuantity(index, -1),
-                  onIncrement: () => _updateItemQuantity(index, 1),
-                  onChanged: (value) {
-                    final quantity = int.tryParse(value) ?? 1;
-                    final change = quantity - item.quantity;
-                    if (change != 0) _updateItemQuantity(index, change);
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
-                    final quantity = int.tryParse(value);
-                    if (quantity == null || quantity <= 0) return 'Inválido';
-                    final quantityWithPrice = item.precio != null
-                        ? quantity * item.precio!.quantity
-                        : quantity;
-                    if (quantityWithPrice > item.producto.stock) {
-                      return 'Stock insuficiente';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+              Expanded(flex: 2, child: _buildQuantityField(item, index)),
               const SizedBox(width: 12),
               Expanded(child: _buildIvaField(item, index)),
             ],
@@ -1147,25 +888,13 @@ class _VendedorOrderCreatePageState
   ) {
     return Column(
       children: [
-        _buildProductoDropdown(item, index, theme, colorScheme),
+        _buildProductoDropdown(item, index),
         const SizedBox(height: 12),
-        _buildPrecioDropdown(item, precios, index, theme, colorScheme),
+        _buildPrecioDropdown(item, precios, index),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(
-              flex: 2,
-              child: QuantityFieldWithButtons(
-                quantity: item.quantity,
-                onDecrement: () => _updateItemQuantity(index, -1),
-                onIncrement: () => _updateItemQuantity(index, 1),
-                onChanged: (value) {
-                  final quantity = int.tryParse(value) ?? 1;
-                  final change = quantity - item.quantity;
-                  if (change != 0) _updateItemQuantity(index, change);
-                },
-              ),
-            ),
+            Expanded(flex: 2, child: _buildQuantityField(item, index)),
             const SizedBox(width: 8),
             Expanded(flex: 2, child: _buildIvaField(item, index)),
           ],
@@ -1197,38 +926,30 @@ class _VendedorOrderCreatePageState
     );
   }
 
-  Widget _buildProductoDropdown(
-    OrderItemData item,
-    int index,
-    ThemeData theme,
-    ColorScheme colorScheme,
-  ) {
-    final selectedProducto = item.producto;
+  Widget _buildProductoDropdown(OrderItemData item, int index) {
+    final productsState = ref.watch(productsProvider);
+    final productos = productsState.productos;
 
     return ThemedDropdown<Producto>(
-      value: selectedProducto,
+      value: item.producto,
       labelText: 'Producto',
-      items: _productos.map((Producto producto) {
+      items: productos.map((producto) {
         return DropdownMenuItem<Producto>(
           value: producto,
           child: Text(
             "${producto.nombre} - S: ${producto.stock}",
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
-      onChanged: (Producto? producto) {
+      onChanged: (producto) {
         if (producto != null) {
-          final nuevosPrecios = _productoPrecios[producto.id] ?? [];
-          final precioSeleccionado = nuevosPrecios.isNotEmpty
-              ? nuevosPrecios[0]
-              : null;
+          final precios = productsState.productoPrecios[producto.id] ?? [];
           setState(() {
             _orderItems[index] = item.copyWith(
               producto: producto,
-              precio: precioSeleccionado,
+              precio: precios.isNotEmpty ? precios.first : null,
             );
             _validatePagoVsOrden();
           });
@@ -1241,32 +962,50 @@ class _VendedorOrderCreatePageState
     OrderItemData item,
     List<ProductoPrecios> precios,
     int index,
-    ThemeData theme,
-    ColorScheme colorScheme,
   ) {
     return ThemedDropdown<ProductoPrecios>(
       value: item.precio,
       labelText: 'Precio',
-      items: precios
-          .map(
-            (ProductoPrecios precio) => DropdownMenuItem<ProductoPrecios>(
-              value: precio,
-              child: Text(
-                '${precio.nombre}: \$${precio.precio.toStringAsFixed(2)} - Cantidad: ${precio.quantity}',
-                style: const TextStyle(fontSize: 14),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: (ProductoPrecios? precio) {
+      items: precios.map((precio) {
+        return DropdownMenuItem<ProductoPrecios>(
+          value: precio,
+          child: Text(
+            '${precio.nombre}: \$${precio.precio.toStringAsFixed(2)} - x${precio.quantity}',
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList(),
+      onChanged: (precio) {
         setState(() {
           _orderItems[index] = item.copyWith(precio: precio);
           _validatePagoVsOrden();
         });
       },
-      validator: (ProductoPrecios? value) =>
-          value == null ? 'Seleccione un precio' : null,
+      validator: (value) => value == null ? 'Seleccione un precio' : null,
+    );
+  }
+
+  Widget _buildQuantityField(OrderItemData item, int index) {
+    return QuantityFieldWithButtons(
+      quantity: item.quantity,
+      onDecrement: () => _updateItemQuantity(index, -1),
+      onIncrement: () => _updateItemQuantity(index, 1),
+      onChanged: (value) {
+        final quantity = int.tryParse(value) ?? 1;
+        final change = quantity - item.quantity;
+        if (change != 0) _updateItemQuantity(index, change);
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Requerido';
+        final quantity = int.tryParse(value);
+        if (quantity == null || quantity <= 0) return 'Inválido';
+        final quantityWithPrice = item.precio != null
+            ? quantity * item.precio!.quantity
+            : quantity;
+        if (quantityWithPrice > item.producto.stock)
+          return 'Stock insuficiente';
+        return null;
+      },
     );
   }
 
@@ -1339,7 +1078,9 @@ class _VendedorOrderCreatePageState
   }
 
   Widget _buildTotalQuantity(OrderItemData item, ColorScheme colorScheme) {
-    final quantityTotal = item.quantity * item.precio!.quantity;
+    final quantityTotal = item.precio != null
+        ? item.quantity * item.precio!.quantity
+        : item.quantity;
     return PaymentSummaryCard(
       title: 'Cantidad total',
       amount: 'x${quantityTotal.toStringAsFixed(0)}',
