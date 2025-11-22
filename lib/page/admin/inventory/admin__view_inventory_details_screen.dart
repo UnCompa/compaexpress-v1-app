@@ -8,12 +8,12 @@ import 'package:compaexpress/services/product/product_controller.dart';
 import 'package:compaexpress/services/proveedor/proveedor_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:compaexpress/widget/ui/barcode_field.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:uuid/uuid.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
 class AdminViewInventoryDetailsScreen extends StatefulWidget {
   final Producto product;
   final String negocioID;
@@ -122,6 +122,7 @@ class _AdminViewInventoryDetailsScreenState
         where: Categoria.NEGOCIOID
             .eq(widget.product.negocioID)
             .and(Categoria.ISDELETED.eq(false)),
+        limit: 10000,
       );
       final response = await Amplify.API.query(request: request).response;
 
@@ -192,6 +193,7 @@ class _AdminViewInventoryDetailsScreenState
         where: ProductoPrecios.PRODUCTOID
             .eq(widget.product.id)
             .and(ProductoPrecios.ISDELETED.eq(false)),
+        limit: 10000,
       );
       final response = await Amplify.API.query(request: request).response;
 

@@ -3,9 +3,10 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_with_details.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/providers/printer_provider.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 class PrintOrderButton extends ConsumerStatefulWidget {
   final Order order;
 
@@ -28,6 +29,7 @@ class _PrintOrderButtonState extends ConsumerState<PrintOrderButton> {
             request: ModelQueries.list(
               OrderItem.classType,
               where: OrderItem.ORDERID.eq(order.id),
+              limit: 10000,
             ),
           )
           .response;
@@ -219,10 +221,7 @@ class _PrintOrderButtonState extends ConsumerState<PrintOrderButton> {
                 key: ValueKey('loading'),
                 width: 16,
                 height: 16,
-                child: AppLoadingIndicator(
-                  strokeWidth: 2,
-                  color: Colors.blue,
-                ),
+                child: AppLoadingIndicator(strokeWidth: 2, color: Colors.blue),
               )
             : const Icon(Icons.print, key: ValueKey('print'), size: 16),
       ),

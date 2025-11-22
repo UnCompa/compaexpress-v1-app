@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
@@ -149,7 +150,7 @@ class ProductsProvider extends StateNotifier<ProductsState> {
         where: Producto.NEGOCIOID
             .eq(userData.negocioId)
             .and(Producto.ISDELETED.eq(false)),
-        limit: 1000,
+        limit: 10000,
       );
 
       final response = await Amplify.API.query(request: request).response;
@@ -226,7 +227,7 @@ class ProductsProvider extends StateNotifier<ProductsState> {
         where: ProductoPrecios.NEGOCIOID
             .eq(userData.negocioId)
             .and(ProductoPrecios.ISDELETED.eq(false)),
-        limit: 5000, // Límite alto para obtener todos los precios
+        limit: 10000,
       );
 
       final preciosResponse = await Amplify.API

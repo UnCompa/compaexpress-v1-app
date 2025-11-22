@@ -2,8 +2,9 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/get_image_for_bucker.dart';
-import 'package:flutter/material.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:flutter/material.dart';
+
 class InvoiceDetailScreen extends StatefulWidget {
   final Invoice invoice;
 
@@ -20,6 +21,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   String _errorMessage = '';
   String? imageUrl;
   Client? _client;
+  List<DocumentMetadata> _metadata = [];
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
       final itemsRequest = ModelQueries.list(
         InvoiceItem.classType,
         where: InvoiceItem.INVOICEID.eq(widget.invoice.id),
+        limit: 10000,
       );
       final itemsResponse = await Amplify.API
           .query(request: itemsRequest)
@@ -94,10 +97,27 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           }
         }
 
+        // Obtener metadatos
+        final metadataRequest = ModelQueries.list(
+          DocumentMetadata.classType,
+          where: DocumentMetadata.INVOICEID.eq(widget.invoice.id),
+          limit: 10000,
+        );
+        final metadataResponse = await Amplify.API
+            .query(request: metadataRequest)
+            .response;
+        final metadata =
+            metadataResponse.data?.items
+                .whereType<DocumentMetadata>()
+                .toList() ??
+            [];
+        debugPrint('Metadatos encontrados: ${metadata.length}');
+
         setState(() {
           _invoiceItems = items;
           _isLoading = false;
           _client = clientData;
+          _metadata = metadata;
         });
       } else {
         setState(() {
@@ -487,6 +507,62 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
+                  if (_metadata.isNotEmpty)
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.description,
+                                  color: colorScheme.primary,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Metadatos',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Column(
+                              children: List.generate(_metadata.length, (
+                                index,
+                              ) {
+                                final meta = _metadata[index];
+                                return Column(
+                                  children: [
+                                    if (index > 0) const Divider(height: 24),
+                                    _buildInfoRow(
+                                      context,
+                                      Icons.label,
+                                      meta.key ?? 'Sin clave',
+                                      meta.value ?? 'Sin valor',
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (_metadata.isNotEmpty) const SizedBox(height: 16),
 
                   // Formas de pago
                   Card(
@@ -923,6 +999,51 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value, {
+    bool isTotal = false,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: isTotal ? colorScheme.tertiary : colorScheme.primary,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            style: textTheme.bodyLarge?.copyWith(
+              fontSize: isTotal ? 18 : null,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+              color: isTotal ? colorScheme.tertiary : colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.end,
+          ),
+        ),
+      ],
     );
   }
 

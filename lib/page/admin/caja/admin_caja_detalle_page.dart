@@ -2,9 +2,10 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
 import 'package:compaexpress/utils/fecha_ecuador.dart';
+import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:compaexpress/widget/app_loading_indicator.dart';
+
 class AdminCajaDetallePage extends StatefulWidget {
   final String cajaId;
   final String negocioId;
@@ -59,6 +60,7 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
         where: CajaMoneda.CAJAID
             .eq(widget.cajaId)
             .and(CajaMoneda.ISDELETED.eq(false)),
+        limit: 10000,
       );
       final monedasResponse = await Amplify.API
           .query(request: monedasRequest)
@@ -71,6 +73,7 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
         where: CajaMovimiento.CAJAID
             .eq(widget.cajaId)
             .and(CajaMovimiento.ISDELETED.eq(false)),
+        limit: 10000,
       );
       final movimientosResponse = await Amplify.API
           .query(request: movimientosRequest)
@@ -83,6 +86,7 @@ class _CajaDetailScreenState extends State<AdminCajaDetallePage> {
         where: CierreCaja.CAJAID
             .eq(widget.cajaId)
             .and(CierreCaja.ISDELETED.eq(false)),
+        limit: 10000,
       );
       final cierresResponse = await Amplify.API
           .query(request: cierresRequest)

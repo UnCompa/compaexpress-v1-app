@@ -389,11 +389,28 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
       // Esperar un momento para asegurar la conexión
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Imprimir los bytes
-      final bool printed = await PrintBluetoothThermal.writeBytes(bytes);
+      // Dividir los bytes en chunks de 512 bytes (ajusta según necesites)
+      const int chunkSize = 512;
+      for (int i = 0; i < bytes.length; i += chunkSize) {
+        final int end = (i + chunkSize < bytes.length)
+            ? i + chunkSize
+            : bytes.length;
+        final List<int> chunk = bytes.sublist(i, end);
 
-      if (!printed) {
-        throw Exception("Error al enviar datos a la impresora");
+        print(
+          "Enviando chunk ${i ~/ chunkSize + 1} de ${(bytes.length + chunkSize - 1) ~/ chunkSize}",
+        );
+
+        final bool printed = await PrintBluetoothThermal.writeBytes(chunk);
+
+        if (!printed) {
+          throw Exception(
+            "Error al enviar datos a la impresora (chunk ${i ~/ chunkSize + 1})",
+          );
+        }
+
+        // Pequeña pausa entre chunks para que la impresora procese
+        await Future.delayed(const Duration(milliseconds: 100));
       }
 
       // Esperar a que termine de imprimir
@@ -401,6 +418,7 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
 
       // Desconectar
       await PrintBluetoothThermal.disconnect;
+      debugPrint("Impresión por Bluetooth completada exitosamente");
     } catch (e) {
       debugPrint("Error en _printWithBluetooth: $e");
       rethrow;
@@ -409,22 +427,39 @@ class PrinterNotifier extends StateNotifier<PrinterState> {
 
   // --- IMPRIMIR CON WIFI/USB (flutter_thermal_printer) ---
   Future<void> _printWithFlutterThermalPrinter(
-    Printer printer,
-    List<int> bytes,
-  ) async {
-    try {
-      await FlutterThermalPrinter.instance.connect(printer);
+  Printer printer,
+  List<int> bytes,
+) async {
+  try {
+    await FlutterThermalPrinter.instance.connect(printer);
+
+    // Dividir los bytes en chunks de 1024 bytes (WiFi/USB pueden manejar más)
+    const int chunkSize = 1024;
+    for (int i = 0; i < bytes.length; i += chunkSize) {
+      final int end = (i + chunkSize < bytes.length)
+          ? i + chunkSize
+          : bytes.length;
+      final List<int> chunk = bytes.sublist(i, end);
+
+      print("Enviando chunk ${i ~/ chunkSize + 1} de ${(bytes.length + chunkSize - 1) ~/ chunkSize}");
+
       await FlutterThermalPrinter.instance.printData(
         printer,
-        bytes,
-        longData: true,
+        chunk,
+        longData: false, // Cambiado a false ya que enviamos chunks más pequeños
       );
-      await FlutterThermalPrinter.instance.disconnect(printer);
-    } catch (e) {
-      debugPrint("Error en _printWithFlutterThermalPrinter: $e");
-      rethrow;
+
+      // Pequeña pausa entre chunks
+      await Future.delayed(const Duration(milliseconds: 50));
     }
+
+    await FlutterThermalPrinter.instance.disconnect(printer);
+    debugPrint("Impresión por WiFi/USB completada exitosamente");
+  } catch (e) {
+    debugPrint("Error en _printWithFlutterThermalPrinter: $e");
+    rethrow;
   }
+}
 
   // --- VERIFICAR ESTADO BLUETOOTH ---
   Future<bool> isBluetoothEnabled() async {

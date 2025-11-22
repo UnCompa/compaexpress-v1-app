@@ -43,6 +43,7 @@ class Order extends amplify_core.Model {
   final String? _cajaID;
   final String? _cajaMovimientoID;
   final String? _cierreCajaID;
+  final List<DocumentMetadata>? _metadata;
 
   @override
   getInstanceType() => classType;
@@ -198,9 +199,13 @@ class Order extends amplify_core.Model {
     return _cierreCajaID;
   }
   
-  const Order._internal({required this.id, required sellerID, required negocioID, required orderNumber, required orderDate, required orderReceivedTotal, required orderReturnedTotal, orderPayments, orderStatus, orderItems, required isDeleted, required createdAt, required updatedAt, cajaID, cajaMovimientoID, cierreCajaID}): _sellerID = sellerID, _negocioID = negocioID, _orderNumber = orderNumber, _orderDate = orderDate, _orderReceivedTotal = orderReceivedTotal, _orderReturnedTotal = orderReturnedTotal, _orderPayments = orderPayments, _orderStatus = orderStatus, _orderItems = orderItems, _isDeleted = isDeleted, _createdAt = createdAt, _updatedAt = updatedAt, _cajaID = cajaID, _cajaMovimientoID = cajaMovimientoID, _cierreCajaID = cierreCajaID;
+  List<DocumentMetadata>? get metadata {
+    return _metadata;
+  }
   
-  factory Order({String? id, required String sellerID, required String negocioID, required String orderNumber, required amplify_core.TemporalDateTime orderDate, required double orderReceivedTotal, required double orderReturnedTotal, List<OrderPayment>? orderPayments, String? orderStatus, List<OrderItem>? orderItems, required bool isDeleted, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, String? cajaID, String? cajaMovimientoID, String? cierreCajaID}) {
+  const Order._internal({required this.id, required sellerID, required negocioID, required orderNumber, required orderDate, required orderReceivedTotal, required orderReturnedTotal, orderPayments, orderStatus, orderItems, required isDeleted, required createdAt, required updatedAt, cajaID, cajaMovimientoID, cierreCajaID, metadata}): _sellerID = sellerID, _negocioID = negocioID, _orderNumber = orderNumber, _orderDate = orderDate, _orderReceivedTotal = orderReceivedTotal, _orderReturnedTotal = orderReturnedTotal, _orderPayments = orderPayments, _orderStatus = orderStatus, _orderItems = orderItems, _isDeleted = isDeleted, _createdAt = createdAt, _updatedAt = updatedAt, _cajaID = cajaID, _cajaMovimientoID = cajaMovimientoID, _cierreCajaID = cierreCajaID, _metadata = metadata;
+  
+  factory Order({String? id, required String sellerID, required String negocioID, required String orderNumber, required amplify_core.TemporalDateTime orderDate, required double orderReceivedTotal, required double orderReturnedTotal, List<OrderPayment>? orderPayments, String? orderStatus, List<OrderItem>? orderItems, required bool isDeleted, required amplify_core.TemporalDateTime createdAt, required amplify_core.TemporalDateTime updatedAt, String? cajaID, String? cajaMovimientoID, String? cierreCajaID, List<DocumentMetadata>? metadata}) {
     return Order._internal(
       id: id == null ? amplify_core.UUID.getUUID() : id,
       sellerID: sellerID,
@@ -217,7 +222,8 @@ class Order extends amplify_core.Model {
       updatedAt: updatedAt,
       cajaID: cajaID,
       cajaMovimientoID: cajaMovimientoID,
-      cierreCajaID: cierreCajaID);
+      cierreCajaID: cierreCajaID,
+      metadata: metadata != null ? List<DocumentMetadata>.unmodifiable(metadata) : metadata);
   }
   
   bool equals(Object other) {
@@ -243,7 +249,8 @@ class Order extends amplify_core.Model {
       _updatedAt == other._updatedAt &&
       _cajaID == other._cajaID &&
       _cajaMovimientoID == other._cajaMovimientoID &&
-      _cierreCajaID == other._cierreCajaID;
+      _cierreCajaID == other._cierreCajaID &&
+      DeepCollectionEquality().equals(_metadata, other._metadata);
   }
   
   @override
@@ -273,7 +280,7 @@ class Order extends amplify_core.Model {
     return buffer.toString();
   }
   
-  Order copyWith({String? sellerID, String? negocioID, String? orderNumber, amplify_core.TemporalDateTime? orderDate, double? orderReceivedTotal, double? orderReturnedTotal, List<OrderPayment>? orderPayments, String? orderStatus, List<OrderItem>? orderItems, bool? isDeleted, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? cajaID, String? cajaMovimientoID, String? cierreCajaID}) {
+  Order copyWith({String? sellerID, String? negocioID, String? orderNumber, amplify_core.TemporalDateTime? orderDate, double? orderReceivedTotal, double? orderReturnedTotal, List<OrderPayment>? orderPayments, String? orderStatus, List<OrderItem>? orderItems, bool? isDeleted, amplify_core.TemporalDateTime? createdAt, amplify_core.TemporalDateTime? updatedAt, String? cajaID, String? cajaMovimientoID, String? cierreCajaID, List<DocumentMetadata>? metadata}) {
     return Order._internal(
       id: id,
       sellerID: sellerID ?? this.sellerID,
@@ -290,7 +297,8 @@ class Order extends amplify_core.Model {
       updatedAt: updatedAt ?? this.updatedAt,
       cajaID: cajaID ?? this.cajaID,
       cajaMovimientoID: cajaMovimientoID ?? this.cajaMovimientoID,
-      cierreCajaID: cierreCajaID ?? this.cierreCajaID);
+      cierreCajaID: cierreCajaID ?? this.cierreCajaID,
+      metadata: metadata ?? this.metadata);
   }
   
   Order copyWithModelFieldValues({
@@ -308,7 +316,8 @@ class Order extends amplify_core.Model {
     ModelFieldValue<amplify_core.TemporalDateTime>? updatedAt,
     ModelFieldValue<String?>? cajaID,
     ModelFieldValue<String?>? cajaMovimientoID,
-    ModelFieldValue<String?>? cierreCajaID
+    ModelFieldValue<String?>? cierreCajaID,
+    ModelFieldValue<List<DocumentMetadata>?>? metadata
   }) {
     return Order._internal(
       id: id,
@@ -326,7 +335,8 @@ class Order extends amplify_core.Model {
       updatedAt: updatedAt == null ? this.updatedAt : updatedAt.value,
       cajaID: cajaID == null ? this.cajaID : cajaID.value,
       cajaMovimientoID: cajaMovimientoID == null ? this.cajaMovimientoID : cajaMovimientoID.value,
-      cierreCajaID: cierreCajaID == null ? this.cierreCajaID : cierreCajaID.value
+      cierreCajaID: cierreCajaID == null ? this.cierreCajaID : cierreCajaID.value,
+      metadata: metadata == null ? this.metadata : metadata.value
     );
   }
   
@@ -370,10 +380,23 @@ class Order extends amplify_core.Model {
       _updatedAt = json['updatedAt'] != null ? amplify_core.TemporalDateTime.fromString(json['updatedAt']) : null,
       _cajaID = json['cajaID'],
       _cajaMovimientoID = json['cajaMovimientoID'],
-      _cierreCajaID = json['cierreCajaID'];
+      _cierreCajaID = json['cierreCajaID'],
+      _metadata = json['metadata']  is Map
+        ? (json['metadata']['items'] is List
+          ? (json['metadata']['items'] as List)
+              .where((e) => e != null)
+              .map((e) => DocumentMetadata.fromJson(new Map<String, dynamic>.from(e)))
+              .toList()
+          : null)
+        : (json['metadata'] is List
+          ? (json['metadata'] as List)
+              .where((e) => e?['serializedData'] != null)
+              .map((e) => DocumentMetadata.fromJson(new Map<String, dynamic>.from(e?['serializedData'])))
+              .toList()
+          : null);
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'sellerID': _sellerID, 'negocioID': _negocioID, 'orderNumber': _orderNumber, 'orderDate': _orderDate?.format(), 'orderReceivedTotal': _orderReceivedTotal, 'orderReturnedTotal': _orderReturnedTotal, 'orderPayments': _orderPayments?.map((OrderPayment? e) => e?.toJson()).toList(), 'orderStatus': _orderStatus, 'orderItems': _orderItems?.map((OrderItem? e) => e?.toJson()).toList(), 'isDeleted': _isDeleted, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'cajaID': _cajaID, 'cajaMovimientoID': _cajaMovimientoID, 'cierreCajaID': _cierreCajaID
+    'id': id, 'sellerID': _sellerID, 'negocioID': _negocioID, 'orderNumber': _orderNumber, 'orderDate': _orderDate?.format(), 'orderReceivedTotal': _orderReceivedTotal, 'orderReturnedTotal': _orderReturnedTotal, 'orderPayments': _orderPayments?.map((OrderPayment? e) => e?.toJson()).toList(), 'orderStatus': _orderStatus, 'orderItems': _orderItems?.map((OrderItem? e) => e?.toJson()).toList(), 'isDeleted': _isDeleted, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format(), 'cajaID': _cajaID, 'cajaMovimientoID': _cajaMovimientoID, 'cierreCajaID': _cierreCajaID, 'metadata': _metadata?.map((DocumentMetadata? e) => e?.toJson()).toList()
   };
   
   Map<String, Object?> toMap() => {
@@ -392,7 +415,8 @@ class Order extends amplify_core.Model {
     'updatedAt': _updatedAt,
     'cajaID': _cajaID,
     'cajaMovimientoID': _cajaMovimientoID,
-    'cierreCajaID': _cierreCajaID
+    'cierreCajaID': _cierreCajaID,
+    'metadata': _metadata
   };
 
   static final amplify_core.QueryModelIdentifier<OrderModelIdentifier> MODEL_IDENTIFIER = amplify_core.QueryModelIdentifier<OrderModelIdentifier>();
@@ -416,6 +440,9 @@ class Order extends amplify_core.Model {
   static final CAJAID = amplify_core.QueryField(fieldName: "cajaID");
   static final CAJAMOVIMIENTOID = amplify_core.QueryField(fieldName: "cajaMovimientoID");
   static final CIERRECAJAID = amplify_core.QueryField(fieldName: "cierreCajaID");
+  static final METADATA = amplify_core.QueryField(
+    fieldName: "metadata",
+    fieldType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.model, ofModelName: 'DocumentMetadata'));
   static var schema = amplify_core.Model.defineSchema(define: (amplify_core.ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "Order";
     modelSchemaDefinition.pluralName = "Orders";
@@ -534,6 +561,13 @@ class Order extends amplify_core.Model {
       key: Order.CIERRECAJAID,
       isRequired: false,
       ofType: amplify_core.ModelFieldType(amplify_core.ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(amplify_core.ModelFieldDefinition.hasMany(
+      key: Order.METADATA,
+      isRequired: false,
+      ofModelName: 'DocumentMetadata',
+      associatedKey: DocumentMetadata.ORDERMETADATAID
     ));
   });
 }

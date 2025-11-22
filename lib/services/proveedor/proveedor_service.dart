@@ -12,6 +12,7 @@ class ProveedorService {
         where:
             Proveedor.NEGOCIOID.eq(negocio.negocioId) &
             Proveedor.ISDELETED.eq(false),
+        limit: 10000,
       );
       final response = await Amplify.API.query(request: request).response;
 

@@ -626,6 +626,7 @@ class _AdminCajaListPageState extends State<AdminCajaListPage> {
       Caja.classType,
       where:
           Caja.ISDELETED.eq(false) & Caja.NEGOCIOID.eq(negocioData.negocioId),
+      limit: 10000,
     );
     final result = await Amplify.API.query(request: request).response;
     final cajas = result.data?.items;

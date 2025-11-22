@@ -142,6 +142,7 @@ class _VendedorInvoiceListScreenState extends State<VendedorInvoiceListScreen> {
             Invoice.ISDELETED.eq(false) &
             Invoice.NEGOCIOID.eq(negocio.negocioId) &
             Invoice.SELLERID.eq(negocio.userId),
+        limit: 10000,
       );
       final response = await Amplify.API.query(request: request).response;
       final invoiceResponse = response.data!.items

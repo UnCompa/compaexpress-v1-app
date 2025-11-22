@@ -2,28 +2,41 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/entities/order_with_product.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
+import 'package:compaexpress/providers/products_provider.dart';
 import 'package:compaexpress/utils/fecha_ecuador.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class OrderDetailScreen extends StatelessWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   final Order order;
 
   const OrderDetailScreen({super.key, required this.order});
+
+  @override
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+  late Future<OrderDetailData> _dataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataFuture = _fetchOrderData();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          'Detalles de Orden #${order.orderNumber}',
+          'Detalles de Orden #${widget.order.orderNumber}',
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             color: colorScheme.onPrimary,
@@ -33,14 +46,16 @@ class OrderDetailScreen extends StatelessWidget {
         foregroundColor: colorScheme.onPrimary,
         elevation: 0,
       ),
-      body: FutureBuilder<List<OrderItemWithProduct>>(
-        future: _fetchOrderItems(),
+      body: FutureBuilder<OrderDetailData>(
+        future: _dataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: AppLoadingIndicator());
           }
 
           if (snapshot.hasError) {
+            debugPrint('Error: ${snapshot.error}');
+            debugPrint('Stack: ${snapshot.stackTrace}');
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -80,7 +95,10 @@ class OrderDetailScreen extends StatelessWidget {
             );
           }
 
-          final orderItems = snapshot.data ?? [];
+          final data = snapshot.data!;
+          final orderItems = data.orderItems;
+          final metadata = data.metadata;
+          final payments = data.payments;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -120,7 +138,7 @@ class OrderDetailScreen extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Orden #${order.orderNumber}',
+                                'Orden #${widget.order.orderNumber}',
                                 style: textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.onPrimary,
@@ -132,11 +150,11 @@ class OrderDetailScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            _buildStatusChip(context, order.orderStatus),
+                            _buildStatusChip(context, widget.order.orderStatus),
                             const Spacer(),
                             Text(
                               FechaEcuador.formatearDesdeTemporal(
-                                order.orderDate.toString(),
+                                widget.order.orderDate.toString(),
                                 conHora: true,
                               ),
                               style: textTheme.bodyMedium?.copyWith(
@@ -188,35 +206,35 @@ class OrderDetailScreen extends StatelessWidget {
                           context,
                           Icons.tag,
                           'Número de Orden',
-                          order.orderNumber.toString(),
+                          widget.order.orderNumber.toString(),
                         ),
                         const Divider(height: 24),
                         _buildInfoRow(
                           context,
                           Icons.signal_cellular_alt,
                           'Estado',
-                          _getStatusText(order.orderStatus),
+                          _getStatusText(widget.order.orderStatus),
                         ),
                         const Divider(height: 24),
                         _buildInfoRow(
                           context,
                           Icons.attach_money,
                           'Recibido',
-                          '\$${(order.orderReceivedTotal + order.orderReturnedTotal).toStringAsFixed(2)}',
+                          '\$${(widget.order.orderReceivedTotal + widget.order.orderReturnedTotal).toStringAsFixed(2)}',
                         ),
                         const Divider(height: 24),
                         _buildInfoRow(
                           context,
                           Icons.attach_money,
                           'Cambio',
-                          '\$${order.orderReturnedTotal.toStringAsFixed(2)}',
+                          '\$${widget.order.orderReturnedTotal.toStringAsFixed(2)}',
                         ),
                         const Divider(height: 24),
                         _buildInfoRow(
                           context,
                           Icons.attach_money,
                           'Total',
-                          '\$${order.orderReceivedTotal.toStringAsFixed(2)}',
+                          '\$${widget.order.orderReceivedTotal.toStringAsFixed(2)}',
                           isTotal: true,
                         ),
                       ],
@@ -318,6 +336,131 @@ class OrderDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Metadata Card
+                if (metadata.isNotEmpty)
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.description,
+                                color: colorScheme.primary,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Metadatos',
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Column(
+                            children: List.generate(metadata.length, (index) {
+                              final meta = metadata[index];
+                              return Column(
+                                children: [
+                                  if (index > 0) const Divider(height: 24),
+                                  _buildInfoRow(
+                                    context,
+                                    Icons.label,
+                                    meta.key ?? 'Sin clave',
+                                    meta.value ?? 'Sin valor',
+                                  ),
+                                ],
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (metadata.isNotEmpty) const SizedBox(height: 16),
+
+                // Payments Card
+                if (payments.isNotEmpty)
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.payment,
+                                color: colorScheme.primary,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Pagos',
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '${payments.length} ${payments.length == 1 ? 'pago' : 'pagos'}',
+                                  style: textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Column(
+                            children: List.generate(payments.length, (index) {
+                              final payment = payments[index];
+                              return Column(
+                                children: [
+                                  if (index > 0) const Divider(height: 24),
+                                  _buildPaymentRow(context, payment),
+                                ],
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
               ],
             ),
           );
@@ -395,10 +538,61 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderItem(BuildContext context, OrderItemWithProduct item) {
+  Widget _buildPaymentRow(BuildContext context, OrderPayment payment) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.payment, size: 20, color: colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                payment.tipoPago.name,
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (payment.detalles != null && payment.detalles!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  payment.detalles!,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '\$${payment.monto.toStringAsFixed(2)}',
+          style: textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
+          textAlign: TextAlign.end,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOrderItem(
+    BuildContext context,
+    OrderItemWithProduct itemWithProduct,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final item = itemWithProduct.orderItem;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -428,7 +622,7 @@ class OrderDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.producto?.nombre ?? 'Producto sin nombre',
+                  itemWithProduct.producto?.nombre ?? 'Producto sin nombre',
                   style: textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onSurface,
@@ -450,7 +644,7 @@ class OrderDetailScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${item.orderItem.quantity}',
+                      '${item.quantity}',
                       style: textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colorScheme.primary,
@@ -474,7 +668,7 @@ class OrderDetailScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '\$${item.orderItem.subtotal.toStringAsFixed(2)}',
+                      '\$${item.subtotal.toStringAsFixed(2)}',
                       style: textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colorScheme.onSurface,
@@ -490,7 +684,7 @@ class OrderDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '\$${item.orderItem.total.toStringAsFixed(2)}',
+                '\$${item.total.toStringAsFixed(2)}',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.tertiary,
@@ -510,47 +704,99 @@ class OrderDetailScreen extends StatelessWidget {
     return status;
   }
 
-  Future<List<OrderItemWithProduct>> _fetchOrderItems() async {
-    // Consultar los OrderItem
-    final request = ModelQueries.list(
-      OrderItem.classType,
-      where: OrderItem.ORDERID.eq(order.id),
-    );
-    final response = await Amplify.API.query(request: request).response;
-    final orderItems =
-        response.data?.items.whereType<OrderItem>().toList() ?? [];
+  Future<OrderDetailData> _fetchOrderData() async {
+    try {
+      debugPrint('Iniciando carga de datos de orden: ${widget.order.id}');
 
-    // Obtener todos los productoID únicos
-    final productoIds = orderItems
-        .map((item) => item.productoID)
-        .whereType<String>()
-        .toSet();
-
-    // Consultar todos los Productos
-    final productRequest = ModelQueries.list(Producto.classType);
-    final productResponse = await Amplify.API
-        .query(request: productRequest)
-        .response;
-    final products =
-        productResponse.data?.items
-            .whereType<Producto>()
-            .where((product) => productoIds.contains(product.id))
-            .toList() ??
-        [];
-
-    // Crear un mapa de Productos por ID
-    final productMap = {for (var p in products) p.id: p};
-
-    // Combinar OrderItem con su Producto
-    final List<OrderItemWithProduct> orderItemsWithProduct = orderItems.map((
-      orderItem,
-    ) {
-      return OrderItemWithProduct(
-        orderItem: orderItem,
-        producto: productMap[orderItem.productoID],
+      // Obtener items de la orden
+      final orderItemsRequest = ModelQueries.list(
+        OrderItem.classType,
+        where: OrderItem.ORDERID.eq(widget.order.id),
+        limit: 10000
       );
-    }).toList();
+      final orderItemsResponse = await Amplify.API
+          .query(request: orderItemsRequest)
+          .response;
+      final orderItems =
+          orderItemsResponse.data?.items.whereType<OrderItem>().toList() ?? [];
+      debugPrint('OrderItems encontrados: ${orderItems.length}');
 
-    return orderItemsWithProduct;
+      // Obtener productos
+      final productoIds = orderItems
+          .map((item) => item.productoID)
+          .whereType<String>()
+          .toSet();
+
+      List<Producto> products = [];
+      if (productoIds.isNotEmpty) {
+        final productsState = ref.watch(productsProvider);
+        products = productsState.productos
+            .where((p) => productoIds.contains(p.id))
+            .toList();
+      }
+      debugPrint('Productos encontrados: ${products.length}');
+
+      final productMap = {for (var p in products) p.id: p};
+
+      // Obtener metadatos
+      final metadataRequest = ModelQueries.list(
+        DocumentMetadata.classType,
+        where: DocumentMetadata.ORDERID.eq(widget.order.id),
+        limit: 10000
+      );
+      final metadataResponse = await Amplify.API
+          .query(request: metadataRequest)
+          .response;
+      final metadata =
+          metadataResponse.data?.items.whereType<DocumentMetadata>().toList() ??
+          [];
+      debugPrint('Metadatos encontrados: ${metadata.length}');
+
+      // Obtener pagos
+      final paymentRequest = ModelQueries.list(
+        OrderPayment.classType,
+        where: OrderPayment.ORDERID.eq(widget.order.id),
+        limit: 10000,
+      );
+      print(paymentRequest.variables);
+      print(paymentRequest.document);
+      final paymentResponse = await Amplify.API
+          .query(request: paymentRequest)
+          .response;
+      final payments =
+          paymentResponse.data?.items.whereType<OrderPayment>().toList() ?? [];
+      debugPrint('Pagos encontrados: ${payments.length}');
+
+      // Combinar OrderItem con sus productos
+      final orderItemsWithProduct = orderItems.map((orderItem) {
+        return OrderItemWithProduct(
+          orderItem: orderItem,
+          producto: productMap[orderItem.productoID],
+          metadata: metadata,
+          payments: payments,
+        );
+      }).toList();
+
+      return OrderDetailData(
+        orderItems: orderItemsWithProduct,
+        metadata: metadata,
+        payments: payments,
+      );
+    } catch (e) {
+      debugPrint('Error cargando datos de orden: $e');
+      rethrow;
+    }
   }
+}
+
+class OrderDetailData {
+  final List<OrderItemWithProduct> orderItems;
+  final List<DocumentMetadata> metadata;
+  final List<OrderPayment> payments;
+
+  OrderDetailData({
+    required this.orderItems,
+    required this.metadata,
+    required this.payments,
+  });
 }

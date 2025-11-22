@@ -298,6 +298,7 @@ type Invoice
   cajaID: ID @index(name: "byCaja")
   cajaMovimientoID: ID @index(name: "byCajaMovimiento")
   cierreCajaID: ID @index(name: "byCierreCaja")
+  metadata: [DocumentMetadata] @hasMany(indexName: "byInvoice")
 }
 
 type InvoiceItem
@@ -373,6 +374,7 @@ type Order
   cajaID: ID @index(name: "byCaja")
   cajaMovimientoID: ID @index(name: "byCajaMovimiento")
   cierreCajaID: ID @index(name: "byCierreCaja")
+  metadata: [DocumentMetadata] @hasMany(indexName: "byOrder")
 }
 
 type OrderItem
@@ -398,6 +400,24 @@ type OrderItem
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 
+}
+
+type DocumentMetadata
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["admin", "vendedor"]
+        operations: [create, read, update, delete]
+      }
+    ]
+  ) {
+  id: ID! @primaryKey
+  key: String!
+  value: String!
+  invoiceID: ID @index(name: "byInvoice")
+  orderID: ID @index(name: "byOrder")
 }
 
 type SesionDispositivo

@@ -12,6 +12,7 @@ import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/utils/denominaciones.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
 import 'package:compaexpress/widget/client_selector.dart';
+import 'package:compaexpress/widget/list_document_metadata_editor.dart';
 import 'package:compaexpress/widget/negocio_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -68,6 +69,7 @@ class _VendedorCreateInvoiceScreenState
   XFile? _comprobanteFile;
   String? _comprobantePreviewUrl;
   bool _isPaymentSectionExpanded = true;
+  
 
   final List<PaymentOption> _paymentOptions = TiposPago.values
       .map((tipo) => PaymentOption(tipo: tipo))
@@ -76,6 +78,7 @@ class _VendedorCreateInvoiceScreenState
   DateTime _selectedDate = DateTime.now();
   String _selectedStatus = 'Pagada';
   final List<InvoiceItemData> _invoiceItems = [];
+  List<DocumentMetadata> _orderMetadata = [];
 
   bool _isLoading = false;
   Client? _client;
@@ -367,7 +370,9 @@ class _VendedorCreateInvoiceScreenState
 
   Future<void> _saveInvoice() async {
     setState(() => _isLoading = true);
-
+    final filterMetadata = _orderMetadata
+        .map((e) => e.value == "" ? null : e)
+        .toList();
     try {
       await InvoiceService.saveInvoice(
         context,
@@ -382,6 +387,7 @@ class _VendedorCreateInvoiceScreenState
         _paymentOptions,
         _comprobanteFile,
         _client,
+        filterMetadata
       );
     } catch (e) {
       debugPrint("Error en _saveInvoice: $e");
@@ -743,8 +749,16 @@ class _VendedorCreateInvoiceScreenState
                   .toList(),
               onChanged: (value) => setState(() => _selectedStatus = value!),
             ),
+            ListDocumentMetadataEditor(
+              initialMetadata: [
+                DocumentMetadata(key: 'Número de comprobante', value: ''),
+              ],
+              onChanged: (metadata) =>
+                  setState(() => _orderMetadata = metadata),
+            ),
             const SizedBox(height: 16),
             _buildComprobanteSection(),
+            
           ],
         ),
       ),

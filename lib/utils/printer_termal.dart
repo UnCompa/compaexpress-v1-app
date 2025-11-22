@@ -814,7 +814,6 @@ class PrinterThermal {
     final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final factura = invoiceWithDetails.invoice;
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
     bytes += generator.text(
       negocio.nombre,
@@ -855,7 +854,7 @@ class PrinterThermal {
         styles: const PosStyles(bold: true, height: PosTextSize.size2),
       ),
       PosColumn(
-        text: '\$${total.toStringAsFixed(2)}',
+        text: '\$${invoiceWithDetails.invoice.invoiceReceivedTotal.toStringAsFixed(2)}',
         width: 6,
         styles: const PosStyles(
           bold: true,
@@ -1040,6 +1039,7 @@ class PrinterThermal {
     String? logoUrl,
     String? mensajePie,
   }) async {
+    print(orderWithDetails.toString());
     switch (design) {
       case InvoiceDesign.classic:
         return _generarOrdenDisenioClasico(
@@ -1774,7 +1774,6 @@ class PrinterThermal {
     final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
     final orden = orderWithDetails.order;
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
     bytes += generator.text(
       negocio.nombre,
@@ -1815,7 +1814,7 @@ class PrinterThermal {
         styles: const PosStyles(bold: true, height: PosTextSize.size2),
       ),
       PosColumn(
-        text: '\$${total.toStringAsFixed(2)}',
+        text: '\$${orderWithDetails.order.orderReceivedTotal.toStringAsFixed(2)}',
         width: 6,
         styles: const PosStyles(
           bold: true,

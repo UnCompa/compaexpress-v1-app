@@ -205,6 +205,7 @@ class PreordersNotifier extends StateNotifier<PreordersState> {
         preorder.orderStatus,
         selectDate,
         preorder.paymentOptions,
+        null,
       );
 
       _log('Orden creada correctamente desde preorder: $preorderId ✅');

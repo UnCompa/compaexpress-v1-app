@@ -9,6 +9,7 @@ import 'package:compaexpress/services/order_service.dart';
 import 'package:compaexpress/utils/barcode_listener_wrapper.dart';
 import 'package:compaexpress/utils/product_quick_selector.dart';
 import 'package:compaexpress/widget/app_loading_indicator.dart';
+import 'package:compaexpress/widget/list_document_metadata_editor.dart';
 import 'package:compaexpress/widget/payment_section_widget.dart';
 import 'package:compaexpress/widget/ui/custom_text_field.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
-
 // ==================== WIDGETS REUTILIZABLES ====================
 
 class ThemedTextField extends StatelessWidget {
@@ -274,6 +274,7 @@ class _VendedorOrderCreatePageState
       .map((tipo) => PaymentOption(tipo: tipo))
       .toList();
   final List<OrderItemData> _orderItems = [];
+  List<DocumentMetadata> _orderMetadata = [];
   bool _isLoading = false;
   bool _isLoadingCaja = false;
   Caja? _caja;
@@ -427,6 +428,10 @@ class _VendedorOrderCreatePageState
   Future<void> _saveOrder() async {
     try {
       log("GUARDANDO ORDEN");
+      final filterMetadata = _orderMetadata
+          .map((e) => e.value == "" ? null : e)
+          .toList();
+      print("Metadatos de la orden: $filterMetadata");
       setState(() => _isLoading = true);
       await OrderService.saveOrder(
         context,
@@ -439,6 +444,7 @@ class _VendedorOrderCreatePageState
         _selectedStatus,
         _selectedDate,
         _paymentOptions,
+        filterMetadata,
       );
     } catch (e) {
       debugPrint('Error al guardar orden: $e');
@@ -464,7 +470,7 @@ class _VendedorOrderCreatePageState
       if (result != null && result != '-1') {
         await _getProductByBarCode(result);
       }
-      } catch (e) {
+    } catch (e) {
       debugPrint('Error al escanear: $e');
     }
   }
@@ -563,6 +569,25 @@ class _VendedorOrderCreatePageState
                       onPressed: _validatePagoVsOrden() ? _saveOrder : null,
                       icon: const Icon(Icons.save, size: 18),
                       label: const Text('Guardar'),
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.all(8),
+                        ),
+                        backgroundColor:
+                            WidgetStateProperty.resolveWith<Color?>((
+                              Set<WidgetState> states,
+                            ) {
+                              if (states.contains(WidgetState.disabled)) {
+                                return theme.colorScheme.secondary.withValues(
+                                  alpha: 0.5,
+                                ); // Opaco cuando está deshabilitado
+                              }
+                              return theme.colorScheme.secondary;
+                            }),
+                        foregroundColor: WidgetStateProperty.all(
+                          theme.colorScheme.onSecondary,
+                        ),
+                      ),
                     ),
                   ),
           ],
@@ -694,6 +719,13 @@ class _VendedorOrderCreatePageState
                   )
                   .toList(),
               onChanged: (value) => setState(() => _selectedStatus = value!),
+            ),
+            ListDocumentMetadataEditor(
+              initialMetadata: [
+                DocumentMetadata(key: 'Número de comprobante', value: ''),
+              ],
+              onChanged: (metadata) =>
+                  setState(() => _orderMetadata = metadata),
             ),
           ],
         ),

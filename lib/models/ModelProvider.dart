@@ -30,6 +30,7 @@ import 'CierreCajaHistorial.dart';
 import 'Client.dart';
 import 'CompraItem.dart';
 import 'CompraProveedor.dart';
+import 'DocumentMetadata.dart';
 import 'HistorialPrecio.dart';
 import 'Invoice.dart';
 import 'InvoiceItem.dart';
@@ -53,6 +54,7 @@ export 'CierreCajaHistorial.dart';
 export 'Client.dart';
 export 'CompraItem.dart';
 export 'CompraProveedor.dart';
+export 'DocumentMetadata.dart';
 export 'HistorialPrecio.dart';
 export 'Invoice.dart';
 export 'InvoiceItem.dart';
@@ -69,9 +71,9 @@ export 'TiposPago.dart';
 
 class ModelProvider implements amplify_core.ModelProviderInterface {
   @override
-  String version = "1b39915187041bb22c860e537067016c";
+  String version = "744e4123fc069892fb350dff3640b7d0";
   @override
-  List<amplify_core.ModelSchema> modelSchemas = [Auditoria.schema, Caja.schema, CajaMoneda.schema, CajaMovimiento.schema, Categoria.schema, CierreCaja.schema, CierreCajaHistorial.schema, Client.schema, CompraItem.schema, CompraProveedor.schema, HistorialPrecio.schema, Invoice.schema, InvoiceItem.schema, InvoicePayment.schema, Negocio.schema, Order.schema, OrderItem.schema, OrderPayment.schema, Producto.schema, ProductoPrecios.schema, Proveedor.schema, SesionDispositivo.schema];
+  List<amplify_core.ModelSchema> modelSchemas = [Auditoria.schema, Caja.schema, CajaMoneda.schema, CajaMovimiento.schema, Categoria.schema, CierreCaja.schema, CierreCajaHistorial.schema, Client.schema, CompraItem.schema, CompraProveedor.schema, DocumentMetadata.schema, HistorialPrecio.schema, Invoice.schema, InvoiceItem.schema, InvoicePayment.schema, Negocio.schema, Order.schema, OrderItem.schema, OrderPayment.schema, Producto.schema, ProductoPrecios.schema, Proveedor.schema, SesionDispositivo.schema];
   @override
   List<amplify_core.ModelSchema> customTypeSchemas = [];
   static final ModelProvider _instance = ModelProvider();
@@ -100,6 +102,8 @@ class ModelProvider implements amplify_core.ModelProviderInterface {
         return CompraItem.classType;
       case "CompraProveedor":
         return CompraProveedor.classType;
+      case "DocumentMetadata":
+        return DocumentMetadata.classType;
       case "HistorialPrecio":
         return HistorialPrecio.classType;
       case "Invoice":

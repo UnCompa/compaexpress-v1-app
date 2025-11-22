@@ -27,6 +27,7 @@ class InvoiceService {
     List<PaymentOption> paymentOptions,
     XFile? comprobanteFile,
     Client? client,
+    List<DocumentMetadata?>? metadata,
   ) async {
     debugPrint('Iniciando _saveInvoice');
 
@@ -117,6 +118,7 @@ class InvoiceService {
         caja,
         userData,
         totalFactura,
+        metadata,
       );
 
       await AuditoriaService.createAuditoria(
@@ -149,10 +151,26 @@ class InvoiceService {
     Caja caja,
     userData,
     double totalFactura,
+    List<DocumentMetadata?>? metadata,
   ) async {
     final List<Future> futures = [];
 
     futures.add(_createPayments(createdInvoice.id, paymentOptions));
+
+    // Metadata
+    final cleanedMetadata = metadata
+        ?.where((m) => m != null)
+        .map((m) => m!)
+        .toList();
+
+    if (cleanedMetadata != null && cleanedMetadata.isNotEmpty) {
+      debugPrint(
+        '📍 Iniciando creación de metadata (${cleanedMetadata.length} documentos)...',
+      );
+      futures.add(_createMetadata(createdInvoice, cleanedMetadata));
+    } else {
+      debugPrint('ℹ️  Sin metadata para crear');
+    }
 
     futures.add(_processInvoiceItemsBatch(createdInvoice.id, invoiceItems));
 
@@ -207,6 +225,37 @@ class InvoiceService {
     }
   }
 
+  static Future<void> _createMetadata(
+    Invoice invoice,
+    List<DocumentMetadata>? metadata,
+  ) async {
+    debugPrint('📋 Factura ID: ${invoice.id}');
+
+    if (metadata == null || metadata.isEmpty) {
+      debugPrint('⚠️  Sin metadata para crear');
+      return;
+    }
+
+    final metadataInvoice = metadata.map((d) {
+      final newMeta = d.copyWith(invoiceID: invoice.id);
+      final docName = newMeta.key ?? 'sin nombre';
+      debugPrint('   • Documento: $docName');
+      return newMeta;
+    }).toList();
+
+    debugPrint('📤 Creando ${metadataInvoice.length} documento(s) en BD...');
+
+    final metadataInvoiceFutures = metadataInvoice.map((m) {
+      return Amplify.API.mutate(request: ModelMutations.create(m)).response;
+    }).toList();
+
+    await Future.wait(metadataInvoiceFutures);
+
+    debugPrint(
+      '✅ ${metadataInvoice.length} documento(s) creado(s) exitosamente',
+    );
+  }
+
   static Future<void> _updateCajaAndInvoice(
     Caja caja,
     double totalFactura,
@@ -228,7 +277,8 @@ class InvoiceService {
           break;
         case TiposPago.TRANSFERENCIA:
         case TiposPago.DEPOSITO_BANCARIO:
-          saldoTransferencias += payment.monto - createdInvoice.invoiceReturnedTotal;
+          saldoTransferencias +=
+              payment.monto - createdInvoice.invoiceReturnedTotal;
           break;
         case TiposPago.TARJETA_DEBITO:
         case TiposPago.TARJETA_CREDITO:

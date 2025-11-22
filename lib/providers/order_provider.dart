@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:compaexpress/models/ModelProvider.dart';
@@ -85,8 +86,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
       final negocio = await NegocioService.getCurrentUserInfo();
       final request = ModelQueries.list(
         Order.classType,
-        where:
-            Order.ISDELETED.eq(false) & Order.NEGOCIOID.eq(negocio.negocioId),
+        where: Order.ISDELETED
+            .eq(false)
+            .and(Order.NEGOCIOID.eq(negocio.negocioId)),
+        limit: 10000,
       );
       final response = await Amplify.API.query(request: request).response;
 

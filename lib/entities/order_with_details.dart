@@ -6,6 +6,11 @@ class OrderWithDetails {
   final List<OrderDetailsWithProductsAndPrice> orderDetails;
 
   OrderWithDetails({required this.order, required this.orderDetails});
+
+  @override
+  String toString() {
+    return 'OrderWithDetails(order: $order, orderDetails: $orderDetails)';
+  }
 }
 
 /// Detalle de un item de orden con su producto y precio
@@ -19,4 +24,9 @@ class OrderDetailsWithProductsAndPrice {
     required this.precios,
     required this.productos,
   });
+
+  @override
+  String toString() {
+    return 'OrderDetailsWithProductsAndPrice(orderItem: $orderItem, precios: $precios, productos: $productos)';
+  }
 }
